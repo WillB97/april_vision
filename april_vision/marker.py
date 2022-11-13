@@ -99,17 +99,13 @@ class Orientation:
 
         # Calculate the quaternion of the rotation in the camera's coordinate system
         initial_rot = Quaternion(matrix=rotation_matrix)
+        # remap quaternion to global coordinate system from the token's perspective
+        quaternion = Quaternion(
+            initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
+        )
         if aruco_orientation:
-            # Rotate the quaternion so 0 roll is a marker the correct way up,
-            # remap quaternion to global coordinate system from the token's perspective
-            quaternion = Quaternion(
-                initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
-            ) * self.__MARKER_ORIENTATION_CORRECTION
-        else:
-            # Remap quaternion to global coordinate system from the token's perspective
-            quaternion = Quaternion(
-                initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
-            )
+            # Rotate the quaternion so 0 roll is a marker the correct way up
+            quaternion *= self.__MARKER_ORIENTATION_CORRECTION
 
         self.__rotation_matrix = quaternion.rotation_matrix
         self._quaternion = quaternion
