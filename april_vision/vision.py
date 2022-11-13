@@ -1,3 +1,5 @@
+from os import pathlike
+from pathlib import Path
 from typing import NamedTuple, Any, List
 
 import cv2
@@ -62,11 +64,24 @@ class USBCamera:
 
 
 class Camera:
-    def __init__(self) -> None:
+    def __init__(self, index: int) -> None:
+        self.video_device = cv2.VideoCapture(index)
         pass
 
-    def _capture(self) -> Frame:
-        pass
+    def _capture_single_frame(self) -> np.ndarray:
+        ret, colour_frame = self.video_device.read()
+        if not ret:
+            raise IOError("Failed to get frama from camera")
+        return colour_frame
+
+    def _capture(self, fresh: bool=True) -> Frame:
+        if fresh:
+            _ = self._capture_single_frame()
+
+        colour_frame = self._capture_single_frame()
+        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
+
+        return Frame(grey_frame=grey_frame, colour_frame=colour_frame)
 
     def _detect(self, frame: Frame) -> List[Marker]:
         pass
@@ -74,8 +89,18 @@ class Camera:
     def _annotate(self, frame: Frame, corners: List[np.ndarray], ids: List[int]) -> Frame:
         pass
 
-    def _save(self, frame: Frame, name: str, colour: bool=True) -> None:
-        pass
+    def _save(self, frame: Frame, name: pathlike[str], colour: bool=True) -> None:
+        if colour:
+            output_frame = frame.colour_frame
+        else:
+            output_frame = frame.grey_frame
+
+        path = Path(name)
+        if not path.suffix:
+            # TODO log we added and extension
+            path = path.with_suffix(".jpg")
+
+        cv2.imwrite(path, output_frame)
 
     def capture(self) -> np.ndarray:
         return self._capture().colour_frame
