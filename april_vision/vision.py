@@ -1,6 +1,9 @@
-import cv2
-from typing import NamedTuple, Any
+from typing import NamedTuple, Any, List
 
+import cv2
+import numpy as np
+
+from .marker import Marker
 
 class Frame(NamedTuple):
     grey_frame: Any
@@ -57,3 +60,40 @@ class USBCamera:
     def close(self):
         self._camera.release()
 
+
+class Camera:
+    def __init__(self) -> None:
+        pass
+
+    def _capture(self) -> Frame:
+        pass
+
+    def _detect(self, frame: Frame) -> List[Marker]:
+        pass
+
+    def _annotate(self, frame: Frame, corners: List[np.ndarray], ids: List[int]) -> Frame:
+        pass
+
+    def _save(self, frame: Frame, name: str, colour: bool=True) -> None:
+        pass
+
+    def capture(self) -> np.ndarray:
+        return self._capture().colour_frame
+
+    def see(self) -> List[Marker]:
+        frame = self._capture()
+        return self._detect(frame)
+
+    def see_ids(self) -> List[int]:
+        frame = self._capture()
+        markers = self._detect(frame)
+        return [marker.id for marker in markers]
+
+    def save(self, name):
+        frame = self._capture()
+        markers = self._detect(frame)
+        frame = self._annotate(
+            frame,
+            corners=[marker.pixel_corners for marker in markers],
+            ids=[marker.id for marker in markers])
+        self._save(frame, name)
