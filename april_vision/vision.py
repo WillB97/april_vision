@@ -1,7 +1,7 @@
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import NamedTuple, Any, List, Tuple, Optional
+from typing import NamedTuple, Any, List, Tuple, Optional, Dict
 
 import cv2
 import numpy as np
@@ -32,6 +32,7 @@ class Camera:
         index: int,
         resolution: Tuple[int, int],
         calibration: Optional[Tuple[float, float, float, float]] = None,
+        tag_sizes: Optional[Dict[int, float]] = None,
         *,
         camera_parameters: Optional[List[Tuple[int, int]]] = None,
         tag_family: str = 'tag36h11',
@@ -41,6 +42,10 @@ class Camera:
     ) -> None:
         self._camera = cv2.VideoCapture(index)
         self.calibration = calibration
+        if tag_sizes is None:
+            self.tag_sizes = {}
+        else:
+            self.tag_sizes = tag_sizes
         try:
             self._set_resolution(resolution)
         except AssertionError as e:
@@ -121,7 +126,22 @@ class Camera:
         return Frame(grey_frame=grey_frame, colour_frame=colour_frame)
 
     def _detect(self, frame: Frame) -> List[Marker]:
-        pass
+        if self.calibration is None:
+            detections = self.detector.detect(frame.grey_frame)
+        else:
+            detections = self.detector.detect(
+                frame.grey_frame,
+                estimate_tag_pose=True,
+                camera_params=self.calibration,
+                tag_size=self.tag_sizes,
+            )
+
+        markers: List[Marker] = []
+        for detection in detections:
+            tag_size = self.tag_sizes.get(detection.tag_id, 0)
+            markers.append(Marker(detection, tag_size))
+
+        return markers
 
     def _annotate(
         self,
