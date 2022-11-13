@@ -32,6 +32,11 @@ class Camera:
         index: int,
         resolution: Tuple[int, int],
         calibration: Optional[Tuple[float, float, float, float]] = None,
+        *,
+        camera_parameters: Optional[List[Tuple[int, int]]] = None,
+        tag_family: str = 'tag36h11',
+        threads: int = 4,
+        quad_decimate: float = 1,
         **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
@@ -41,16 +46,26 @@ class Camera:
         except AssertionError as e:
             LOGGER.warning(f"Failed to set resolution: {e}")
 
-        try:
-            # Set buffer length to 1
-            self._set_camera_property(cv2.CAP_PROP_BUFFERSIZE, 1)
-        except AssertionError as e:
-            LOGGER.warning(f"Failed to set property: {e}")
+        if camera_parameters is None:
+            camera_parameters = []
+
+        # Set buffer length to 1
+        camera_parameters.append((cv2.CAP_PROP_BUFFERSIZE, 1))
+
+        for parameter, value in camera_parameters:
+            try:
+                self._set_camera_property(parameter, value)
+            except AssertionError as e:
+                LOGGER.warning(f"Failed to set property: {e}")
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
 
-        self.detector = Detector(families='tag36h11', nthreads=4, quad_decimate=1)
+        self.detector = Detector(
+            families=tag_family,
+            nthreads=threads,
+            quad_decimate=quad_decimate,
+        )
 
     @classmethod
     def from_calibration_file(
