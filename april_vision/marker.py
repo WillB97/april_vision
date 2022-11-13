@@ -231,7 +231,7 @@ class Marker:
     @property
     def cartesian(self) -> CartesianCoordinates:
         if self.__pose:
-            return CartesianCoordinates.from_tvec(*self._tvec.tolist())
+            return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
         return CartesianCoordinates(0, 0, 0)
 
     def as_dict(self) -> Dict[str, Any]:
