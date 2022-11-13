@@ -168,7 +168,7 @@ class Marker:
     ):
         self.marker = marker
 
-        self.__marker_type = marker.tag_family
+        self.__marker_type = MarkerType(marker.tag_family.decode('utf-8'))
         self.__id = marker.tag_id
         self.__pixel_center = PixelCoordinates(*marker.center.tolist())
         self._pixel_corners = marker.corners.tolist()
