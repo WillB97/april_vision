@@ -35,11 +35,17 @@ class Camera:
         **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
-        self._set_resolution(resolution)
         self.calibration = calibration
+        try:
+            self._set_resolution(resolution)
+        except AssertionError as e:
+            LOGGER.warning(f"Failed to set resolution: {e}")
 
-        # Set buffer length to 1
-        self._set_camera_property(cv2.CAP_PROP_BUFFERSIZE, 1)
+        try:
+            # Set buffer length to 1
+            self._set_camera_property(cv2.CAP_PROP_BUFFERSIZE, 1)
+        except AssertionError as e:
+            LOGGER.warning(f"Failed to set property: {e}")
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
