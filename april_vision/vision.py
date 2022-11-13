@@ -1,4 +1,4 @@
-from os import pathlike
+from os import PathLike
 from pathlib import Path
 from typing import NamedTuple, Any, List, Tuple, Optional
 
@@ -45,7 +45,7 @@ class Camera:
 
     @classmethod
     def from_calibration_file(
-            cls, index: int, calibration_file: pathlike[str], **kwargs) -> 'Camera':
+            cls, index: int, calibration_file: PathLike[str], **kwargs) -> 'Camera':
         if not calibration_file.exists():
             raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
         storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
@@ -131,7 +131,7 @@ class Camera:
 
         return frame
 
-    def _save(self, frame: Frame, name: pathlike[str], colour: bool = True) -> None:
+    def _save(self, frame: Frame, name: PathLike[str], colour: bool = True) -> None:
         if colour:
             output_frame = frame.colour_frame
         else:
