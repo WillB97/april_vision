@@ -7,6 +7,7 @@ import numpy as np
 
 from .marker import Marker
 
+
 class Frame(NamedTuple):
     grey_frame: Any
     colour_frame: Any
@@ -23,9 +24,9 @@ def _find_camera():
 
 class Camera:
     def __init__(
-        self, 
-        index: int, 
-        resolution: Tuple[int, int], 
+        self,
+        index: int,
+        resolution: Tuple[int, int],
         calibration: Optional[Tuple[float, float, float, float]]=None,
         **kwargs,
     ) -> None:
@@ -41,7 +42,7 @@ class Camera:
 
     @classmethod
     def from_calibration_file(
-            cls, index: int, calibration_file: pathlike[str], **kwargs) -> Camera:
+            cls, index: int, calibration_file: pathlike[str], **kwargs) -> 'Camera':
         if not calibration_file.exists():
             raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
         storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
@@ -80,7 +81,7 @@ class Camera:
     def _capture_single_frame(self) -> np.ndarray:
         ret, colour_frame = self._camera.read()
         if not ret:
-            raise IOError("Failed to get frama from camera")
+            raise IOError("Failed to get frame from camera")
         return colour_frame
 
     def _capture(self, fresh: bool=True) -> Frame:
@@ -95,8 +96,37 @@ class Camera:
     def _detect(self, frame: Frame) -> List[Marker]:
         pass
 
-    def _annotate(self, frame: Frame, corners: List[np.ndarray], ids: List[int]) -> Frame:
-        pass
+    def _annotate(
+        self,
+        frame: Frame,
+        markers: List[Marker],
+        colour: Tuple[int, int, int]=(0, 0, 255),
+        line_thickness: int=1,
+        text_scale: float=1,
+    ) -> Frame:
+        for marker in markers:
+            integer_corners = np.array(marker.pixel_corners, dtype=np.int32)
+            marker_id = f"id={marker.id}"
+
+            for frame_type in frame:
+                cv2.polylines(
+                    frame_type,
+                    [integer_corners],
+                    isClosed=True,
+                    color=colour,
+                    thickness=line_thickness,
+                )
+
+                cv2.putText(
+                    frame_type,
+                    marker_id,
+                    integer_corners[0],
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    text_scale,
+                    colour,
+                )
+
+        return frame
 
     def _save(self, frame: Frame, name: pathlike[str], colour: bool=True) -> None:
         if colour:
@@ -128,8 +158,8 @@ class Camera:
         markers = self._detect(frame)
         frame = self._annotate(
             frame,
-            corners=[marker.pixel_corners for marker in markers],
-            ids=[marker.id for marker in markers])
+            markers
+        )
         self._save(frame, name)
 
     def close(self):
