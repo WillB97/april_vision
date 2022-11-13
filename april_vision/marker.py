@@ -88,7 +88,7 @@ class Orientation:
         [0, 0, -1]
     ]))
 
-    def __init__(self, rotation_matrix: NDArray):
+    def __init__(self, rotation_matrix: NDArray, aruco_orientation: bool = True):
         """
         Construct a quaternion given the rotation matrix in the camera's
         coordinate system.
@@ -99,11 +99,17 @@ class Orientation:
 
         # Calculate the quaternion of the rotation in the camera's coordinate system
         initial_rot = Quaternion(matrix=rotation_matrix)
-        # Rotate the quaternion so 0 roll is a marker the correct way up,
-        # remap quaternion to global coordinate system from the token's perspective
-        quaternion = Quaternion(
-            initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
-        ) * self.__MARKER_ORIENTATION_CORRECTION
+        if aruco_orientation:
+            # Rotate the quaternion so 0 roll is a marker the correct way up,
+            # remap quaternion to global coordinate system from the token's perspective
+            quaternion = Quaternion(
+                initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
+            ) * self.__MARKER_ORIENTATION_CORRECTION
+        else:
+            # Remap quaternion to global coordinate system from the token's perspective
+            quaternion = Quaternion(
+                initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
+            )
 
         self.__rotation_matrix = quaternion.rotation_matrix
         self._quaternion = quaternion
@@ -165,6 +171,8 @@ class Marker:
         self,
         marker: Detection,
         size: float,
+        *,
+        aruco_orientation: bool = True,
     ):
         self.marker = marker
 
@@ -176,6 +184,7 @@ class Marker:
         self._tvec = marker.pose_t
         self._rvec = marker.pose_R
         self.__pose = (self._tvec is not None and self._rvec is not None)
+        self.__aruco_orientation = aruco_orientation
 
         self.__distance = int(hypotenuse(self._tvec)) if self.__pose else 0
 
@@ -213,7 +222,7 @@ class Marker:
 
     @property
     def orientation(self) -> Orientation:
-        return Orientation(self._rvec)
+        return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
 
     @property
     def spherical(self) -> SphericalCoordinate:

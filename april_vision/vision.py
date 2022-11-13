@@ -38,10 +38,12 @@ class Camera:
         tag_family: str = 'tag36h11',
         threads: int = 4,
         quad_decimate: float = 1,
+        aruco_orientation: bool = True,
         **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
         self.calibration = calibration
+        self._aruco_orientation = aruco_orientation
         if tag_sizes is None:
             self.tag_sizes = {}
         else:
@@ -139,7 +141,11 @@ class Camera:
         markers: List[Marker] = []
         for detection in detections:
             tag_size = self.tag_sizes.get(detection.tag_id, 0)
-            markers.append(Marker(detection, tag_size))
+            markers.append(Marker(
+                detection,
+                tag_size,
+                aruco_orientation=self._aruco_orientation
+            ))
 
         return markers
 
