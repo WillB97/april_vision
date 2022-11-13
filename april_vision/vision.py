@@ -77,13 +77,14 @@ class Camera:
     @classmethod
     def from_calibration_file(
             cls, index: int, calibration_file: PathLike[str], **kwargs) -> 'Camera':
+        calibration_file = Path(calibration_file)
         if not calibration_file.exists():
             raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
         storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
         resolution_node = storage.getNode("cameraResolution")
         camera_matrix = storage.getNode("cameraMatrix").mat()
         fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
-        cx, cy = camera_matrix[3, 1], camera_matrix[3, 2]
+        cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
         return cls(
             index,
             resolution=(
