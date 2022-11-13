@@ -222,7 +222,9 @@ class Marker:
 
     @property
     def orientation(self) -> Orientation:
-        return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
+        if self.__pose:
+            return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
+        return Orientation(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))
 
     @property
     def spherical(self) -> SphericalCoordinate:
