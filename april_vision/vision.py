@@ -1,3 +1,4 @@
+import logging
 from os import PathLike
 from pathlib import Path
 from typing import NamedTuple, Any, List, Tuple, Optional
@@ -7,6 +8,8 @@ import numpy as np
 from pyapriltags import Detector
 
 from .marker import Marker
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Frame(NamedTuple):
@@ -139,7 +142,7 @@ class Camera:
 
         path = Path(name)
         if not path.suffix:
-            # TODO log we added an extension
+            LOGGER.warning("No file extension given, defaulting to jpg")
             path = path.with_suffix(".jpg")
 
         cv2.imwrite(path, output_frame)
