@@ -1,6 +1,6 @@
 from os import pathlike
 from pathlib import Path
-from typing import NamedTuple, Any, List, Tuple
+from typing import NamedTuple, Any, List, Tuple, Optional
 
 import cv2
 import numpy as np
@@ -22,12 +22,36 @@ def _find_camera():
 
 
 class Camera:
-    def __init__(self, index: int, resolution: Tuple[int, int]) -> None:
+    def __init__(
+        self, 
+        index: int, 
+        resolution: Tuple[int, int], 
+        calibration: Optional[Tuple[float, float, float, float]]=None
+    ) -> None:
         self._camera = cv2.VideoCapture(index)
         self._set_resolution(resolution)
+        self.calibraion = calibration
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
+
+    @classmethod
+    def from_calibration_file(cls, index: int, calibration_file: pathlike[str]) -> Camera:
+        if not calibration_file.exists():
+            raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
+        storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
+        resolution_node = storage.getNode("cameraResolution")
+        camera_matrix = storage.getNode("cameraMatrix").mat()
+        fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
+        cx, cy = camera_matrix[3, 1], camera_matrix[3, 2]
+        return cls(
+            index,
+            resolution=(
+                int(resolution_node.at(0).real()),
+                int(resolution_node.at(1).real()),
+            ),
+            calibration=(fx, fy, cx, cy),
+        )
 
     def _set_camera_property(self, property: int, value: int) -> None:
         self._camera.set(property, value)
