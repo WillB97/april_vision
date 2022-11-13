@@ -26,17 +26,22 @@ class Camera:
         self, 
         index: int, 
         resolution: Tuple[int, int], 
-        calibration: Optional[Tuple[float, float, float, float]]=None
+        calibration: Optional[Tuple[float, float, float, float]]=None,
+        **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
         self._set_resolution(resolution)
         self.calibration = calibration
 
+        # Set buffer length to 1
+        self._set_camera_property(cv2.CAP_PROP_BUFFERSIZE, 1)
+
         # Take and discard a camera capture
         _ = self._capture_single_frame()
 
     @classmethod
-    def from_calibration_file(cls, index: int, calibration_file: pathlike[str]) -> Camera:
+    def from_calibration_file(
+            cls, index: int, calibration_file: pathlike[str], **kwargs) -> Camera:
         if not calibration_file.exists():
             raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
         storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
@@ -51,6 +56,7 @@ class Camera:
                 int(resolution_node.at(1).real()),
             ),
             calibration=(fx, fy, cx, cy),
+            **kwargs,
         )
 
     def _set_camera_property(self, property: int, value: int) -> None:
