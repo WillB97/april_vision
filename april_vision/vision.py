@@ -30,7 +30,7 @@ class Camera:
     ) -> None:
         self._camera = cv2.VideoCapture(index)
         self._set_resolution(resolution)
-        self.calibraion = calibration
+        self.calibration = calibration
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
