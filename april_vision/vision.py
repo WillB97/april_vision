@@ -4,6 +4,7 @@ from typing import NamedTuple, Any, List, Tuple, Optional
 
 import cv2
 import numpy as np
+from pyapriltags import Detector
 
 from .marker import Marker
 
@@ -27,7 +28,7 @@ class Camera:
         self,
         index: int,
         resolution: Tuple[int, int],
-        calibration: Optional[Tuple[float, float, float, float]]=None,
+        calibration: Optional[Tuple[float, float, float, float]] = None,
         **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
@@ -39,6 +40,8 @@ class Camera:
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
+
+        self.detector = Detector(families='tag36h11', nthreads=4, quad_decimate=1)
 
     @classmethod
     def from_calibration_file(
@@ -84,7 +87,7 @@ class Camera:
             raise IOError("Failed to get frame from camera")
         return colour_frame
 
-    def _capture(self, fresh: bool=True) -> Frame:
+    def _capture(self, fresh: bool = True) -> Frame:
         if fresh:
             _ = self._capture_single_frame()
 
@@ -100,9 +103,9 @@ class Camera:
         self,
         frame: Frame,
         markers: List[Marker],
-        colour: Tuple[int, int, int]=(0, 0, 255),
-        line_thickness: int=1,
-        text_scale: float=1,
+        colour: Tuple[int, int, int] = (0, 0, 255),
+        line_thickness: int = 1,
+        text_scale: float = 1,
     ) -> Frame:
         for marker in markers:
             integer_corners = np.array(marker.pixel_corners, dtype=np.int32)
@@ -128,7 +131,7 @@ class Camera:
 
         return frame
 
-    def _save(self, frame: Frame, name: pathlike[str], colour: bool=True) -> None:
+    def _save(self, frame: Frame, name: pathlike[str], colour: bool = True) -> None:
         if colour:
             output_frame = frame.colour_frame
         else:
@@ -136,7 +139,7 @@ class Camera:
 
         path = Path(name)
         if not path.suffix:
-            # TODO log we added and extension
+            # TODO log we added an extension
             path = path.with_suffix(".jpg")
 
         cv2.imwrite(path, output_frame)

@@ -180,7 +180,9 @@ class Marker:
         self.__distance = int(hypotenuse(self._tvec)) if self.__pose else 0
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} id={self.id} size={self.size} type={self.marker_type.name} distance={self.distance}>"
+        return (
+            f"<{self.__class__.__name__} id={self.id} size={self.size} "
+            f"type={self.marker_type.name} distance={self.distance}>")
 
     @property  # noqa: A003
     def id(self) -> int:  # noqa: A003
