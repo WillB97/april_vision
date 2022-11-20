@@ -72,7 +72,7 @@ class SphericalCoordinate(NamedTuple):
         theta = atan2(y, x)
         phi = acos(z / dist)
         # cartesian coordinates are already in mm
-        return cls(dist, theta, phi)
+        return cls(int(dist), theta, phi)
 
 
 ThreeTuple = Tuple[float, float, float]
@@ -128,17 +128,40 @@ class Orientation:
 
     @property
     def yaw(self) -> float:
-        """Get rotation angle around z axis in radians."""
+        """
+        Get yaw of the marker, a rotation about the vertical axis, in radians.
+
+        Positive values indicate a rotation clockwise from the perspective of
+        the marker.
+
+        Zero values have the marker facing the camera square-on.
+        """
         return self._yaw_pitch_roll[0]
 
     @property
     def pitch(self) -> float:
-        """Get rotation angle around y axis in radians."""
+        """
+        Get pitch of the marker, a rotation about the transverse axis, in
+        radians.
+
+        Positive values indicate a rotation upwards from the perspective of the
+        marker.
+
+        Zero values have the marker facing the camera square-on.
+        """
         return self._yaw_pitch_roll[1]
 
     @property
     def roll(self) -> float:
-        """Get rotation angle around x axis in radians."""
+        """
+        Get roll of the marker, a rotation about the longitudinal axis, in
+        radians.
+
+        Positive values indicate a rotation clockwise from the perspective of
+        the marker.
+
+        Zero values have the marker facing the camera square-on.
+        """
         return self._yaw_pitch_roll[2]
 
     @property
@@ -176,7 +199,7 @@ class Marker:
         self.__id = marker.tag_id
         self.__pixel_center = PixelCoordinates(*marker.center.tolist())
         self._pixel_corners = marker.corners.tolist()
-        self.__size = size * 1000
+        self.__size = int(size * 1000)
         self._tvec = marker.pose_t
         self._rvec = marker.pose_R
         self.__pose = (self._tvec is not None and self._rvec is not None)
