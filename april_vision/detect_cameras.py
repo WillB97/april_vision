@@ -16,7 +16,7 @@ class CameraIdentifier(NamedTuple):
 class CalibratedCamera(NamedTuple):
     index: int
     name: str
-    pidvid: str
+    vidpid: str
     calibration: Optional[Path] = None
 
 
@@ -69,15 +69,15 @@ def linux_discovery() -> List[CameraIdentifier]:
         if m is None:
             continue
 
-        pid = int(m.groups()[0], 16)
-        vid = int(m.groups()[1], 16)
+        vid = int(m.groups()[0], 16)
+        pid = int(m.groups()[1], 16)
 
-        pidvid = f'{pid:04x}:{vid:04x}'
+        vidpid = f'{vid:04x}:{pid:04x}'
 
         cameras.append(CameraIdentifier(
             index=index,
             name=name,
-            pidvid=pidvid,
+            vidpid=vidpid,
         ))
 
     return cameras
