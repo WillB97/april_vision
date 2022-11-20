@@ -10,7 +10,7 @@ from pathlib import Path
 class CameraIdentifier(NamedTuple):
     index: int
     name: str
-    pidvid: str
+    vidpid: str
 
 
 class CalibratedCamera(NamedTuple):
@@ -20,7 +20,10 @@ class CalibratedCamera(NamedTuple):
     calibration: Optional[Path] = None
 
 
-def _find_cameras(calibration_locations: List[str], include_uncalibrated: bool = False) -> List[CalibratedCamera]:
+def _find_cameras(
+    calibration_locations: List[str],
+    include_uncalibrated: bool = False
+) -> List[CalibratedCamera]:
     platform = sys.platform()
 
     if platform.startswith("linux"):
@@ -37,7 +40,11 @@ def _find_cameras(calibration_locations: List[str], include_uncalibrated: bool =
     return valid_cameras
 
 
-def match_calibrations(cameras: List[CameraIdentifier], calibration_locations: List[str], include_uncalibrated: bool):
+def match_calibrations(
+    cameras: List[CameraIdentifier],
+    calibration_locations: List[str],
+    include_uncalibrated: bool
+) -> List[CalibratedCamera]:
     pass
 
 
@@ -92,7 +99,21 @@ def mac_discovery() -> List[CameraIdentifier]:
 
     for index, camera in enumerate(camera_list):
         try:
-            cameras.append(CameraIdentifier(index=index, name=camera["_name"]))
+            name = camera["_name"]
+            camera_data = camera['spcamera_model-id']
+
+            m = re.search(r'VendorID_([0-9]{1,5}) ProductID_([0-9]{1,5})', camera_data)
+
+            if m is None:
+                # Facetime cameras have no PID or VID
+                vidpid = camera_data
+            else:
+                vid = int(m.groups()[0], 10)
+                pid = int(m.groups()[1], 10)
+
+                vidpid = f'{vid:04x}:{pid:04x}'
+
+            cameras.append(CameraIdentifier(index=index, name=name, vidpid=vidpid))
         except KeyError:
             pass  # TODO log that we got a camera with no name
 
