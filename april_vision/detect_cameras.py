@@ -2,9 +2,12 @@ import re
 import sys
 import cv2
 import json
+import logging
 import subprocess
 from typing import List, Optional, NamedTuple
 from pathlib import Path
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CameraIdentifier(NamedTuple):
@@ -81,6 +84,7 @@ def linux_discovery() -> List[CameraIdentifier]:
 
         vidpid = f'{vid:04x}:{pid:04x}'
 
+        LOGGER.debug(f"Found camera at index {index}: {name}")
         cameras.append(CameraIdentifier(
             index=index,
             name=name,
@@ -113,9 +117,10 @@ def mac_discovery() -> List[CameraIdentifier]:
 
                 vidpid = f'{vid:04x}:{pid:04x}'
 
+            LOGGER.debug(f"Found camera at index {index}: {name}")
             cameras.append(CameraIdentifier(index=index, name=name, vidpid=vidpid))
         except KeyError:
-            pass  # TODO log that we got a camera with no name
+            LOGGER.warning(f"Camera {index} had missing fields: {camera}")
 
     return cameras
 
