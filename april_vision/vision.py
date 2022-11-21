@@ -16,6 +16,21 @@ class Frame(NamedTuple):
     grey_frame: Any
     colour_frame: Any
 
+    @classmethod
+    def from_colour_frame(cls, colour_frame: np.ndarray) -> 'Frame':
+        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
+
+        return cls(
+            grey_frame=grey_frame,
+            colour_frame=colour_frame,
+        )
+
+    @classmethod
+    def from_file(cls, filepath: Path) -> 'Frame':
+        colour_frame = cv2.imread(filepath)
+
+        return cls.from_colour_frame(colour_frame)
+
 
 def _find_camera():
     pass
@@ -124,9 +139,7 @@ class Camera:
             _ = self._capture_single_frame()
 
         colour_frame = self._capture_single_frame()
-        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
-
-        return Frame(grey_frame=grey_frame, colour_frame=colour_frame)
+        return Frame.from_colour_frame(colour_frame)
 
     def _detect(self, frame: Frame) -> List[Marker]:
         if self.calibration is None:
