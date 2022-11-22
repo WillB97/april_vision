@@ -126,11 +126,22 @@ def mac_discovery() -> List[CameraIdentifier]:
 
 
 def windows_discovery() -> List[CameraIdentifier]:
-    pass
+    return default_discovery()
 
 
 def default_discovery() -> List[CameraIdentifier]:
-    pass
+    found_cameras = []
+    for camera_id in range(8):
+        capture = cv2.VideoCapture(camera_id)
+        if capture.isOpened():
+            found_cameras.append(CameraIdentifier(
+                index=camera_id,
+                name=str(camera_id),
+                vidpid='',
+            ))
+        capture.release()
+
+    return found_cameras
 
 
 # def get_pidvid_cal_map(dir):
