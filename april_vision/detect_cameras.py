@@ -11,13 +11,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CameraIdentifier(NamedTuple):
-    index: int
+    index: int  # type: ignore[assignment]
     name: str
     vidpid: str
 
 
 class CalibratedCamera(NamedTuple):
-    index: int
+    index: int  # type: ignore[assignment]
     name: str
     vidpid: str
     calibration: Optional[Path] = None
@@ -27,7 +27,7 @@ def _find_cameras(
     calibration_locations: List[str],
     include_uncalibrated: bool = False
 ) -> List[CalibratedCamera]:
-    platform = sys.platform()
+    platform = sys.platform
 
     if platform.startswith("linux"):
         cameras = linux_discovery()
