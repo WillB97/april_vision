@@ -1,14 +1,10 @@
 """
-SR custom behaviour for Zoloto.
-
-- Overriding the camera so that only the markers we want are captured
-- Map the development and competition markers into the correct ranges
-- Determine the size of a marker given the ID
-- Determine which OpenCV calibration to use for the currently connected camera.
+j5 integration for april_vision
 """
+import os
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Type, Union, Container
+from typing import Dict, List, Optional, Set, Type, Union, Iterable
 
 from numpy.typing import NDArray
 
@@ -107,7 +103,8 @@ class AprilTagHardwareBackend(Backend):
                 str(camera_data.index),
                 cls(camera_data.index, calibration_file=camera_data.calibration),
             )
-            for camera_data in _find_cameras()  # TODO define calibration locations
+            for camera_data in _find_cameras(
+                os.environ.get('OPENCV_CALIBRATIONS', '.').split(':'))
         }
 
     def __init__(self, camera_id: int, calibration_file: Optional[Path]) -> None:
@@ -153,7 +150,7 @@ class AprilTagHardwareBackend(Backend):
         """Close the camera object."""
         self._cam.close()
 
-    def set_marker_sizes(self, marker_sizes: Dict[Container[int], int]) -> None:
+    def set_marker_sizes(self, marker_sizes: Dict[Iterable[int], int]) -> None:
         """Set the sizes of all the markers used in the game."""
         # Reset previously stored sizes
         self._cam.tag_sizes = {}
