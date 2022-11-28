@@ -35,6 +35,7 @@ class AprilCameraBoard(Board):
     """
 
     name: str = "AprilTag Camera Board"
+    _backend: 'AprilTagHardwareBackend'
 
     def __init__(self, serial: str, backend: 'AprilTagHardwareBackend'):
         self._serial = serial
@@ -106,10 +107,10 @@ class AprilTagHardwareBackend(Backend):
                 str(camera_data.index),
                 cls(camera_data.index, calibration_file=camera_data.calibration),
             )
-            for camera_data in _find_cameras()
+            for camera_data in _find_cameras()  # TODO define calibration locations
         }
 
-    def __init__(self, camera_id: int, calibration_file: Union[Path, str]) -> None:
+    def __init__(self, camera_id: int, calibration_file: Optional[Path]) -> None:
         self._cam = Camera.from_calibration_file(
             camera_id,
             calibration_file=calibration_file,
