@@ -196,7 +196,7 @@ class Marker:
         self.marker = marker
 
         self.__marker_type = MarkerType(marker.tag_family.decode('utf-8'))
-        self.__id = marker.tag_id
+        self._id = marker.tag_id
         self.__pixel_center = PixelCoordinates(*marker.center.tolist())
         self._pixel_corners = marker.corners.tolist()
         self.__size = int(size * 1000)
@@ -214,7 +214,7 @@ class Marker:
 
     @property  # noqa: A003
     def id(self) -> int:  # noqa: A003
-        return self.__id
+        return self._id
 
     @property
     def size(self) -> int:
@@ -259,7 +259,7 @@ class Marker:
 
     def as_dict(self) -> Dict[str, Any]:
         marker_dict = {
-            "id": self.__id,
+            "id": self._id,
             "size": self.__size,
             "pixel_corners": self._pixel_corners,
         }
