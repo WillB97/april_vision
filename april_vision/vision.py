@@ -211,17 +211,26 @@ class Camera:
     def capture(self) -> np.ndarray:
         return self._capture().colour_frame
 
-    def see(self) -> List[Marker]:
-        frame = self._capture()
+    def see(self, *, frame=None) -> List[Marker]:
+        if frame is None:
+            frame = self._capture()
+        else:
+            frame = Frame.from_colour_frame(frame)
         return self._detect(frame)
 
-    def see_ids(self) -> List[int]:
-        frame = self._capture()
+    def see_ids(self, *, frame=None) -> List[int]:
+        if frame is None:
+            frame = self._capture()
+        else:
+            frame = Frame.from_colour_frame(frame)
         markers = self._detect(frame)
         return [marker.id for marker in markers]
 
-    def save(self, name):
-        frame = self._capture()
+    def save(self, name, *, frame=None):
+        if frame is None:
+            frame = self._capture()
+        else:
+            frame = Frame.from_colour_frame(frame)
         markers = self._detect(frame)
         frame = self._annotate(
             frame,
