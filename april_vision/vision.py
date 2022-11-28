@@ -1,7 +1,7 @@
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Callable
 
 import cv2
 import numpy as np
@@ -89,6 +89,14 @@ class Camera:
             quad_decimate=quad_decimate,
         )
 
+        self.capture_filter: Callable[[np.ndarray], np.ndarray]
+        self.marker_filter: Callable[[List[Marker]], List[Marker]]
+        self.detection_hook: Callable[[Frame, List[Marker]], None]
+
+        self.capture_filter = lambda frame: frame
+        self.marker_filter = lambda markers: markers
+        self.detection_hook = lambda frame, markers: None
+
     @classmethod
     def from_calibration_file(
             cls, index: int, calibration_file: PathLike[str], **kwargs) -> 'Camera':
@@ -136,9 +144,17 @@ class Camera:
 
     def _capture(self, fresh: bool = True) -> Frame:
         if fresh:
+            # Discard a frame to remove the old frame in the buffer
             _ = self._capture_single_frame()
 
         colour_frame = self._capture_single_frame()
+
+        try:
+            # hook to allow modification of the captured frame
+            colour_frame = self.capture_filter(colour_frame)
+        except Exception:
+            pass
+
         return Frame.from_colour_frame(colour_frame)
 
     def _detect(self, frame: Frame) -> List[Marker]:
@@ -160,6 +176,18 @@ class Camera:
                 tag_size,
                 aruco_orientation=self._aruco_orientation
             ))
+
+        try:
+            # hook to filter and modify markers
+            markers = self.marker_filter(markers)
+        except Exception:
+            pass
+
+        try:
+            # hook to extract a frame and its markers
+            self.detection_hook(frame, markers)
+        except Exception:
+            pass
 
         return markers
 
