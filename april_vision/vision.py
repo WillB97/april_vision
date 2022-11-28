@@ -1,7 +1,7 @@
 import logging
-from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Callable
+from typing import (Any, Callable, Dict, List, NamedTuple, Optional, Tuple,
+                    Union)
 
 import cv2
 import numpy as np
@@ -26,14 +26,10 @@ class Frame(NamedTuple):
         )
 
     @classmethod
-    def from_file(cls, filepath: Path) -> 'Frame':
+    def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
         colour_frame = cv2.imread(filepath)
 
         return cls.from_colour_frame(colour_frame)
-
-
-def _find_camera():
-    pass
 
 
 # self._camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
@@ -63,10 +59,11 @@ class Camera:
             self.tag_sizes = {}
         else:
             self.tag_sizes = tag_sizes
-        try:
-            self._set_resolution(resolution)
-        except AssertionError as e:
-            LOGGER.warning(f"Failed to set resolution: {e}")
+        if resolution != (0, 0):
+            try:
+                self._set_resolution(resolution)
+            except AssertionError as e:
+                LOGGER.warning(f"Failed to set resolution: {e}")
 
         if camera_parameters is None:
             camera_parameters = []
@@ -99,10 +96,16 @@ class Camera:
 
     @classmethod
     def from_calibration_file(
-            cls, index: int, calibration_file: PathLike[str], **kwargs) -> 'Camera':
-        calibration_file = Path(calibration_file)
+            cls, index: int, calibration_file: Union[str, Path, None], **kwargs) -> 'Camera':
+        if calibration_file is not None:
+            calibration_file = Path(calibration_file)
+        else:
+            return cls(index, resolution=(0, 0), **kwargs)
+
         if not calibration_file.exists():
-            raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
+            LOGGER.warning(f"Calibrations not found: {calibration_file}")
+            return cls(index, resolution=(0, 0), **kwargs)
+
         storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
         resolution_node = storage.getNode("cameraResolution")
         camera_matrix = storage.getNode("cameraMatrix").mat()
@@ -143,7 +146,7 @@ class Camera:
         return colour_frame
 
     def _capture(self, fresh: bool = True) -> Frame:
-        if fresh:
+        if fresh is True:
             # Discard a frame to remove the old frame in the buffer
             _ = self._capture_single_frame()
 
@@ -223,7 +226,7 @@ class Camera:
 
         return frame
 
-    def _save(self, frame: Frame, name: PathLike[str], colour: bool = True) -> None:
+    def _save(self, frame: Frame, name: Union[str, Path], colour: bool = True) -> None:
         if colour:
             output_frame = frame.colour_frame
         else:
@@ -241,30 +244,30 @@ class Camera:
 
     def see(self, *, frame: Optional[np.ndarray] = None) -> List[Marker]:
         if frame is None:
-            frame = self._capture()
+            frames = self._capture()
         else:
-            frame = Frame.from_colour_frame(frame)
-        return self._detect(frame)
+            frames = Frame.from_colour_frame(frame)
+        return self._detect(frames)
 
     def see_ids(self, *, frame: Optional[np.ndarray] = None) -> List[int]:
         if frame is None:
-            frame = self._capture()
+            frames = self._capture()
         else:
-            frame = Frame.from_colour_frame(frame)
-        markers = self._detect(frame)
+            frames = Frame.from_colour_frame(frame)
+        markers = self._detect(frames)
         return [marker.id for marker in markers]
 
-    def save(self, name: str, *, frame: Optional[np.ndarray] = None) -> None:
+    def save(self, name: Union[str, Path], *, frame: Optional[np.ndarray] = None) -> None:
         if frame is None:
-            frame = self._capture()
+            frames = self._capture()
         else:
-            frame = Frame.from_colour_frame(frame)
-        markers = self._detect(frame)
-        frame = self._annotate(
-            frame,
+            frames = Frame.from_colour_frame(frame)
+        markers = self._detect(frames)
+        frames = self._annotate(
+            frames,
             markers
         )
-        self._save(frame, name)
+        self._save(frames, name)
 
     def close(self) -> None:
         self._camera.release()
