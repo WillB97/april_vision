@@ -4,7 +4,7 @@ import cv2
 import json
 import logging
 import subprocess
-from typing import List, Optional, NamedTuple
+from typing import Dict, List, Optional, NamedTuple
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -43,12 +43,49 @@ def _find_cameras(
     return valid_cameras
 
 
+def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str, Path]:
+    calibration_map: Dict[str, Path] = {}
+    for location in calibration_locations:
+        for calibration_file in Path(location).glob('*.xml'):
+            storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
+
+            node = storage.getNode('pidvid')
+            if node.isSeq():
+                pidvids = [node.at(i).string() for i in range(node.size())]
+            else:
+                pidvids = [node.string()]
+
+            for pidvid in pidvids:
+                calibration_map[pidvid] = calibration_file.absolute()
+
+    return calibration_map
+
+
 def match_calibrations(
     cameras: List[CameraIdentifier],
     calibration_locations: List[str],
     include_uncalibrated: bool
 ) -> List[CalibratedCamera]:
-    pass
+    calibrated_cameras: List[CalibratedCamera] = []
+    calibration_map = generate_calibration_file_map(calibration_locations)
+
+    for camera in cameras:
+        try:
+            calibrated_cameras.append(CalibratedCamera(
+                index=camera.index,
+                name=camera.name,
+                vidpid=camera.vidpid,
+                calibration=calibration_map[camera.vidpid],
+            ))
+        except KeyError:
+            if include_uncalibrated is True:
+                calibrated_cameras.append(CalibratedCamera(
+                    index=camera.index,
+                    name=camera.name,
+                    vidpid=camera.vidpid,
+                ))
+
+    return calibrated_cameras
 
 
 def linux_discovery() -> List[CameraIdentifier]:
@@ -142,21 +179,3 @@ def default_discovery() -> List[CameraIdentifier]:
         capture.release()
 
     return found_cameras
-
-
-# def get_pidvid_cal_map(dir):
-#     mapping = []
-
-#     for file in dir:
-#         s = april_vision.Camera.from_calibration_file(0, filename)
-
-#         n = s.getNode('pidvid')
-#         if n.isSeq():
-#             pidvids = [n.at(i).string() for i in range(n.size())]
-#         else:
-#             pidvids = [n.string()]
-
-#         for pidvid in pidvids:
-#             mapping.append(
-#                 (pidvid, filename)
-#             )
