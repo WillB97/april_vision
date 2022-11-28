@@ -55,7 +55,7 @@ class AprilCameraBoard(Board):
         Close the camera.
         The camera will no longer work after this method is called.
         """
-        self._backend.close_camera(self._identifier)
+        self._backend.close_camera()
 
     @staticmethod
     def supported_components() -> Set[Type[Component]]:
@@ -70,7 +70,7 @@ class AprilCameraBoard(Board):
             currently unused.
         :returns: list of markers that the camera could see.
         """
-        return self._backend.see(self._identifier)
+        return self._backend.see()
 
     def see_ids(self) -> List[int]:
         """
@@ -78,7 +78,7 @@ class AprilCameraBoard(Board):
         This method returns just the marker IDs that are visible.
         :returns: A list of IDs for the markers that were visible.
         """
-        return self._backend.see_ids(self._identifier)
+        return self._backend.see_ids()
 
     def capture(self) -> NDArray:
         """
@@ -89,7 +89,7 @@ class AprilCameraBoard(Board):
 
     def save(self, path: Union[Path, str]) -> None:
         """Save an annotated image to a path."""
-        self._backend.save_annotated_image(self._identifier, path)
+        self._backend.save_annotated_image(path)
 
 
 class AprilTagHardwareBackend(Backend):
@@ -117,25 +117,21 @@ class AprilTagHardwareBackend(Backend):
 
     def see(
         self,
-        identifier: int,
     ) -> List[Marker]:
         """
         Get markers that the camera can see.
-        :param identifier: Camera identifier, ignored.
         """
         return self._cam.see()
 
-    def save_annotated_image(self, identifier: int, file: Path) -> None:
+    def save_annotated_image(self, file: Union[Path, str]) -> None:
         """
         Save an annotated image to a file.
-        :param identifier: Camera identifier, ignored.
         """
         self._cam.save(file)
 
-    def see_ids(self, identifier: int) -> List[int]:
+    def see_ids(self) -> List[int]:
         """
         Get a list of visible marker IDs.
-        :param identifier: Camera identifier, ignored.
         :returns: List of marker IDs that were visible.
         """
         return self._cam.see_ids()
@@ -152,7 +148,7 @@ class AprilTagHardwareBackend(Backend):
         """The firmware version of the board."""
         return f"April camera v{__version__}"
 
-    def close_camera(self, identifier: int) -> None:
+    def close_camera(self) -> None:
         """Close the camera object."""
         self._cam.close()
 
