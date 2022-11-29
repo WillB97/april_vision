@@ -10,6 +10,11 @@ from pyapriltags import Detection
 
 
 class MarkerType(Enum):
+    """
+    The available tag families.
+
+    To support Apriltag 2 libraries use tag36h11.
+    """
     APRILTAG_16H5 = 'tag16h5'
     APRILTAG_25H9 = 'tag25h9'
     APRILTAG_36H11 = 'tag36h11'
@@ -22,6 +27,11 @@ class MarkerType(Enum):
 
 class PixelCoordinates(NamedTuple):
     """
+    Coordinates within an image made up from pixels.
+
+    Floating point type is used to allow for subpixel detected locations 
+    to be represented.
+
     :param float x: X coordinate
     :param float y: Y coordinate
     """
@@ -32,7 +42,9 @@ class PixelCoordinates(NamedTuple):
 
 class CartesianCoordinates(NamedTuple):
     """
-    A 3 dimesional cartesian coordinate in the standard right-handed cartesian system
+    A 3 dimesional cartesian coordinate in the standard right-handed cartesian system.
+    Origin is at the camera.
+    
     :param float x: X coordinate, positive is forward, in millimeters
     :param float y: Y coordinate, positive is left, in millimeters
     :param float z: Z coordinate, positive is up, in millimeters
@@ -57,12 +69,22 @@ class CartesianCoordinates(NamedTuple):
 
 class SphericalCoordinate(NamedTuple):
     """
-    :param float theta: the azimuthal angle in the xy-plane from the x-axis, in radians
-    :param float phi: the polar angle from the z-axis, in radians
-    :param float dist: Magnitude, in millimeters
+    The convential spherical coordinate in mathematical notation where θ is
+    a rotation around the vertical axis and φ is measured as the angle from
+    the vertical axis.
+    More information: https://mathworld.wolfram.com/SphericalCoordinates.html
+
+    :param float distance: Radial distance from the origin, in millimeters.
+    :param float theta: Azimuth angle, θ, in radians. This is the angle from
+        directly in front of the camera to the vector which points to the
+        location in the horizontal plane. A positive value indicates a
+        counter-clockwise rotation. Zero is at the centre of the image.
+    :param float phi: Polar angle, φ, in radians. This is the angle "down"
+        from the vertical axis to the vector which points to the location.
+        Zero is directly upward.
     """
 
-    dist: int
+    distance: int
     theta: float
     phi: float
 
@@ -113,17 +135,32 @@ class Orientation:
 
     @property
     def rot_x(self) -> float:
-        """Get rotation angle around x axis in radians."""
+        """
+        Get rotation angle around X axis in radians.
+
+        The roll rotation with zero as the April Tags marker reference point 
+        at the top left of the marker.
+        """
         return self.roll
 
     @property
     def rot_y(self) -> float:
-        """Get rotation angle around y axis in radians."""
+        """
+        Get rotation angle around Y axis in radians.
+
+        The pitch rotation with zero as the marker facing the camera square-on 
+        and a positive rotation being upward.
+        """
         return self.pitch
 
     @property
     def rot_z(self) -> float:
-        """Get rotation angle around z axis in radians."""
+        """
+        Get rotation angle around Z axis in radians.
+
+        The yaw rotation with zero as the marker facing the camera square-on 
+        and a positive rotation being clockwise.
+        """
         return self.yaw
 
     @property
