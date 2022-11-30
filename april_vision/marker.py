@@ -226,7 +226,12 @@ class Orientation:
             quaternion *= self.__MARKER_ORIENTATION_CORRECTION
 
         self.__rotation_matrix = quaternion.rotation_matrix
-        self._quaternion = quaternion
+
+        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
+            raise NotImplementedError()
+        else:
+            self._quaternion = quaternion
+
         self._yaw_pitch_roll = quaternion.yaw_pitch_roll
 
     @property
