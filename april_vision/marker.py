@@ -46,9 +46,38 @@ class CartesianCoordinates(NamedTuple):
     A 3 dimesional cartesian coordinate in the standard right-handed cartesian system.
     Origin is at the camera.
 
-    :param float x: X coordinate, positive is forward, in millimeters
-    :param float y: Y coordinate, positive is left, in millimeters
-    :param float z: Z coordinate, positive is up, in millimeters
+    The X axis extends directly away from the camera. Zero is at the camera.
+    Increasing values indicate greater distance from the camera.
+
+    The Y axis is horizontal relative to the camera's perspective, i.e: right
+    to left within the frame of the image. Zero is at the centre of the image.
+    Increasing values indicate greater distance to the left.
+
+    The Z axis is vertical relative to the camera's perspective, i.e: down to
+    up within the frame of the image. Zero is at the centre of the image.
+    Increasing values indicate greater distance above the centre of the image.
+
+    More information: https://w.wiki/5zbE
+
+    Legacy:
+    The X axis is horizontal relative to the camera's perspective, i.e: left &
+    right within the frame of the image. Zero is at the centre of the image.
+    Increasing values indicate greater distance to the right.
+
+    The Y axis is vertical relative to the camera's perspective, i.e: up & down
+    within the frame of the image. Zero is at the centre of the image.
+    Increasing values indicate greater distance below the centre of the image.
+
+    The Z axis extends directly away from the camera. Zero is at the camera.
+    Increasing values indicate greater distance from the camera.
+
+    These match traditional cartesian coordinates when the camera is facing
+    upwards.
+
+
+    :param float x: X coordinate, in millimeters
+    :param float y: Y coordinate, in millimeters
+    :param float z: Z coordinate, in millimeters
     """
 
     x: float
@@ -153,10 +182,10 @@ class SphericalCoordinate(NamedTuple):
         """
         _x, _y, _z = z, -x, -y
 
-        dist = hypotenuse([_x, _y, _z]) * 1000
+        dist = hypotenuse([_x, _y, _z])
         theta = atan2(_y, _x)
         phi = acos(_z / dist)
-        return cls(int(dist), theta, phi)
+        return cls(int(dist * 1000), theta, phi)
 
 
 ThreeTuple = Tuple[float, float, float]
@@ -202,8 +231,15 @@ class Orientation:
 
         The roll rotation with zero as the April Tags marker reference point
         at the top left of the marker.
+
+        Legacy: The inverted pitch rotation with zero as the marker facing
+                directly away from the camera and a positive rotation being
+                downward.
+                The practical effect of this is that an April Tags marker
+                facing the camera square-on will have a value of ``pi`` (or
+                equivalently ``-pi``).
         """
-        return self.roll
+        return self.yaw_pitch_roll[2]
 
     @property
     def rot_y(self) -> float:
@@ -212,8 +248,12 @@ class Orientation:
 
         The pitch rotation with zero as the marker facing the camera square-on
         and a positive rotation being upward.
+
+        Legacy: The inverted yaw rotation with zero as the marker facing the
+                camera square-on and a positive rotation being
+                counter-clockwise.
         """
-        return self.pitch
+        return self.yaw_pitch_roll[1]
 
     @property
     def rot_z(self) -> float:
@@ -222,8 +262,11 @@ class Orientation:
 
         The yaw rotation with zero as the marker facing the camera square-on
         and a positive rotation being clockwise.
+
+        Legacy: The roll rotation with zero as the marker facing the camera
+                square-on and a positive rotation being clockwise.
         """
-        return self.yaw
+        return self.yaw_pitch_roll[0]
 
     @property
     def yaw(self) -> float:
@@ -262,6 +305,14 @@ class Orientation:
         Zero values have the marker facing the camera square-on.
         """
         return self._yaw_pitch_roll[2]
+
+    @property
+    def yaw_pitch_roll(self) -> ThreeTuple:
+        """
+        Get the equivalent yaw-pitch-roll angles.
+        Specifically intrinsic Tait-Bryan angles following the z-y'-x'' convention.
+        """
+        return self._quaternion.yaw_pitch_roll
 
     @property
     def rotation_matrix(self) -> RotationMatrix:

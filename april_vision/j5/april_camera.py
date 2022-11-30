@@ -60,22 +60,22 @@ class AprilCameraBoard(Board):
         return set()
 
     # Proxy methods from MarkerCamera object
-    def see(self, *, eager: bool = True) -> List[Marker]:
+    def see(self, *, eager: bool = True, frame: Optional[NDArray] = None) -> List[Marker]:
         """
         Capture an image and identify fiducial markers.
         :param eager: Process the pose estimations of markers immediately,
             currently unused.
         :returns: list of markers that the camera could see.
         """
-        return self._backend.see()
+        return self._backend.see(frame=frame)
 
-    def see_ids(self) -> List[int]:
+    def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
         """
         Capture an image and identify fiducial markers.
         This method returns just the marker IDs that are visible.
         :returns: A list of IDs for the markers that were visible.
         """
-        return self._backend.see_ids()
+        return self._backend.see_ids(frame=frame)
 
     def capture(self) -> NDArray:
         """
@@ -84,9 +84,9 @@ class AprilCameraBoard(Board):
         """
         return self._backend.capture_frame()
 
-    def save(self, path: Union[Path, str]) -> None:
+    def save(self, path: Union[Path, str], *, frame: Optional[NDArray] = None) -> None:
         """Save an annotated image to a path."""
-        self._backend.save_annotated_image(path)
+        self._backend.save_annotated_image(path, frame=frame)
 
 
 class AprilTagHardwareBackend(Backend):
@@ -115,24 +115,28 @@ class AprilTagHardwareBackend(Backend):
 
     def see(
         self,
+        *,
+        frame: Optional[NDArray] = None,
     ) -> List[Marker]:
         """
         Get markers that the camera can see.
         """
-        return self._cam.see()
+        return self._cam.see(frame=frame)
 
-    def save_annotated_image(self, file: Union[Path, str]) -> None:
+    def save_annotated_image(
+        self, file: Union[Path, str], *, frame: Optional[NDArray] = None,
+    ) -> None:
         """
         Save an annotated image to a file.
         """
-        self._cam.save(file)
+        self._cam.save(file, frame=frame)
 
-    def see_ids(self) -> List[int]:
+    def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
         """
         Get a list of visible marker IDs.
         :returns: List of marker IDs that were visible.
         """
-        return self._cam.see_ids()
+        return self._cam.see_ids(frame=frame)
 
     def capture_frame(self) -> NDArray:
         """
