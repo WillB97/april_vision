@@ -152,11 +152,8 @@ class Camera:
 
         colour_frame = self._capture_single_frame()
 
-        try:
-            # hook to allow modification of the captured frame
-            colour_frame = self.capture_filter(colour_frame)
-        except Exception:
-            pass
+        # hook to allow modification of the captured frame
+        colour_frame = self.capture_filter(colour_frame)
 
         return Frame.from_colour_frame(colour_frame)
 
@@ -180,17 +177,11 @@ class Camera:
                 aruco_orientation=self._aruco_orientation
             ))
 
-        try:
-            # hook to filter and modify markers
-            markers = self.marker_filter(markers)
-        except Exception:
-            pass
+        # hook to filter and modify markers
+        markers = self.marker_filter(markers)
 
-        try:
-            # hook to extract a frame and its markers
-            self.detection_hook(frame, markers)
-        except Exception:
-            pass
+        # hook to extract a frame and its markers
+        self.detection_hook(frame, markers)
 
         return markers
 
