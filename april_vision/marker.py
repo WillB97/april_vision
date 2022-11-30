@@ -1,5 +1,6 @@
+import os
 from enum import Enum
-from math import acos, atan2
+from math import pi, acos, atan2
 from typing import NamedTuple, List, Dict, Any, Tuple
 
 import numpy as np
@@ -29,7 +30,7 @@ class PixelCoordinates(NamedTuple):
     """
     Coordinates within an image made up from pixels.
 
-    Floating point type is used to allow for subpixel detected locations 
+    Floating point type is used to allow for subpixel detected locations
     to be represented.
 
     :param float x: X coordinate
@@ -44,7 +45,7 @@ class CartesianCoordinates(NamedTuple):
     """
     A 3 dimesional cartesian coordinate in the standard right-handed cartesian system.
     Origin is at the camera.
-    
+
     :param float x: X coordinate, positive is forward, in millimeters
     :param float y: Y coordinate, positive is left, in millimeters
     :param float z: Z coordinate, positive is up, in millimeters
@@ -60,11 +61,16 @@ class CartesianCoordinates(NamedTuple):
         Convert coordinate system to standard right-handed cartesian system
         The pose estimation coordinate system has the origin at the camera center.
 
+        Also converts units to millimeters.
+
         :param float x: The x-axis is to the right in the image taken by the camera.
         :param float y: The y-axis is down in the image taken by the camera.
         :param float z: The z-axis points from the camera center out the camera lens.
         """
-        return cls(z * 1000, -x * 1000, -y * 1000)
+        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
+            return cls(x=x * 1000, y=y * 1000, z=z * 1000)
+        else:
+            return cls(x=z * 1000, y=-x * 1000, z=-y * 1000)
 
 
 class SphericalCoordinate(NamedTuple):
@@ -88,12 +94,68 @@ class SphericalCoordinate(NamedTuple):
     theta: float
     phi: float
 
+    @property
+    def rot_x(self) -> float:
+        """
+        Rotation around the x-axis.
+        Conventional:  This is unused.
+        Legacy: A rotation up to down around the camera, in radians. Values
+                increase as the marker moves towards the bottom of the image.
+                A zero value is halfway up the image.
+        """
+        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
+            return self.phi - (pi / 2)
+        else:
+            raise AttributeError(
+                "That axis is not available in the selected coordinate system.")
+
+    @property
+    def rot_y(self) -> float:
+        """
+        Rotation around the y-axis.
+        Conventional: A rotation up to down around the camera, in radians.
+                      Values increase as the marker moves towards the bottom
+                      of the image. A zero value is halfway up the image.
+        Legacy: A rotation left to right around the camera, in radians. Values
+                increase as the marker moves towards the right of the image.
+                A zero value is on the centerline of the image.
+        """
+        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
+            return -self.theta
+        else:
+            return self.phi - (pi / 2)
+
+    @property
+    def rot_z(self) -> float:
+        """
+        Rotation around the z-axis.
+        Conventional: A rotation right to left around the camera, in radians.
+                      Values increase as the marker moves towards the left of
+                      the image. A zero value is on the centerline of the
+                      image.
+        Legacy: This is unused.
+        """
+        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
+            raise AttributeError(
+                "That axis is not available in the selected coordinate system.")
+        else:
+            return self.theta
+
     @classmethod
-    def from_cartesian(cls, x: float, y: float, z: float):
-        dist = hypotenuse([x, y, z])
-        theta = atan2(y, x)
-        phi = acos(z / dist)
-        # cartesian coordinates are already in mm
+    def from_tvec(cls, x: float, y: float, z: float):
+        """
+        Convert coordinate system to standard right-handed cartesian system
+        The pose estimation coordinate system has the origin at the camera center.
+
+        :param float x: The x-axis is to the right in the image taken by the camera.
+        :param float y: The y-axis is down in the image taken by the camera.
+        :param float z: The z-axis points from the camera center out the camera lens.
+        """
+        _x, _y, _z = z, -x, -y
+
+        dist = hypotenuse([_x, _y, _z]) * 1000
+        theta = atan2(_y, _x)
+        phi = acos(_z / dist)
         return cls(int(dist), theta, phi)
 
 
@@ -138,7 +200,7 @@ class Orientation:
         """
         Get rotation angle around X axis in radians.
 
-        The roll rotation with zero as the April Tags marker reference point 
+        The roll rotation with zero as the April Tags marker reference point
         at the top left of the marker.
         """
         return self.roll
@@ -148,7 +210,7 @@ class Orientation:
         """
         Get rotation angle around Y axis in radians.
 
-        The pitch rotation with zero as the marker facing the camera square-on 
+        The pitch rotation with zero as the marker facing the camera square-on
         and a positive rotation being upward.
         """
         return self.pitch
@@ -158,7 +220,7 @@ class Orientation:
         """
         Get rotation angle around Z axis in radians.
 
-        The yaw rotation with zero as the marker facing the camera square-on 
+        The yaw rotation with zero as the marker facing the camera square-on
         and a positive rotation being clockwise.
         """
         return self.yaw
@@ -242,7 +304,7 @@ class Marker:
         self.__pose = (self._tvec is not None and self._rvec is not None)
         self.__aruco_orientation = aruco_orientation
 
-        self.__distance = int(hypotenuse(self._tvec)) if self.__pose else 0
+        self.__distance = int(hypotenuse(self._tvec) * 1000) if self.__pose else 0
 
     def __repr__(self) -> str:
         return (
@@ -274,7 +336,9 @@ class Marker:
 
     @property
     def distance(self) -> int:
-        return self.__distance
+        if self.__pose:
+            return self.__distance
+        return 0
 
     @property
     def orientation(self) -> Orientation:
@@ -285,7 +349,7 @@ class Marker:
     @property
     def spherical(self) -> SphericalCoordinate:
         if self.__pose:
-            return SphericalCoordinate.from_cartesian(*self.cartesian)
+            return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
         return SphericalCoordinate(0, 0, 0)
 
     @property
