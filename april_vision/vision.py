@@ -228,7 +228,7 @@ class Camera:
             LOGGER.warning("No file extension given, defaulting to jpg")
             path = path.with_suffix(".jpg")
 
-        cv2.imwrite(path, output_frame)
+        cv2.imwrite(str(path), output_frame)
 
     def capture(self) -> np.ndarray:
         return self._capture().colour_frame

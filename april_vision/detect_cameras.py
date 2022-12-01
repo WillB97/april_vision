@@ -49,7 +49,7 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
         for calibration_file in Path(location).glob('*.xml'):
             storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
 
-            node = storage.getNode('pidvid')
+            node = storage.getNode('vidpid')
             if node.isSeq():
                 pidvids = [node.at(i).string() for i in range(node.size())]
             else:
@@ -68,6 +68,7 @@ def match_calibrations(
 ) -> List[CalibratedCamera]:
     calibrated_cameras: List[CalibratedCamera] = []
     calibration_map = generate_calibration_file_map(calibration_locations)
+    LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
     for camera in cameras:
         try:
@@ -77,7 +78,10 @@ def match_calibrations(
                 vidpid=camera.vidpid,
                 calibration=calibration_map[camera.vidpid],
             ))
+            LOGGER.debug(
+                f"Found calibration for {camera.name} in {calibration_map[camera.vidpid]}")
         except KeyError:
+            LOGGER.debug(f"No calibration found for for {camera.name}")
             if include_uncalibrated is True:
                 calibrated_cameras.append(CalibratedCamera(
                     index=camera.index,
@@ -171,6 +175,7 @@ def default_discovery() -> List[CameraIdentifier]:
     for camera_id in range(8):
         capture = cv2.VideoCapture(camera_id)
         if capture.isOpened():
+            LOGGER.debug(f"Found camera at index {camera_id}")
             found_cameras.append(CameraIdentifier(
                 index=camera_id,
                 name=str(camera_id),

@@ -173,7 +173,7 @@ class AprilTagHardwareBackend(Backend):
     def marker_filter(self, markers: List[Marker]) -> List[Marker]:
         filtered_markers: List[Marker] = []
         for marker in markers:
-            if marker in self._cam.tag_sizes.keys():
+            if marker._id in self._cam.tag_sizes.keys():
                 marker._id -= self._marker_offset
                 filtered_markers.append(marker)
 
