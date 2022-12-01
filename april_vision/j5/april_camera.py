@@ -19,8 +19,6 @@ from ..detect_cameras import _find_cameras
 
 LOGGER = logging.getLogger(__name__)
 
-# TODO add filter hooks to do "markers in game" and marker offset
-
 
 class AprilCameraBoard(Board):
     """
@@ -112,6 +110,8 @@ class AprilTagHardwareBackend(Backend):
             camera_id,
             calibration_file=calibration_file,
         )
+        self._marker_offset = 0
+        self._cam.marker_filter = self.marker_filter
 
     def see(
         self,
@@ -154,12 +154,27 @@ class AprilTagHardwareBackend(Backend):
         """Close the camera object."""
         self._cam.close()
 
-    def set_marker_sizes(self, marker_sizes: Dict[Iterable[int], int]) -> None:
+    def set_marker_sizes(
+        self,
+        marker_sizes: Dict[Iterable[int], int],
+        marker_offset: int = 0
+    ) -> None:
         """Set the sizes of all the markers used in the game."""
+        # store marker offset to be used by the filter
+        self._marker_offset = marker_offset
         # Reset previously stored sizes
         self._cam.tag_sizes = {}
         for marker_ids, marker_size in marker_sizes.items():
             # Unroll generators to give direct lookup
             for marker_id in marker_ids:
                 # Convert to meters
-                self._cam.tag_sizes[marker_id] = float(marker_size) / 1000
+                self._cam.tag_sizes[marker_id + marker_offset] = float(marker_size) / 1000
+
+    def marker_filter(self, markers: List[Marker]) -> List[Marker]:
+        filtered_markers: List[Marker] = []
+        for marker in markers:
+            if marker in self._cam.tag_sizes.keys():
+                marker._id -= self._marker_offset
+                filtered_markers.append(marker)
+
+        return filtered_markers
