@@ -27,7 +27,7 @@ class Frame(NamedTuple):
 
     @classmethod
     def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
-        colour_frame = cv2.imread(filepath)
+        colour_frame = cv2.imread(str(filepath))
 
         return cls.from_colour_frame(colour_frame)
 
