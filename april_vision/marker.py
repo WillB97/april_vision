@@ -349,7 +349,6 @@ class Marker:
     def __init__(
         self,
         marker: Detection,
-        size: float,
         *,
         aruco_orientation: bool = True,
     ):
@@ -359,7 +358,7 @@ class Marker:
         self._id = marker.tag_id
         self.__pixel_center = PixelCoordinates(*marker.center.tolist())
         self._pixel_corners = marker.corners.tolist()
-        self.__size = int(size * 1000)
+        self.__size = int(marker.tag_size * 1000) if marker.tag_size is not None else 0
         self._tvec = marker.pose_t
         self._rvec = marker.pose_R
         self.__pose = (self._tvec is not None and self._rvec is not None)

@@ -170,10 +170,8 @@ class Camera:
 
         markers: List[Marker] = []
         for detection in detections:
-            tag_size = self.tag_sizes.get(detection.tag_id, 0)
             markers.append(Marker(
                 detection,
-                tag_size,
                 aruco_orientation=self._aruco_orientation
             ))
 
