@@ -23,7 +23,7 @@ class CalibratedCamera(NamedTuple):
     calibration: Optional[Path] = None
 
 
-def _find_cameras(
+def find_cameras(
     calibration_locations: List[str],
     include_uncalibrated: bool = False
 ) -> List[CalibratedCamera]:

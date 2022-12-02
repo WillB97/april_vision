@@ -15,7 +15,7 @@ from j5.components.component import Component
 from .._version import __version__
 from ..marker import MarkerType, Marker
 from ..vision import Camera
-from ..detect_cameras import _find_cameras
+from ..detect_cameras import find_cameras
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class AprilTagHardwareBackend(Backend):
                 str(camera_data.index),
                 cls(camera_data.index, calibration_file=camera_data.calibration),
             )
-            for camera_data in _find_cameras(
+            for camera_data in find_cameras(
                 os.environ.get('OPENCV_CALIBRATIONS', '.').split(':'))
         }
 
