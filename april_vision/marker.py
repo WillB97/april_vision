@@ -405,19 +405,19 @@ class Marker:
     def orientation(self) -> Orientation:
         if self.__pose:
             return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
-        return Orientation(np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]))
+        raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
     def spherical(self) -> SphericalCoordinate:
         if self.__pose:
             return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
-        return SphericalCoordinate(0, 0, 0)
+        raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
     def cartesian(self) -> CartesianCoordinates:
         if self.__pose:
             return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
-        return CartesianCoordinates(0, 0, 0)
+        raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     def as_dict(self) -> Dict[str, Any]:
         marker_dict = {
