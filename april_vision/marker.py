@@ -361,10 +361,12 @@ class Marker:
         self.__size = int(marker.tag_size * 1000) if marker.tag_size is not None else 0
         self._tvec = marker.pose_t
         self._rvec = marker.pose_R
-        self.__pose = (self._tvec is not None and self._rvec is not None)
         self.__aruco_orientation = aruco_orientation
 
-        self.__distance = int(hypotenuse(self._tvec) * 1000) if self.__pose else 0
+        if self._tvec is not None:
+            self.__distance = int(hypotenuse(self._tvec) * 1000)
+        else:
+            self.__distance = 0
 
     def __repr__(self) -> str:
         return (
@@ -396,25 +398,25 @@ class Marker:
 
     @property
     def distance(self) -> int:
-        if self.__pose:
+        if self._tvec is not None and self._rvec is not None:
             return self.__distance
         return 0
 
     @property
     def orientation(self) -> Orientation:
-        if self.__pose:
+        if self._rvec is not None:
             return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
     def spherical(self) -> SphericalCoordinate:
-        if self.__pose:
+        if self._tvec is not None:
             return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
     def cartesian(self) -> CartesianCoordinates:
-        if self.__pose:
+        if self._tvec is not None:
             return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
@@ -424,7 +426,7 @@ class Marker:
             "size": self.__size,
             "pixel_corners": self._pixel_corners,
         }
-        if self.__pose:
+        if self._tvec is not None and self._rvec is not None:
             marker_dict.update(
                 {"rvec": self._rvec.tolist(), "tvec": self._tvec.tolist()}
             )
