@@ -110,7 +110,6 @@ class AprilTagHardwareBackend(Backend):
             camera_id,
             calibration_file=calibration_file,
         )
-        # TODO add extra camera options
         self._marker_offset = 0
         self._cam.marker_filter = self.marker_filter
 
