@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from sys import platform
 from typing import (Any, Callable, Dict, List, NamedTuple, Optional, Tuple,
                     Union)
 
@@ -32,11 +33,6 @@ class Frame(NamedTuple):
         return cls.from_colour_frame(colour_frame)
 
 
-# self._camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-# self._camera.set(cv2.CAP_PROP_FPS, 30)
-# self._camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-
 class Camera:
     def __init__(
         self,
@@ -50,11 +46,15 @@ class Camera:
         threads: int = 4,
         quad_decimate: float = 1,
         aruco_orientation: bool = True,
+        name: str = "Camera",
+        vidpid: str = "",
         **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
         self.calibration = calibration
         self._aruco_orientation = aruco_orientation
+        self.name = name
+        self.vidpid = vidpid
         if tag_sizes is None:
             self.tag_sizes = {}
         else:
@@ -77,6 +77,9 @@ class Camera:
             except AssertionError as e:
                 LOGGER.warning(f"Failed to set property: {e}")
 
+        # Maximise the framerate on Linux
+        self._optimise_camera(vidpid)
+
         # Take and discard a camera capture
         _ = self._capture_single_frame()
 
@@ -96,7 +99,13 @@ class Camera:
 
     @classmethod
     def from_calibration_file(
-            cls, index: int, calibration_file: Union[str, Path, None], **kwargs) -> 'Camera':
+            cls,
+            index: int,
+            calibration_file: Union[str, Path, None],
+            name: str = "Camera",
+            vidpid: str = "",
+            **kwargs,
+    ) -> 'Camera':
         if calibration_file is not None:
             calibration_file = Path(calibration_file)
         else:
@@ -118,6 +127,8 @@ class Camera:
                 int(resolution_node.at(1).real()),
             ),
             calibration=(fx, fy, cx, cy),
+            name=name,
+            vidpid=vidpid,
             **kwargs,
         )
 
@@ -138,6 +149,31 @@ class Camera:
             int(self._camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
+
+    def _optimise_camera(self, vidpid: str):
+        """
+        Tweak the camera's image type and framerate to achieve the minimum
+        frame time.
+        """
+        verified_vidpid = {'046d:0825', '046d:0807'}
+        if not platform.startswith("linux"):
+            # All current optimisations are for linux
+            return
+
+        # These may not improve frame time on all cameras
+        if vidpid not in verified_vidpid:
+            return
+
+        camera_parameters = [
+            (cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')),
+            (cv2.CAP_PROP_FPS, 30)
+        ]
+
+        for parameter, value in camera_parameters:
+            try:
+                self._set_camera_property(parameter, value)
+            except AssertionError as e:
+                LOGGER.warning(f"Failed to set property: {e}")
 
     def _capture_single_frame(self) -> np.ndarray:
         ret, colour_frame = self._camera.read()

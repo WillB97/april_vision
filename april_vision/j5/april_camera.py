@@ -1,21 +1,20 @@
 """
 j5 integration for april_vision
 """
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Type, Union, Iterable
-
-from numpy.typing import NDArray
+from typing import Dict, Iterable, List, Optional, Set, Type, Union
 
 from j5.backends import Backend
 from j5.boards import Board
 from j5.components.component import Component
+from numpy.typing import NDArray
 
 from .._version import __version__
-from ..marker import MarkerType, Marker
+from ..detect_cameras import CalibratedCamera, find_cameras
+from ..marker import Marker, MarkerType
 from ..vision import Camera
-from ..detect_cameras import find_cameras
 
 LOGGER = logging.getLogger(__name__)
 
@@ -98,19 +97,20 @@ class AprilTagHardwareBackend(Backend):
         """Discover boards that this backend can control."""
         return {
             AprilCameraBoard(
-                str(camera_data.index),
-                cls(camera_data.index, calibration_file=camera_data.calibration),
+                f"{camera_data.name} - {camera_data.index}",
+                cls(camera_data.index, camera_data=camera_data),
             )
             for camera_data in find_cameras(
                 os.environ.get('OPENCV_CALIBRATIONS', '.').split(':'))
         }
 
-    def __init__(self, camera_id: int, calibration_file: Optional[Path]) -> None:
+    def __init__(self, camera_id: int, camera_data: CalibratedCamera) -> None:
         self._cam = Camera.from_calibration_file(
             camera_id,
-            calibration_file=calibration_file,
+            calibration_file=camera_data.calibration,
+            name=camera_data.name,
+            vidpid=camera_data.vidpid,
         )
-        # TODO add extra camera options
         self._marker_offset = 0
         self._cam.marker_filter = self.marker_filter
 
