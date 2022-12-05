@@ -1,11 +1,11 @@
 import logging
 from pathlib import Path
 from sys import platform
-from typing import (Any, Callable, Dict, List, NamedTuple, Optional, Tuple,
-                    Union)
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 from pyapriltags import Detector
 
 from .marker import Marker
@@ -14,11 +14,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Frame(NamedTuple):
-    grey_frame: Any
-    colour_frame: Any
+    grey_frame: NDArray
+    colour_frame: NDArray
 
     @classmethod
-    def from_colour_frame(cls, colour_frame: np.ndarray) -> 'Frame':
+    def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
         grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
 
         return cls(
@@ -89,7 +89,7 @@ class Camera:
             quad_decimate=quad_decimate,
         )
 
-        self.capture_filter: Callable[[np.ndarray], np.ndarray]
+        self.capture_filter: Callable[[NDArray], NDArray]
         self.marker_filter: Callable[[List[Marker]], List[Marker]]
         self.detection_hook: Callable[[Frame, List[Marker]], None]
 
@@ -175,7 +175,7 @@ class Camera:
             except AssertionError as e:
                 LOGGER.warning(f"Failed to set property: {e}")
 
-    def _capture_single_frame(self) -> np.ndarray:
+    def _capture_single_frame(self) -> NDArray:
         ret, colour_frame = self._camera.read()
         if not ret:
             raise IOError("Failed to get frame from camera")
@@ -281,17 +281,17 @@ class Camera:
 
         cv2.imwrite(str(path), output_frame)
 
-    def capture(self) -> np.ndarray:
+    def capture(self) -> NDArray:
         return self._capture().colour_frame
 
-    def see(self, *, frame: Optional[np.ndarray] = None) -> List[Marker]:
+    def see(self, *, frame: Optional[NDArray] = None) -> List[Marker]:
         if frame is None:
             frames = self._capture()
         else:
             frames = Frame.from_colour_frame(frame)
         return self._detect(frames)
 
-    def see_ids(self, *, frame: Optional[np.ndarray] = None) -> List[int]:
+    def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
         if frame is None:
             frames = self._capture()
         else:
@@ -299,7 +299,7 @@ class Camera:
         markers = self._detect(frames)
         return [marker.id for marker in markers]
 
-    def save(self, name: Union[str, Path], *, frame: Optional[np.ndarray] = None) -> None:
+    def save(self, name: Union[str, Path], *, frame: Optional[NDArray] = None) -> None:
         if frame is None:
             frames = self._capture()
         else:
