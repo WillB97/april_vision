@@ -187,9 +187,8 @@ class Camera:
         self,
         frame: Frame,
         markers: List[Marker],
-        colour: Tuple[int, int, int] = (0, 0, 255),
-        line_thickness: int = 1,
-        text_scale: float = 1,
+        line_thickness: int = 2,
+        text_scale: float = 0.5,
     ) -> Frame:
         for marker in markers:
             integer_corners = np.array(marker.pixel_corners, dtype=np.int32)
@@ -200,17 +199,35 @@ class Camera:
                     frame_type,
                     [integer_corners],
                     isClosed=True,
-                    color=colour,
+                    color=(0, 255, 0),  # Green (BGR)
+                    thickness=line_thickness,
+                )
+
+                # Add square at marker origin corner
+                origin_square = np.array([
+                    # index -1 is the top-left corner in apriltag
+                    # index 1 is correct for aruco's orientation
+                    integer_corners[1] + np.array([3, 3]),
+                    integer_corners[1] + np.array([3, -3]),
+                    integer_corners[1] + np.array([-3, -3]),
+                    integer_corners[1] + np.array([-3, 3])
+                ], dtype=np.int32)
+                cv2.polylines(
+                    frame_type,
+                    [origin_square],
+                    isClosed=True,
+                    color=(0, 0, 255),  # red
                     thickness=line_thickness,
                 )
 
                 cv2.putText(
                     frame_type,
                     marker_id,
-                    integer_corners[0],
+                    np.array(marker.pixel_centre, dtype=np.int32),
                     cv2.FONT_HERSHEY_DUPLEX,
                     text_scale,
-                    colour,
+                    color=(255, 0, 0),  # blue
+                    thickness=2,
                 )
 
         return frame
