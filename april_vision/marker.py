@@ -205,6 +205,11 @@ class Orientation:
         [0, -1, 0],
         [0, 0, -1]
     ]))
+    __ZOLOTO_LEGACY_ORIENTATION = Quaternion(matrix=np.array([
+        [-1, 0, 0],
+        [0, 1, 0],
+        [0, 0, -1]
+    ]))
 
     def __init__(self, rotation_matrix: NDArray, aruco_orientation: bool = True):
         """
@@ -228,7 +233,7 @@ class Orientation:
         self.__rotation_matrix = quaternion.rotation_matrix
 
         if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            raise NotImplementedError()
+            self._quaternion = initial_rot * self.__ZOLOTO_LEGACY_ORIENTATION
         else:
             self._quaternion = quaternion
 
