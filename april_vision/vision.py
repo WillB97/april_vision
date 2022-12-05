@@ -46,11 +46,15 @@ class Camera:
         threads: int = 4,
         quad_decimate: float = 1,
         aruco_orientation: bool = True,
+        name: str = "Camera",
+        vidpid: str = "",
         **kwargs,
     ) -> None:
         self._camera = cv2.VideoCapture(index)
         self.calibration = calibration
         self._aruco_orientation = aruco_orientation
+        self.name = name
+        self.vidpid = vidpid
         if tag_sizes is None:
             self.tag_sizes = {}
         else:
@@ -73,8 +77,8 @@ class Camera:
             except AssertionError as e:
                 LOGGER.warning(f"Failed to set property: {e}")
 
-        # TODO pass in camera's vidpid (and name)
-        # self._optimise_camera(vidpid)
+        # Maximise the framerate on Linux
+        self._optimise_camera(vidpid)
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
@@ -95,7 +99,13 @@ class Camera:
 
     @classmethod
     def from_calibration_file(
-            cls, index: int, calibration_file: Union[str, Path, None], **kwargs) -> 'Camera':
+            cls,
+            index: int,
+            calibration_file: Union[str, Path, None],
+            name: str = "Camera",
+            vidpid: str = "",
+            **kwargs,
+    ) -> 'Camera':
         if calibration_file is not None:
             calibration_file = Path(calibration_file)
         else:
@@ -117,6 +127,8 @@ class Camera:
                 int(resolution_node.at(1).real()),
             ),
             calibration=(fx, fy, cx, cy),
+            name=name,
+            vidpid=vidpid,
             **kwargs,
         )
 
