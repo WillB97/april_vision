@@ -1,11 +1,12 @@
-import re
-import sys
-import cv2
 import json
 import logging
+import re
 import subprocess
-from typing import Dict, List, Optional, NamedTuple
+import sys
 from pathlib import Path
+from typing import Dict, List, NamedTuple, Optional
+
+import cv2
 
 LOGGER = logging.getLogger(__name__)
 

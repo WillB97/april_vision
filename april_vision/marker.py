@@ -5,14 +5,14 @@ where x is forward, y is left and z is upward.
 """
 import os
 from enum import Enum
-from math import pi, acos, atan2
-from typing import NamedTuple, List, Dict, Any, Tuple
+from math import acos, atan2, pi
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 import numpy as np
 from numpy.linalg import norm as hypotenuse
 from numpy.typing import NDArray
-from pyquaternion import Quaternion
 from pyapriltags import Detection
+from pyquaternion import Quaternion
 
 
 class MarkerType(Enum):

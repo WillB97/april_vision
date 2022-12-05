@@ -1,6 +1,6 @@
 import logging
-from sys import platform
 from pathlib import Path
+from sys import platform
 from typing import (Any, Callable, Dict, List, NamedTuple, Optional, Tuple,
                     Union)
 
