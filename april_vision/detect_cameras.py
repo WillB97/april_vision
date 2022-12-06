@@ -46,7 +46,9 @@ def find_cameras(
 
 def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str, Path]:
     calibration_map: Dict[str, Path] = {}
-    for location in calibration_locations:
+    # iterate calibration locations backword so that so that earlier locations
+    # in the list get higher precedence
+    for location in reversed(calibration_locations):
         for calibration_file in Path(location).glob('*.xml'):
             storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
 
