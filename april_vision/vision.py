@@ -141,8 +141,12 @@ class Camera:
 
     def _set_resolution(self, resolution: Tuple[int, int]) -> None:
         width, height = resolution
-        self._set_camera_property(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self._set_camera_property(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        self._camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self._camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
+        actual = self._get_resolution()
+        assert actual == resolution, ("Failed to set resolution expected "
+                                      f"{resolution} got {actual}")
 
     def _get_resolution(self) -> Tuple[int, int]:
         return (
