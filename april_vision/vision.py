@@ -44,7 +44,7 @@ class Camera:
         camera_parameters: Optional[List[Tuple[int, int]]] = None,
         tag_family: str = 'tag36h11',
         threads: int = 4,
-        quad_decimate: float = 1,
+        quad_decimate: float = 2,
         aruco_orientation: bool = True,
         name: str = "Camera",
         vidpid: str = "",
