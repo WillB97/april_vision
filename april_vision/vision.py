@@ -80,6 +80,8 @@ class Camera:
         # Maximise the framerate on Linux
         self._optimise_camera(vidpid)
 
+        self._buffer_length = int(self._camera.get(cv2.CAP_PROP_BUFFERSIZE))
+
         # Take and discard a camera capture
         _ = self._capture_single_frame()
 
@@ -170,8 +172,11 @@ class Camera:
 
         camera_parameters = [
             (cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')),
-            (cv2.CAP_PROP_FPS, 30)
+            (cv2.CAP_PROP_FPS, 30),
+            (cv2.CAP_PROP_BUFFERSIZE, 2),
         ]
+
+        LOGGER.debug("Optimising camera")
 
         for parameter, value in camera_parameters:
             try:
@@ -187,8 +192,9 @@ class Camera:
 
     def _capture(self, fresh: bool = True) -> Frame:
         if fresh is True:
-            # Discard a frame to remove the old frame in the buffer
-            _ = self._capture_single_frame()
+            for _ in range(self._buffer_length):
+                # Discard a frame to remove the old frame in the buffer
+                _ = self._capture_single_frame()
 
         colour_frame = self._capture_single_frame()
 
