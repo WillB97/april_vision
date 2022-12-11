@@ -36,6 +36,7 @@ class USBCamera(FrameSource):
     def __init__(
         self,
         index: int,
+        resolution: Tuple[int, int] = (0, 0),
         camera_parameters: Optional[List[Tuple[int, int]]] = None,
         vidpid: str = "",
     ) -> None:
@@ -45,6 +46,12 @@ class USBCamera(FrameSource):
         :param vidpid: The vendor/product string for the camera.
         """
         self._camera = cv2.VideoCapture(index)
+
+        if resolution != (0, 0):
+            try:
+                self._set_resolution(resolution)
+            except AssertionError as e:
+                LOGGER.warning(f"Failed to set resolution: {e}")
 
         if camera_parameters is None:
             camera_parameters = []
