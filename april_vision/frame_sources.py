@@ -38,11 +38,14 @@ class USBCamera(FrameSource):
         index: int,
         resolution: Tuple[int, int] = (0, 0),
         camera_parameters: Optional[List[Tuple[int, int]]] = None,
+        calibration: Optional[Tuple[float, float, float, float]] = None,
         vidpid: str = "",
     ) -> None:
         """
         :param index: The camera's opencv index.
-        :param camera_parameters: Additional opencv parameter to appliy to the camera.
+        :param resolution: Resolution to set the camera to.
+        :param camera_parameters: Additional opencv parameters to apply to the camera.
+        :param calibration: Optional, the intrinsic parameters of the camera.
         :param vidpid: The vendor/product string for the camera.
         """
         self._camera = cv2.VideoCapture(index)
@@ -72,6 +75,40 @@ class USBCamera(FrameSource):
 
         # Take and discard a camera capture
         _ = self._capture_single_frame()
+
+        # Save the camera intrinsic parameters
+        self.calibration = calibration
+
+    @classmethod
+    def from_calibration_file(
+        cls,
+        index: int,
+        calibration_file: Union[str, Path, None],
+        vidpid: str = "",
+    ) -> 'USBCamera':
+        if calibration_file is not None:
+            calibration_file = Path(calibration_file)
+        else:
+            return cls(index)
+
+        if not calibration_file.exists():
+            LOGGER.warning(f"Calibrations not found: {calibration_file}")
+            return cls(index)
+
+        storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
+        resolution_node = storage.getNode("cameraResolution")
+        camera_matrix = storage.getNode("cameraMatrix").mat()
+        fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
+        cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
+        return cls(
+            index,
+            resolution=(
+                int(resolution_node.at(0).real()),
+                int(resolution_node.at(1).real()),
+            ),
+            calibration=(fx, fy, cx, cy),
+            vidpid=vidpid,
+        )
 
     def _set_camera_property(self, property: int, value: int) -> None:
         self._camera.set(property, value)
