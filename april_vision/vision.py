@@ -129,14 +129,23 @@ class Processor:
                 )
 
                 # Add square at marker origin corner
-                origin_square = np.array([
-                    # index -1 is the top-left corner in apriltag
-                    # index 1 is correct for aruco's orientation
-                    integer_corners[1] + np.array([3, 3]),
-                    integer_corners[1] + np.array([3, -3]),
-                    integer_corners[1] + np.array([-3, -3]),
-                    integer_corners[1] + np.array([-3, 3])
-                ], dtype=np.int32)
+                if self._aruco_orientation:
+                    origin_square = np.array([
+                        # index 1 is the top-left corner in aruco
+                        integer_corners[1] + np.array([3, 3]),
+                        integer_corners[1] + np.array([3, -3]),
+                        integer_corners[1] + np.array([-3, -3]),
+                        integer_corners[1] + np.array([-3, 3])
+                    ], dtype=np.int32)
+                else:
+                    origin_square = np.array([
+                        # index -1 is the top-left corner in apriltag
+                        integer_corners[-1] + np.array([3, 3]),
+                        integer_corners[-1] + np.array([3, -3]),
+                        integer_corners[-1] + np.array([-3, -3]),
+                        integer_corners[-1] + np.array([-3, 3])
+                    ], dtype=np.int32)
+
                 cv2.polylines(
                     frame_type,
                     [origin_square],
