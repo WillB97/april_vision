@@ -138,7 +138,7 @@ class USBCamera(FrameSource):
 
     def close(self) -> None:
         """Close the underlying capture device."""
-        self._camera.close()
+        self._camera.release()
 
 
 class VideoSource(FrameSource):
@@ -157,14 +157,14 @@ class VideoSource(FrameSource):
 
         :param fresh: Unused.
         """
-        ret, colour_frame = self._camera.read()
+        ret, colour_frame = self._video.read()
         if not ret:
             raise IOError("Failed to get frame from video")
         return colour_frame
 
     def close(self) -> None:
         """Close the video file."""
-        self._video.close()
+        self._video.release()
 
 
 class ImageSource(FrameSource):
