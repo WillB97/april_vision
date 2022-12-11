@@ -13,8 +13,9 @@ from numpy.typing import NDArray
 
 from .._version import __version__
 from ..detect_cameras import CalibratedCamera, find_cameras
+from ..frame_sources import USBCamera
 from ..marker import Marker, MarkerType
-from ..vision import Camera
+from ..vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,9 +106,14 @@ class AprilTagHardwareBackend(Backend):
         }
 
     def __init__(self, camera_id: int, camera_data: CalibratedCamera) -> None:
-        self._cam = Camera.from_calibration_file(
+        camera_source = USBCamera.from_calibration_file(
             camera_id,
             calibration_file=camera_data.calibration,
+            vidpid=camera_data.vidpid,
+        )
+        self._cam = Processor(
+            camera_source,
+            calibration=camera_source.calibration,
             name=camera_data.name,
             vidpid=camera_data.vidpid,
         )
