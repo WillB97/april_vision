@@ -1,9 +1,12 @@
 """j5 integration for april_vision."""
+import base64
 import logging
 import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Type, Union
 
+import cv2
+import numpy as np
 from j5.backends import Backend
 from j5.boards import Board
 from j5.components.component import Component
@@ -13,7 +16,7 @@ from .._version import __version__
 from ..detect_cameras import CalibratedCamera, find_cameras
 from ..frame_sources import USBCamera
 from ..marker import Marker, MarkerType
-from ..vision import Processor
+from ..vision import Frame, Processor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,6 +126,8 @@ class AprilTagHardwareBackend(Backend):
         )
         self._marker_offset = 0
         self._cam.marker_filter = self.marker_filter
+        self._mqttc = None
+        self._cam.detection_hook = self.annotated_frame_hook
 
     def see(
         self,
@@ -188,3 +193,37 @@ class AprilTagHardwareBackend(Backend):
                 filtered_markers.append(marker)
 
         return filtered_markers
+
+    def annotated_frame_hook(self, frame: Frame, markers: List[Marker]) -> None:
+        if self._mqttc is None:
+            return
+
+        copied_frame = Frame(
+            np.array(frame.grey_frame, copy=True),
+            np.array(frame.colour_frame, copy=True),
+        )
+        annotated_frame = self._cam._annotate(copied_frame, markers)
+
+        encoded_frame = self.base64_encode_frame(annotated_frame.colour_frame)
+        if encoded_frame is None:
+            return
+
+        encoded_frame = b'data:image/jpeg;base64, ' + encoded_frame
+
+        # The message is sent in a background thread
+        try:
+            self._mqttc.publish(  # type: ignore[attr-defined]
+                'camera/annotated',
+                encoded_frame,
+                auto_prefix_topic=False,
+            )
+        except ValueError:
+            pass
+
+    def base64_encode_frame(self, frame: NDArray[np.uint8]) -> Optional[bytes]:
+        """Convert image frame to base64 bytestring."""
+        ret, image = cv2.imencode('.jpg', frame)
+        if not ret:
+            return None
+        image_bytes = image.tobytes()
+        return base64.b64encode(image_bytes)
