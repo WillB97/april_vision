@@ -36,6 +36,8 @@ def find_cameras(
     """Find the available cameras using OS-specific discovery where available."""
     platform = sys.platform
 
+    calibration_map = generate_calibration_file_map(calibration_locations)
+
     if platform.startswith("linux"):
         cameras = linux_discovery()
     elif platform.startswith("darwin"):
@@ -45,7 +47,7 @@ def find_cameras(
     else:
         cameras = default_discovery()
 
-    valid_cameras = match_calibrations(cameras, calibration_locations, include_uncalibrated)
+    valid_cameras = match_calibrations(cameras, calibration_map, include_uncalibrated)
 
     return valid_cameras
 
@@ -71,20 +73,19 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
 
             for pidvid in pidvids:
                 calibration_map[pidvid] = calibration_file.absolute()
+    LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
     return calibration_map
 
 
 def match_calibrations(
     cameras: List[CameraIdentifier],
-    calibration_locations: List[str],
+    calibration_map: Dict[str, Path],
     include_uncalibrated: bool,
 ) -> List[CalibratedCamera]:
     """Filter found cameras to those that matching calibration files' USB VID & PID."""
     calibrated_cameras: List[CalibratedCamera] = []
     uncalibrated_cameras: List[CalibratedCamera] = []
-    calibration_map = generate_calibration_file_map(calibration_locations)
-    LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
     for camera in cameras:
         try:
