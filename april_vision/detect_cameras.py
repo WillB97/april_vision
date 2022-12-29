@@ -130,6 +130,7 @@ def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, 
         if calibration is not None:
             usable_devices.append((vidpid, calibration))
 
+    LOGGER.debug(f"Found calibration for the devices: {[dev[0] for dev in usable_devices]}")
     return usable_devices
 
 
@@ -233,6 +234,7 @@ def windows_discovery(
     if include_uncalibrated:
         # We lack the information to match which camera is which so treat them
         # all as uncalibrated
+        LOGGER.debug("Assuming all cameras are uncalibrated")
         return [
             CalibratedCamera(
                 index=camera.index,
@@ -245,6 +247,7 @@ def windows_discovery(
         return []
 
     selected_camera = found_cameras[0]
+    LOGGER.debug(f"Selecting camera index {selected_camera.index}")
 
     usable_cameras = usable_present_devices(calibration_map)
     if len(usable_cameras) > 1:
