@@ -114,6 +114,7 @@ def match_calibrations(
 def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path]]:
     try:
         usb_devices = usb.core.find(find_all=True)
+        assert not isinstance(usb_devices, usb.core.Device)
     except ValueError:
         LOGGER.warning("pyusb failed to find a libusb backend.")
         return []
