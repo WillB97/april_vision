@@ -1,6 +1,8 @@
 import argparse
 import importlib
 
+from april_vision._version import version
+
 subcommands = [
     "annotate_image",
     "annotate_video",
@@ -13,6 +15,10 @@ subcommands = [
 ]
 
 
+def print_versions(args):
+    print(version)
+
+
 def build_argparser():
     parser = argparse.ArgumentParser()
 
@@ -20,6 +26,9 @@ def build_argparser():
     for command in subcommands:
         mod_name = f"{__package__}.{command}"
         importlib.import_module(mod_name).create_subparser(subparsers)
+
+    version_parser = subparsers.add_parser("version", help="Print package version")
+    version_parser.set_defaults(func=print_versions)
 
     return parser
 
