@@ -70,8 +70,11 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
             node = storage.getNode('vidpid')
             if node.isSeq():
                 pidvids = [node.at(i).string() for i in range(node.size())]
-            else:
+            elif node.isString():
                 pidvids = [node.string()]
+            else:
+                # This file lacks any vidpids
+                continue
 
             for pidvid in pidvids:
                 calibration_map[pidvid] = calibration_file.absolute()
