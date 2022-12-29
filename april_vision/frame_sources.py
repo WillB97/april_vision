@@ -12,8 +12,10 @@ LOGGER = logging.getLogger(__name__)
 class FrameSource:
     """
     A base frame source.
+
     Allows april_vision.Processor to be created prior to frames being available.
     """
+
     def __init__(self) -> None:
         pass
 
@@ -33,6 +35,7 @@ class FrameSource:
 
 class USBCamera(FrameSource):
     """A USB attached camera."""
+
     def __init__(
         self,
         index: int,
@@ -110,7 +113,7 @@ class USBCamera(FrameSource):
             vidpid=vidpid,
         )
 
-    def _set_camera_property(self, property: int, value: int) -> None:
+    def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002
         self._camera.set(property, value)
         actual = self._camera.get(property)
 
@@ -133,10 +136,7 @@ class USBCamera(FrameSource):
         )
 
     def _optimise_camera(self, vidpid: str):
-        """
-        Tweak the camera's image type and framerate to achieve the minimum
-        frame time.
-        """
+        """Tweak the camera's image type and framerate to achieve the minimum frame time."""
         verified_vidpid = {'046d:0825', '046d:0807'}
         if not platform.startswith("linux"):
             # All current optimisations are for linux
@@ -187,6 +187,7 @@ class USBCamera(FrameSource):
 
 class VideoSource(FrameSource):
     """Return frames from a video."""
+
     def __init__(self, filepath: Union[str, Path]) -> None:
         """
         Read a video from file.
@@ -213,6 +214,7 @@ class VideoSource(FrameSource):
 
 class ImageSource(FrameSource):
     """Return a single image repeatedly."""
+
     def __init__(self, filepath: Union[str, Path]) -> None:
         """
         Load an image from file.

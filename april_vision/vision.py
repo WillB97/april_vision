@@ -97,7 +97,7 @@ class Processor:
         for detection in detections:
             markers.append(Marker(
                 detection,
-                aruco_orientation=self._aruco_orientation
+                aruco_orientation=self._aruco_orientation,
             ))
 
         # hook to filter and modify markers
@@ -135,7 +135,7 @@ class Processor:
                         integer_corners[1] + np.array([3, 3]),
                         integer_corners[1] + np.array([3, -3]),
                         integer_corners[1] + np.array([-3, -3]),
-                        integer_corners[1] + np.array([-3, 3])
+                        integer_corners[1] + np.array([-3, 3]),
                     ], dtype=np.int32)
                 else:
                     origin_square = np.array([
@@ -143,7 +143,7 @@ class Processor:
                         integer_corners[-1] + np.array([3, 3]),
                         integer_corners[-1] + np.array([3, -3]),
                         integer_corners[-1] + np.array([-3, -3]),
-                        integer_corners[-1] + np.array([-3, 3])
+                        integer_corners[-1] + np.array([-3, 3]),
                     ], dtype=np.int32)
 
                 cv2.polylines(
@@ -205,7 +205,7 @@ class Processor:
         markers = self._detect(frames)
         frames = self._annotate(
             frames,
-            markers
+            markers,
         )
         self._save(frames, name)
 

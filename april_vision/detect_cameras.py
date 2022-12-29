@@ -26,7 +26,7 @@ class CalibratedCamera(NamedTuple):
 
 def find_cameras(
     calibration_locations: List[str],
-    include_uncalibrated: bool = False
+    include_uncalibrated: bool = False,
 ) -> List[CalibratedCamera]:
     platform = sys.platform
 
@@ -67,7 +67,7 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
 def match_calibrations(
     cameras: List[CameraIdentifier],
     calibration_locations: List[str],
-    include_uncalibrated: bool
+    include_uncalibrated: bool,
 ) -> List[CalibratedCamera]:
     calibrated_cameras: List[CalibratedCamera] = []
     calibration_map = generate_calibration_file_map(calibration_locations)
@@ -114,7 +114,7 @@ def linux_discovery() -> List[CameraIdentifier]:
     cameras = []
     for index in valid_cameras:
         name = Path(
-                f'/sys/class/video4linux/video{index}/name'
+                f'/sys/class/video4linux/video{index}/name',
             ).read_text().strip()
 
         uevent_file = Path(f'/sys/class/video4linux/video{index}/device/uevent').read_text()

@@ -1,6 +1,4 @@
-"""
-j5 integration for april_vision
-"""
+"""j5 integration for april_vision."""
 import logging
 import os
 from pathlib import Path
@@ -23,6 +21,7 @@ LOGGER = logging.getLogger(__name__)
 class AprilCameraBoard(Board):
     """
     Virtual Camera Board for detecting fiducial markers.
+
     Additionally, it will do pose estimation, along with some calibration
     in order to determine the spatial positon and orientation of the markers
     that it has detected.
@@ -48,6 +47,7 @@ class AprilCameraBoard(Board):
     def make_safe(self) -> None:
         """
         Close the camera.
+
         The camera will no longer work after this method is called.
         """
         self._backend.close_camera()
@@ -61,6 +61,7 @@ class AprilCameraBoard(Board):
     def see(self, *, eager: bool = True, frame: Optional[NDArray] = None) -> List[Marker]:
         """
         Capture an image and identify fiducial markers.
+
         :param eager: Process the pose estimations of markers immediately,
             currently unused.
         :returns: list of markers that the camera could see.
@@ -70,6 +71,7 @@ class AprilCameraBoard(Board):
     def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
         """
         Capture an image and identify fiducial markers.
+
         This method returns just the marker IDs that are visible.
         :returns: A list of IDs for the markers that were visible.
         """
@@ -78,6 +80,7 @@ class AprilCameraBoard(Board):
     def capture(self) -> NDArray:
         """
         Get the raw image data from the camera.
+
         :returns: Camera pixel data
         """
         return self._backend.capture_frame()
@@ -125,22 +128,19 @@ class AprilTagHardwareBackend(Backend):
         *,
         frame: Optional[NDArray] = None,
     ) -> List[Marker]:
-        """
-        Get markers that the camera can see.
-        """
+        """Get markers that the camera can see."""
         return self._cam.see(frame=frame)
 
     def save_annotated_image(
         self, file: Union[Path, str], *, frame: Optional[NDArray] = None,
     ) -> None:
-        """
-        Save an annotated image to a file.
-        """
+        """Save an annotated image to a file."""
         self._cam.save(file, frame=frame)
 
     def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
         """
         Get a list of visible marker IDs.
+
         :returns: List of marker IDs that were visible.
         """
         return self._cam.see_ids(frame=frame)
@@ -148,6 +148,7 @@ class AprilTagHardwareBackend(Backend):
     def capture_frame(self) -> NDArray:
         """
         Get the raw image data from the camera.
+
         :returns: Camera pixel data
         """
         return self._cam.capture()
@@ -164,7 +165,7 @@ class AprilTagHardwareBackend(Backend):
     def set_marker_sizes(
         self,
         marker_sizes: Dict[Iterable[int], int],
-        marker_offset: int = 0
+        marker_offset: int = 0,
     ) -> None:
         """Set the sizes of all the markers used in the game."""
         # store marker offset to be used by the filter

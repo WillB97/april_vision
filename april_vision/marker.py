@@ -21,6 +21,7 @@ class MarkerType(Enum):
 
     To support Apriltag 2 libraries use tag36h11.
     """
+
     APRILTAG_16H5 = 'tag16h5'
     APRILTAG_25H9 = 'tag25h9'
     APRILTAG_36H11 = 'tag36h11'
@@ -49,6 +50,7 @@ class PixelCoordinates(NamedTuple):
 class CartesianCoordinates(NamedTuple):
     """
     A 3 dimesional cartesian coordinate in the standard right-handed cartesian system.
+
     Origin is at the camera.
 
     The X axis extends directly away from the camera. Zero is at the camera.
@@ -92,9 +94,9 @@ class CartesianCoordinates(NamedTuple):
     @classmethod
     def from_tvec(cls, x: float, y: float, z: float):
         """
-        Convert coordinate system to standard right-handed cartesian system
-        The pose estimation coordinate system has the origin at the camera center.
+        Convert coordinate system to standard right-handed cartesian system.
 
+        The pose estimation coordinate system has the origin at the camera center.
         Also converts units to millimeters.
 
         :param float x: The x-axis is to the right in the image taken by the camera.
@@ -132,6 +134,7 @@ class SphericalCoordinate(NamedTuple):
     def rot_x(self) -> float:
         """
         Rotation around the x-axis.
+
         Conventional:  This is unused.
         Legacy: A rotation up to down around the camera, in radians. Values
                 increase as the marker moves towards the bottom of the image.
@@ -147,6 +150,7 @@ class SphericalCoordinate(NamedTuple):
     def rot_y(self) -> float:
         """
         Rotation around the y-axis.
+
         Conventional: A rotation up to down around the camera, in radians.
                       Values increase as the marker moves towards the bottom
                       of the image. A zero value is halfway up the image.
@@ -163,6 +167,7 @@ class SphericalCoordinate(NamedTuple):
     def rot_z(self) -> float:
         """
         Rotation around the z-axis.
+
         Conventional: A rotation right to left around the camera, in radians.
                       Values increase as the marker moves towards the left of
                       the image. A zero value is on the centerline of the
@@ -178,7 +183,8 @@ class SphericalCoordinate(NamedTuple):
     @classmethod
     def from_tvec(cls, x: float, y: float, z: float):
         """
-        Convert coordinate system to standard right-handed cartesian system
+        Convert coordinate system to standard right-handed cartesian system.
+
         The pose estimation coordinate system has the origin at the camera center.
 
         :param float x: The x-axis is to the right in the image taken by the camera.
@@ -203,28 +209,26 @@ class Orientation:
     __MARKER_ORIENTATION_CORRECTION = Quaternion(matrix=np.array([
         [1, 0, 0],
         [0, -1, 0],
-        [0, 0, -1]
+        [0, 0, -1],
     ]))
     __ZOLOTO_LEGACY_ORIENTATION = Quaternion(matrix=np.array([
         [-1, 0, 0],
         [0, 1, 0],
-        [0, 0, -1]
+        [0, 0, -1],
     ]))
 
     def __init__(self, rotation_matrix: NDArray, aruco_orientation: bool = True):
         """
-        Construct a quaternion given the rotation matrix in the camera's
-        coordinate system.
+        Construct a quaternion given the rotation matrix in the camera's coordinate system.
 
         More information:
         https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
         """
-
         # Calculate the quaternion of the rotation in the camera's coordinate system
         initial_rot = Quaternion(matrix=rotation_matrix)
         # remap quaternion to global coordinate system from the token's perspective
         quaternion = Quaternion(
-            initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y
+            initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y,
         )
         if aruco_orientation:
             # Rotate the quaternion so 0 roll is a marker the correct way up
@@ -298,8 +302,7 @@ class Orientation:
     @property
     def pitch(self) -> float:
         """
-        Get pitch of the marker, a rotation about the transverse axis, in
-        radians.
+        Get pitch of the marker, a rotation about the transverse axis, in radians.
 
         Positive values indicate a rotation upwards from the perspective of the
         marker.
@@ -311,8 +314,7 @@ class Orientation:
     @property
     def roll(self) -> float:
         """
-        Get roll of the marker, a rotation about the longitudinal axis, in
-        radians.
+        Get roll of the marker, a rotation about the longitudinal axis, in radians.
 
         Positive values indicate a rotation clockwise from the perspective of
         the marker.
@@ -325,6 +327,7 @@ class Orientation:
     def yaw_pitch_roll(self) -> ThreeTuple:
         """
         Get the equivalent yaw-pitch-roll angles.
+
         Specifically intrinsic Tait-Bryan angles following the z-y'-x'' convention.
         """
         return self._quaternion.yaw_pitch_roll
@@ -346,7 +349,7 @@ class Orientation:
 
     def __repr__(self) -> str:
         return "Orientation(rot_x={}, rot_y={}, rot_z={})".format(
-            self.rot_x, self.rot_y, self.rot_z
+            self.rot_x, self.rot_y, self.rot_z,
         )
 
 
@@ -433,6 +436,6 @@ class Marker:
         }
         if self._tvec is not None and self._rvec is not None:
             marker_dict.update(
-                {"rvec": self._rvec.tolist(), "tvec": self._tvec.tolist()}
+                {"rvec": self._rvec.tolist(), "tvec": self._tvec.tolist()},
             )
         return marker_dict
