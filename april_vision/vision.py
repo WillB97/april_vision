@@ -7,8 +7,8 @@ import numpy as np
 from numpy.typing import NDArray
 from pyapriltags import Detector
 
-from .marker import Marker
 from .frame_sources import FrameSource
+from .marker import Marker
 
 LOGGER = logging.getLogger(__name__)
 
