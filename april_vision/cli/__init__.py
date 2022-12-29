@@ -6,7 +6,7 @@ from april_vision._version import version
 subcommands = [
     "annotate_image",
     "annotate_video",
-    # "calibrate",
+    "calibrate",
     "camera_benchmark",
     "live",
     "marker_benchmark",
