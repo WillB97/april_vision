@@ -16,9 +16,9 @@ subcommands = [
 def build_argparser():
     parser = argparse.ArgumentParser()
 
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(required=True)
     for command in subcommands:
-        mod_name = f"{__name__}.{command}"
+        mod_name = f"{__package__}.{command}"
         importlib.import_module(mod_name).create_subparser(subparsers)
 
     return parser
