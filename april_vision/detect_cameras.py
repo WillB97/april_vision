@@ -115,6 +115,7 @@ def match_calibrations(
 
 
 def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path]]:
+    """Use PyUSB to detect any supported USB VID/PID combinations connected to the system."""
     try:
         usb_devices = usb.core.find(find_all=True)
         assert not isinstance(usb_devices, usb.core.Device)
@@ -225,10 +226,13 @@ def windows_discovery(
     include_uncalibrated: bool,
 ) -> List[CalibratedCamera]:
     """
-    Discovery method for Windows using the fallback discovery method.
+    Discovery method for Windows using PyUSB and the fallback discovery method.
 
-    This cannot identify the USB VID & PID of the camera and only provides
-    information on the openable indexes.
+    This cannot identify which index corresponds to the found USB VID & PID
+    so is unable to provide a useful output when more than one USB camera with
+    calibration is connected.
+    The returned camera is a combination of the found USB VID & PID and the
+    first openable camera index.
     """
     found_cameras = default_discovery()
     if include_uncalibrated:
@@ -260,7 +264,7 @@ def windows_discovery(
             index=selected_camera.index,
             name=selected_camera.name,
             vidpid=usable_camera[0],
-            calibration=usable_camera[1]
+            calibration=usable_camera[1],
         )]
     else:
         return []
