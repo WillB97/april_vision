@@ -1,3 +1,4 @@
+"""OS-specific and generic methods for detecting attached USB cameras."""
 import json
 import logging
 import re
@@ -12,12 +13,16 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CameraIdentifier(NamedTuple):
+    """A tuple to store information of a discovered camera."""
+
     index: int  # type: ignore[assignment]
     name: str
     vidpid: str
 
 
 class CalibratedCamera(NamedTuple):
+    """A tuple to store camera and calibration information of a discovered camera."""
+
     index: int  # type: ignore[assignment]
     name: str
     vidpid: str
@@ -26,8 +31,9 @@ class CalibratedCamera(NamedTuple):
 
 def find_cameras(
     calibration_locations: List[str],
-    include_uncalibrated: bool = False
+    include_uncalibrated: bool = False,
 ) -> List[CalibratedCamera]:
+    """Find the available cameras using OS-specific discovery where available."""
     platform = sys.platform
 
     if platform.startswith("linux"):
@@ -45,6 +51,11 @@ def find_cameras(
 
 
 def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str, Path]:
+    """
+    Generate map of USB VID & PID to calibration file.
+
+    Uses vidpid tag in XML files.
+    """
     calibration_map: Dict[str, Path] = {}
     # iterate calibration locations backword so that so that earlier locations
     # in the list get higher precedence
@@ -67,8 +78,9 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
 def match_calibrations(
     cameras: List[CameraIdentifier],
     calibration_locations: List[str],
-    include_uncalibrated: bool
+    include_uncalibrated: bool,
 ) -> List[CalibratedCamera]:
+    """Filter found cameras to those that matching calibration files' USB VID & PID."""
     calibrated_cameras: List[CalibratedCamera] = []
     calibration_map = generate_calibration_file_map(calibration_locations)
     LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
@@ -96,6 +108,12 @@ def match_calibrations(
 
 
 def linux_discovery() -> List[CameraIdentifier]:
+    """
+    Discovery method for Linux using Video4Linux.
+
+    This matches camera indexes to their USB VID & PID and omits indexes
+    that are not the actual camera.
+    """
     # Get a list of all potential cameras
     potential_cameras = []
     for index in range(10):
@@ -114,7 +132,7 @@ def linux_discovery() -> List[CameraIdentifier]:
     cameras = []
     for index in valid_cameras:
         name = Path(
-                f'/sys/class/video4linux/video{index}/name'
+                f'/sys/class/video4linux/video{index}/name',
             ).read_text().strip()
 
         uevent_file = Path(f'/sys/class/video4linux/video{index}/device/uevent').read_text()
@@ -139,6 +157,12 @@ def linux_discovery() -> List[CameraIdentifier]:
 
 
 def mac_discovery() -> List[CameraIdentifier]:
+    """
+    Discovery method for MacOS using system_profiler.
+
+    This matches camera indexes to their USB VID & PID as long as cameras are
+    not attached after cv2 has been imported.
+    """
     camera_info = json.loads(
         subprocess.check_output(['system_profiler', '-json', 'SPCameraDataType']),
     )
@@ -170,10 +194,22 @@ def mac_discovery() -> List[CameraIdentifier]:
 
 
 def windows_discovery() -> List[CameraIdentifier]:
+    """
+    Discovery method for Windows using the fallback discovery method.
+
+    This cannot identify the USB VID & PID of the camera and only provides
+    information on the openable indexes.
+    """
     return default_discovery()
 
 
 def default_discovery() -> List[CameraIdentifier]:
+    """
+    A fallback discovery method for when there is not an OS specific one available.
+
+    This cannot identify the USB VID & PID of the camera and only provides
+    information on the openable indexes.
+    """
     found_cameras = []
     for camera_id in range(8):
         capture = cv2.VideoCapture(camera_id)
