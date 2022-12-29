@@ -18,7 +18,7 @@ isort:
 	python -m isort $(PYMODULE)
 
 build:
-	python -m build --wheel
+	python -m build
 
 upload:
 	twine upload dist/*
