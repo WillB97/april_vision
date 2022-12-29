@@ -1,3 +1,4 @@
+"""An AprilTags wrapper with camera discovery and axis conversion."""
 from ._version import __version__
 from .detect_cameras import find_cameras
 from .frame_sources import FrameSource, USBCamera

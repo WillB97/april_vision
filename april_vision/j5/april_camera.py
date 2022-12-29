@@ -109,6 +109,7 @@ class AprilTagHardwareBackend(Backend):
         }
 
     def __init__(self, camera_id: int, camera_data: CalibratedCamera) -> None:
+        """Generate a backend from the camera index and calibration data."""
         camera_source = USBCamera.from_calibration_file(
             camera_id,
             calibration_file=camera_data.calibration,
@@ -179,6 +180,7 @@ class AprilTagHardwareBackend(Backend):
                 self._cam.tag_sizes[marker_id + marker_offset] = float(marker_size) / 1000
 
     def marker_filter(self, markers: List[Marker]) -> List[Marker]:
+        """Apply marker offset and remove markers that are not in the game."""
         filtered_markers: List[Marker] = []
         for marker in markers:
             if marker._id in self._cam.tag_sizes.keys():

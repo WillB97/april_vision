@@ -1,4 +1,6 @@
 """
+Classes for marker detections and various axis representations.
+
 Setting the environment variable ZOLOTO_LEGACY_AXIS uses the axis that were
 used in zoloto<0.9.0. Otherwise the conventional right-handed axis is used
 where x is forward, y is left and z is upward.
@@ -111,6 +113,8 @@ class CartesianCoordinates(NamedTuple):
 
 class SphericalCoordinate(NamedTuple):
     """
+    A 3 dimesional spherical coordinate location.
+
     The convential spherical coordinate in mathematical notation where θ is
     a rotation around the vertical axis and φ is measured as the angle from
     the vertical axis.
@@ -354,6 +358,8 @@ class Orientation:
 
 
 class Marker:
+    """Wrapper of a marker detection with axis and rotation calculated."""
+
     def __init__(
         self,
         marker: Detection,
@@ -383,18 +389,22 @@ class Marker:
 
     @property  # noqa: A003
     def id(self) -> int:  # noqa: A003
+        """The marker id number."""
         return self._id
 
     @property
     def size(self) -> int:
+        """The size of the detected marker in millimeters."""
         return self.__size
 
     @property
     def marker_type(self) -> MarkerType:
+        """The family of the detected marker, likely tag36h11."""
         return self.__marker_type
 
     @property
     def pixel_corners(self) -> List[PixelCoordinates]:
+        """The pixels of the corners of the marker in the image."""
         return [
             PixelCoordinates(x, y)
             for x, y in self._pixel_corners
@@ -402,33 +412,39 @@ class Marker:
 
     @property
     def pixel_centre(self) -> PixelCoordinates:
+        """The pixel location of the center of the marker in the image."""
         return self.__pixel_center
 
     @property
     def distance(self) -> int:
+        """The distance between the marker and camera, in millimeters."""
         if self._tvec is not None and self._rvec is not None:
             return self.__distance
         return 0
 
     @property
     def orientation(self) -> Orientation:
+        """The marker's orientation."""
         if self._rvec is not None:
             return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
     def spherical(self) -> SphericalCoordinate:
+        """The spherical coordinates of the marker's location relative to the camera."""
         if self._tvec is not None:
             return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
     def cartesian(self) -> CartesianCoordinates:
+        """The cartesian coordinates of the marker's location relative to the camera."""
         if self._tvec is not None:
             return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     def as_dict(self) -> Dict[str, Any]:
+        """The marker data as a dict."""
         marker_dict = {
             "id": self._id,
             "size": self.__size,

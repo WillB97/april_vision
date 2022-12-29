@@ -1,3 +1,4 @@
+"""The top-level Processor class for marker detection and annotation."""
 import logging
 from pathlib import Path
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
@@ -14,11 +15,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Frame(NamedTuple):
+    """A tuple of original image and a greyscale version for fiducial detection."""
+
     grey_frame: NDArray
     colour_frame: NDArray
 
     @classmethod
     def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
+        """Load frame from a colour image in a numpy array."""
         grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
 
         return cls(
@@ -28,12 +32,15 @@ class Frame(NamedTuple):
 
     @classmethod
     def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
+        """Load an image file into the frame."""
         colour_frame = cv2.imread(str(filepath))
 
         return cls.from_colour_frame(colour_frame)
 
 
 class Processor:
+    """A pyaprilTags wrapper for fiducial detection from frame sources."""
+
     capture_filter: Callable[[NDArray], NDArray]
     marker_filter: Callable[[List[Marker]], List[Marker]]
     detection_hook: Callable[[Frame, List[Marker]], None]
@@ -75,6 +82,7 @@ class Processor:
         )
 
     def _capture(self, fresh: bool = True) -> Frame:
+        """Get another frame from the underlying camera."""
         colour_frame = self._frame_source.read(fresh)
 
         # hook to allow modification of the captured frame
@@ -83,6 +91,7 @@ class Processor:
         return Frame.from_colour_frame(colour_frame)
 
     def _detect(self, frame: Frame) -> List[Marker]:
+        """Locate fiducial markers in frame using pyapriltags."""
         if self.calibration is None:
             detections = self.detector.detect(frame.grey_frame)
         else:
@@ -115,6 +124,11 @@ class Processor:
         line_thickness: int = 2,
         text_scale: float = 0.5,
     ) -> Frame:
+        """
+        Annotate marker borders and ids onto frame.
+
+        The annotation is in-place.
+        """
         for marker in markers:
             integer_corners = np.array(marker.pixel_corners, dtype=np.int32)
             marker_id = f"id={marker.id}"
@@ -167,6 +181,7 @@ class Processor:
         return frame
 
     def _save(self, frame: Frame, name: Union[str, Path], colour: bool = True) -> None:
+        """Save a frame to a file, selectable between colour and grayscale."""
         if colour:
             output_frame = frame.colour_frame
         else:
@@ -180,9 +195,11 @@ class Processor:
         cv2.imwrite(str(path), output_frame)
 
     def capture(self) -> NDArray:
+        """Get the raw image data from the camera."""
         return self._capture().colour_frame
 
     def see(self, *, frame: Optional[NDArray] = None) -> List[Marker]:
+        """Get markers that the camera can see."""
         if frame is None:
             frames = self._capture()
         else:
@@ -190,6 +207,7 @@ class Processor:
         return self._detect(frames)
 
     def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
+        """Get a list of visible marker IDs."""
         if frame is None:
             frames = self._capture()
         else:
@@ -198,6 +216,7 @@ class Processor:
         return [marker.id for marker in markers]
 
     def save(self, name: Union[str, Path], *, frame: Optional[NDArray] = None) -> None:
+        """Save an annotated image to a file."""
         if frame is None:
             frames = self._capture()
         else:
@@ -210,4 +229,5 @@ class Processor:
         self._save(frames, name)
 
     def close(self) -> None:
+        """Close the underlying capture device."""
         self._frame_source.close()

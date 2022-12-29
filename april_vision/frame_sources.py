@@ -1,3 +1,4 @@
+"""The available frame sources for the Processor class."""
 import logging
 from pathlib import Path
 from sys import platform
@@ -15,9 +16,6 @@ class FrameSource:
 
     Allows april_vision.Processor to be created prior to frames being available.
     """
-
-    def __init__(self) -> None:
-        pass
 
     def read(self, fresh: bool = True) -> NDArray:
         """
@@ -45,6 +43,8 @@ class USBCamera(FrameSource):
         vidpid: str = "",
     ) -> None:
         """
+        Create a USB attached camera frame source.
+
         :param index: The camera's opencv index.
         :param resolution: Resolution to set the camera to.
         :param camera_parameters: Additional opencv parameters to apply to the camera.
@@ -89,6 +89,7 @@ class USBCamera(FrameSource):
         calibration_file: Union[str, Path, None],
         vidpid: str = "",
     ) -> 'USBCamera':
+        """Instantiate camera using calibration data from opencv XML calibration file."""
         if calibration_file is not None:
             calibration_file = Path(calibration_file)
         else:
@@ -114,6 +115,7 @@ class USBCamera(FrameSource):
         )
 
     def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002
+        """Set an opencv property to a value and assert that it changed."""
         self._camera.set(property, value)
         actual = self._camera.get(property)
 
@@ -121,6 +123,7 @@ class USBCamera(FrameSource):
                                  f"expected {value} got {actual}")
 
     def _set_resolution(self, resolution: Tuple[int, int]) -> None:
+        """Set the camera resolution and assert that it changed."""
         width, height = resolution
         self._camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self._camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -130,6 +133,7 @@ class USBCamera(FrameSource):
                                       f"{resolution} got {actual}")
 
     def _get_resolution(self) -> Tuple[int, int]:
+        """Get the camera resolution active in opencv."""
         return (
             int(self._camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
@@ -161,6 +165,7 @@ class USBCamera(FrameSource):
                 LOGGER.warning(f"Failed to set property: {e}")
 
     def _capture_single_frame(self) -> NDArray:
+        """Read a single frame from the camera's buffer."""
         ret, colour_frame = self._camera.read()
         if not ret:
             raise IOError("Failed to get frame from camera")
