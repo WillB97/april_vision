@@ -3,6 +3,7 @@ import base64
 import logging
 import os
 from pathlib import Path
+from threading import Thread
 from typing import Dict, Iterable, List, Optional, Set, Type, Union
 
 import cv2
@@ -209,7 +210,21 @@ class AprilTagHardwareBackend(Backend):
         )
         annotated_frame = self._cam._annotate(copied_frame, markers)
 
-        encoded_frame = self.base64_encode_frame(annotated_frame.colour_frame)
+        thread = Thread(
+            name="Image send",
+            target=self.background_encode_and_send,
+            args=(annotated_frame.colour_frame,),
+            daemon=True,
+        )
+        thread.start()
+
+    def background_encode_and_send(self,  frame: NDArray[np.uint8]) -> None:
+        """
+        Handle converting a frame to a base64 bytestring and sending over MQTT.
+
+        To be run as a thread target.
+        """
+        encoded_frame = self.base64_encode_frame(frame)
         if encoded_frame is None:
             return
 
