@@ -1,4 +1,4 @@
-.PHONY: lint type test isort build upload
+.PHONY: lint type test isort isort-check build upload
 
 PYMODULE:=april_vision
 TESTS:=tests
@@ -13,6 +13,9 @@ type:
 
 test:
 	pytest --cov=$(PYMODULE) $(TESTS)
+
+isort-check:
+	python -m isort --check $(PYMODULE)
 
 isort:
 	python -m isort $(PYMODULE)
