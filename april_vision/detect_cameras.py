@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import cv2
-import usb
 
 LOGGER = logging.getLogger(__name__)
 
@@ -116,11 +115,11 @@ def match_calibrations(
 
 def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path]]:
     """Use PyUSB to detect any supported USB VID/PID combinations connected to the system."""
+    import libusb_package
     try:
-        usb_devices = usb.core.find(find_all=True)
-        assert not isinstance(usb_devices, usb.core.Device)
+        usb_devices = libusb_package.find(find_all=True)
     except ValueError:
-        LOGGER.warning("pyusb failed to find a libusb backend.")
+        LOGGER.warning("libusb_package failed to find a libusb backend.")
         return []
 
     usable_devices: List[Tuple[str, Path]] = []
