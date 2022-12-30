@@ -1,6 +1,7 @@
-import os
-import cv2
 import argparse
+import os
+
+import cv2
 from PIL import Image
 from pyapriltags import Detector
 

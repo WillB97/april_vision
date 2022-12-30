@@ -1,3 +1,4 @@
+"""The april_vision CLI."""
 import argparse
 import importlib
 
@@ -16,10 +17,12 @@ subcommands = [
 
 
 def print_versions(args):
-    print(version)
+    """Print library version."""
+    print(version)  # noqa: T201
 
 
 def build_argparser():
+    """Load subparsers from available subcommands."""
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(required=True)
@@ -34,6 +37,7 @@ def build_argparser():
 
 
 def main():
+    """CLI entry-point."""
     parser = build_argparser()
     args = parser.parse_args()
 

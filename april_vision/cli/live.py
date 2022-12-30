@@ -1,5 +1,7 @@
 import argparse
+
 import cv2
+
 from april_vision import Camera
 
 """

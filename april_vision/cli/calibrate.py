@@ -1,10 +1,11 @@
 """
-A charuco calibration script from:
-https://gist.github.com/naoki-mizuno/d25cbc3c59228291cabe50529d70894c
+A charuco calibration script.
+
+From: https://gist.github.com/naoki-mizuno/d25cbc3c59228291cabe50529d70894c
 """
-import sys
-import logging
 import argparse
+import logging
+import sys
 
 import cv2
 import numpy as np
@@ -13,9 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def read_chessboards(frames, aruco_dict, board):
-    """
-    Charuco base pose estimation.
-    """
+    """Charuco base pose estimation."""
     all_corners = []
     all_ids = []
 
@@ -31,13 +30,14 @@ def read_chessboards(frames, aruco_dict, board):
                 all_corners.append(c_corners)
                 all_ids.append(c_ids)
         else:
-            print('Failed!')
+            LOGGER.error('Failed!')
 
     imsize = gray.shape
     return all_corners, all_ids, imsize
 
 
 def capture_camera(cap, num=1, mirror=False, size=None):
+    """Capture frames to be used for calibration."""
     frames = []
     LOGGER.info("Press space to capture frame.")
 
@@ -65,6 +65,7 @@ def capture_camera(cap, num=1, mirror=False, size=None):
 
 
 def draw_axis(frame, camera_matrix, dist_coeff, aruco_dict, board):
+    """Annotate charuco marker target using calibration parameters."""
     corners, ids, rejected_points = cv2.aruco.detectMarkers(frame, aruco_dict)
     ret, c_corners, c_ids = cv2.aruco.interpolateCornersCharuco(
         corners, ids, frame, board)
@@ -75,16 +76,17 @@ def draw_axis(frame, camera_matrix, dist_coeff, aruco_dict, board):
     # cv2.aruco.drawDetectedCornersCharuco(frame, c_corners, c_ids)
     # cv2.aruco.drawDetectedMarkers(frame, corners, ids)
     # cv2.aruco.drawDetectedMarkers(frame, rejected_points, borderColor=(100, 0, 240))
-    print('Translation : {0}'.format(p_tvec))
-    print('Rotation    : {0}'.format(p_rvec))
-    print('Distance from camera: {0} m'.format(np.linalg.norm(p_tvec)))
+    LOGGER.info('Translation : {0}'.format(p_tvec))
+    LOGGER.info('Rotation    : {0}'.format(p_rvec))
+    LOGGER.info('Distance from camera: {0} m'.format(np.linalg.norm(p_tvec)))
 
     return frame
 
 
 def main(args: argparse.Namespace):
+    """Charuco calibration."""
     try:
-        import cv2.aruco  # ignore: type
+        import cv2.aruco  # type: ignore
     except ImportError:
         LOGGER.critical("Calibration requires the opencv-contrib-python package")
         sys.exit(1)
@@ -105,21 +107,17 @@ def main(args: argparse.Namespace):
         sys.exit(1)
     all_corners, all_ids, imsize = read_chessboards(frames, aruco_dict, board)
     ret, camera_matrix, dist_coeff, rvec, tvec = cv2.aruco.calibrateCameraCharuco(
-        all_corners, all_ids, board, imsize, None, None
+        all_corners, all_ids, board, imsize, None, None,
     )
 
-    print('> Camera matrix')
-    print(camera_matrix)
-    print('> Distortion coefficients')
-    print(dist_coeff)
-    print('> Resolution')
+    LOGGER.info(f"> Camera matrix\n{camera_matrix}")
+    LOGGER.info(f"> Distortion coefficients\n{dist_coeff}")
 
     height = int(video_dev.get(cv2.CAP_PROP_FRAME_WIDTH))
     width = int(video_dev.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    print(height, 'x', width)
+    LOGGER.info(f"> Resolution\n{height}x{width}")
 
-    print()
-    print("Capture frame to test calibration.")
+    LOGGER.info("Capture frame to test calibration.")
     test_frame = capture_camera(video_dev, 1)[0]
     test_frame = draw_axis(test_frame, camera_matrix, dist_coeff, aruco_dict, board)
 
@@ -130,6 +128,7 @@ def main(args: argparse.Namespace):
 
 
 def create_subparser(subparsers: argparse._SubParsersAction):
+    """Calibrate command parser."""
     parser = subparsers.add_parser(
         "calibrate",
         help="Generate camera calibration",
