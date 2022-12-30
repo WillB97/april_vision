@@ -195,6 +195,11 @@ class AprilTagHardwareBackend(Backend):
         return filtered_markers
 
     def annotated_frame_hook(self, frame: Frame, markers: List[Marker]) -> None:
+        """
+        During _detect annotate a copy of the frame and send it over MQTT.
+
+        The image data is a base64 JPEG.
+        """
         if self._mqttc is None:
             return
 
