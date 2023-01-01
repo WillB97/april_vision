@@ -17,11 +17,6 @@ subcommands = [
 ]
 
 
-def print_versions(args):
-    """Print library version."""
-    print(version)  # noqa: T201
-
-
 def build_argparser():
     """Load subparsers from available subcommands."""
     parser = argparse.ArgumentParser()
@@ -31,8 +26,9 @@ def build_argparser():
         mod_name = f"{__package__}.{command}"
         importlib.import_module(mod_name).create_subparser(subparsers)
 
-    version_parser = subparsers.add_parser("version", help="Print package version")
-    version_parser.set_defaults(func=print_versions)
+    parser.add_argument(
+        '--version', action='version', version=version, help="Print package version")
+    parser.add_argument('--debug', action='store_true', help="Enable debug logging")
 
     return parser
 
@@ -54,9 +50,9 @@ def setup_logger(debug=False):
 
 def main():
     """CLI entry-point."""
-    setup_logger()
     parser = build_argparser()
     args = parser.parse_args()
+    setup_logger(debug=args.debug)
 
     if "func" in args:
         args.func(args)
