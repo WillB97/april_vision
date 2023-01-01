@@ -1,16 +1,15 @@
+"""
+Generate the debug images of the vision processing steps.
+
+Provide an input image and generate the debug output
+of the vision processing steps.
+"""
 import argparse
 import os
 
 import cv2
 from PIL import Image
 from pyapriltags import Detector
-
-"""
-vision_debug:
-Provide an input image and generate the debug output
-of the vision processing steps
-"""
-
 
 pnm_files = [
     "debug_preprocess.pnm",
@@ -31,6 +30,7 @@ ps_files = [
 
 
 def process_debug(preserve=True, collage=True, clean=False):
+    """Convert debug outputs to PNG and optionally collage the images."""
     new_files = []
 
     for index, file in enumerate(pnm_files):
@@ -58,6 +58,7 @@ def process_debug(preserve=True, collage=True, clean=False):
 
 
 def create_collage(files, out):
+    """Create a collage of the debug images."""
     img = Image.open(files[-1])
     width, height = img.size
 
@@ -72,6 +73,7 @@ def create_collage(files, out):
 
 
 def main(args: argparse.Namespace):
+    """Generate the debug images of the vision processing steps."""
     detector = Detector(quad_decimate=1.0, debug=True)
 
     # TODO change directory around the debug process
@@ -83,6 +85,7 @@ def main(args: argparse.Namespace):
 
 
 def create_subparser(subparsers: argparse._SubParsersAction):
+    """Vision_debug command parser."""
     parser = subparsers.add_parser("vision_debug")
 
     parser.add_argument("input_file", type=str)

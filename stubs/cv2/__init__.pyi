@@ -136,6 +136,20 @@ CAP_PROP_ZOOM: int
 
 COLOR_BGR2GRAY: int
 
+IMREAD_ANYCOLOR: int
+IMREAD_ANYDEPTH: int
+IMREAD_COLOR: int
+IMREAD_GRAYSCALE: int
+IMREAD_IGNORE_ORIENTATION: int
+IMREAD_LOAD_GDAL: int
+IMREAD_REDUCED_COLOR_2: int
+IMREAD_REDUCED_COLOR_4: int
+IMREAD_REDUCED_COLOR_8: int
+IMREAD_REDUCED_GRAYSCALE_2: int
+IMREAD_REDUCED_GRAYSCALE_4: int
+IMREAD_REDUCED_GRAYSCALE_8: int
+IMREAD_UNCHANGED: int
+
 
 def cvtColor(src: Mat, code: int, dts: Mat = ..., dstCn: int = ...) -> Mat: ...
 def imread(filename: str, flags: int = ...) -> Mat: ...
