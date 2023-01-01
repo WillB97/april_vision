@@ -5,7 +5,6 @@ Takes an input video, adds annotation to each frame and saves the video.
 """
 import argparse
 import logging
-import os
 from pathlib import Path
 
 import cv2
@@ -32,12 +31,10 @@ def main(args: argparse.Namespace) -> None:
     width = int(source._video.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(source._video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    threads = os.cpu_count()
-    if threads is None:
-        threads = 4
     processer = Processor(
-        source, threads=threads,
-        tag_family=args.tag_family.value, quad_decimate=args.quad_decimate,
+        source,
+        tag_family=args.tag_family.value,
+        quad_decimate=args.quad_decimate,
     )
     output = cv2.VideoWriter(
         args.output_file, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))

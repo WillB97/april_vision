@@ -6,7 +6,6 @@ Can add overlays of fps, marker annotation, marker distance, etc..
 Option to save the current view of the camera.
 """
 import argparse
-import os
 
 import cv2
 
@@ -25,12 +24,10 @@ from ..vision import Processor
 def main(args: argparse.Namespace):
     """Live camera demonstration."""
     source = USBCamera(args.id, (1280, 720))  # TODO open camera in a smarter way
-    threads = os.cpu_count()
-    if threads is None:
-        threads = 4
     cam = Processor(
-        source, threads=threads,
-        tag_family=args.tag_family.value, quad_decimate=args.quad_decimate,
+        source,
+        tag_family=args.tag_family.value,
+        quad_decimate=args.quad_decimate,
     )
 
     while True:

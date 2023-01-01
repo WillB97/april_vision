@@ -5,7 +5,6 @@ Takes an input image, adds annotation and saves the image.
 """
 import argparse
 import logging
-import os
 from pathlib import Path
 
 import cv2
@@ -25,12 +24,10 @@ def main(args: argparse.Namespace):
         return
 
     source = ImageSource(args.input_file)
-    threads = os.cpu_count()
-    if threads is None:
-        threads = 4
     processer = Processor(
-        source, threads=threads,
-        tag_family=args.tag_family.value, quad_decimate=args.quad_decimate,
+        source,
+        tag_family=args.tag_family.value,
+        quad_decimate=args.quad_decimate,
     )
 
     frame = processer._capture()
