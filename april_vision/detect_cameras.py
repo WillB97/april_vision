@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import cv2
 
@@ -36,16 +36,19 @@ def find_cameras(
     """Find the available cameras using OS-specific discovery where available."""
     platform = sys.platform
 
+    calibration_map = generate_calibration_file_map(calibration_locations)
+
     if platform.startswith("linux"):
         cameras = linux_discovery()
     elif platform.startswith("darwin"):
         cameras = mac_discovery()
     elif platform == "win32":
-        cameras = windows_discovery()
+        valid_cameras = windows_discovery(calibration_map, include_uncalibrated)
+        return valid_cameras
     else:
         cameras = default_discovery()
 
-    valid_cameras = match_calibrations(cameras, calibration_locations, include_uncalibrated)
+    valid_cameras = match_calibrations(cameras, calibration_map, include_uncalibrated)
 
     return valid_cameras
 
@@ -66,25 +69,27 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
             node = storage.getNode('vidpid')
             if node.isSeq():
                 pidvids = [node.at(i).string() for i in range(node.size())]
-            else:
+            elif node.isString():
                 pidvids = [node.string()]
+            else:
+                # This file lacks any vidpids
+                continue
 
             for pidvid in pidvids:
                 calibration_map[pidvid] = calibration_file.absolute()
+    LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
     return calibration_map
 
 
 def match_calibrations(
     cameras: List[CameraIdentifier],
-    calibration_locations: List[str],
+    calibration_map: Dict[str, Path],
     include_uncalibrated: bool,
 ) -> List[CalibratedCamera]:
     """Filter found cameras to those that matching calibration files' USB VID & PID."""
     calibrated_cameras: List[CalibratedCamera] = []
     uncalibrated_cameras: List[CalibratedCamera] = []
-    calibration_map = generate_calibration_file_map(calibration_locations)
-    LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
     for camera in cameras:
         try:
@@ -106,6 +111,27 @@ def match_calibrations(
                 ))
 
     return calibrated_cameras + uncalibrated_cameras
+
+
+def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path, str]]:
+    """Use PyUSB to detect any supported USB VID/PID combinations connected to the system."""
+    import libusb_package
+    try:
+        usb_devices = libusb_package.find(find_all=True)
+    except ValueError:
+        LOGGER.warning("libusb_package failed to find a libusb backend.")
+        return []
+
+    usable_devices: List[Tuple[str, Path, str]] = []
+
+    for dev in usb_devices:
+        vidpid = f"{dev.idVendor:04x}:{dev.idProduct:04x}"
+        calibration = calibration_map.get(vidpid)
+        if calibration is not None:
+            usable_devices.append((vidpid, calibration, calibration.stem))
+
+    LOGGER.debug(f"Found calibration for the devices: {[dev[0] for dev in usable_devices]}")
+    return usable_devices
 
 
 def linux_discovery() -> List[CameraIdentifier]:
@@ -194,14 +220,53 @@ def mac_discovery() -> List[CameraIdentifier]:
     return cameras
 
 
-def windows_discovery() -> List[CameraIdentifier]:
+def windows_discovery(
+    calibration_map: Dict[str, Path],
+    include_uncalibrated: bool,
+) -> List[CalibratedCamera]:
     """
-    Discovery method for Windows using the fallback discovery method.
+    Discovery method for Windows using PyUSB and the fallback discovery method.
 
-    This cannot identify the USB VID & PID of the camera and only provides
-    information on the openable indexes.
+    This cannot identify which index corresponds to the found USB VID & PID
+    so is unable to provide a useful output when more than one USB camera with
+    calibration is connected.
+    The returned camera is a combination of the found USB VID & PID and the
+    first openable camera index.
     """
-    return default_discovery()
+    found_cameras = default_discovery()
+    if include_uncalibrated:
+        # We lack the information to match which camera is which so treat them
+        # all as uncalibrated
+        LOGGER.debug("Assuming all cameras are uncalibrated")
+        return [
+            CalibratedCamera(
+                index=camera.index,
+                name=camera.name,
+                vidpid=camera.vidpid,
+            ) for camera in found_cameras
+        ]
+
+    if len(found_cameras) == 0:
+        return []
+
+    selected_camera = found_cameras[0]
+    LOGGER.debug(f"Selecting camera index {selected_camera.index}")
+
+    usable_cameras = usable_present_devices(calibration_map)
+    if len(usable_cameras) > 1:
+        raise RuntimeError(
+            "Naive calibration selection is only supported when a single compatible "
+            "device is connected")
+    elif len(usable_cameras) == 1:
+        usable_camera = usable_cameras[0]
+        return [CalibratedCamera(
+            index=selected_camera.index,
+            name=usable_camera[2],
+            vidpid=usable_camera[0],
+            calibration=usable_camera[1],
+        )]
+    else:
+        return []
 
 
 def default_discovery() -> List[CameraIdentifier]:
