@@ -1,6 +1,7 @@
 """The top-level Processor class for marker detection and annotation."""
 import logging
 from pathlib import Path
+from math import hypot
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import cv2
@@ -9,7 +10,7 @@ from numpy.typing import NDArray
 from pyapriltags import Detector
 
 from .frame_sources import FrameSource
-from .marker import Marker
+from .marker import Marker, PixelCoordinates
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +37,10 @@ class Frame(NamedTuple):
         colour_frame = cv2.imread(str(filepath))
 
         return cls.from_colour_frame(colour_frame)
+
+
+def line_distance(p1: PixelCoordinates, p2: PixelCoordinates) -> float:
+    return hypot(p1.x - p2.x, p1.y - p2.y)
 
 
 class Processor:
@@ -122,7 +127,7 @@ class Processor:
         frame: Frame,
         markers: List[Marker],
         line_thickness: int = 2,
-        text_scale: float = 0.5,
+        text_scale: float = 1,
     ) -> Frame:
         """
         Annotate marker borders and ids onto frame.
@@ -168,13 +173,26 @@ class Processor:
                     thickness=line_thickness,
                 )
 
+                corners = marker.pixel_corners
+                # Scale the text to be a reasonable size based on the distance between
+                # corner diagonals
+                text_pre_scale = max(
+                    line_distance(corners[0], corners[2]),
+                    line_distance(corners[1], corners[3]),
+                ) / 300
+                text_scale *= text_pre_scale
+
+                # Approximately center the text
+                text_origin = np.array(marker.pixel_centre, dtype=np.int32)
+                text_origin += np.array([-40 * text_scale, 10 * text_scale], dtype=np.int32)
+
                 cv2.putText(
                     frame_type,
                     marker_id,
-                    np.array(marker.pixel_centre, dtype=np.int32),
+                    text_origin,
                     cv2.FONT_HERSHEY_DUPLEX,
                     text_scale,
-                    color=(255, 0, 0),  # blue
+                    color=(255, 191, 0),  # deep sky blue
                     thickness=2,
                 )
 

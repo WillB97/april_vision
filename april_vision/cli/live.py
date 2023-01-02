@@ -53,7 +53,7 @@ def main(args: argparse.Namespace):
         markers = cam._detect(frame)
 
         if args.annotate:
-            cam._annotate(frame, markers, text_scale=0.5, line_thickness=2)
+            cam._annotate(frame, markers)
 
         new_frame_time = perf_counter()
         fps = 1 / (new_frame_time - prev_frame_time)
