@@ -12,18 +12,14 @@ from time import perf_counter
 
 import cv2
 
+from ..calibrations import calibrations
+from ..detect_cameras import find_cameras
 from ..frame_sources import USBCamera
 from ..marker import MarkerType
+from ..utils import RollingAverage, annotate_text
 from ..vision import Processor
-from ..utils import annotate_text, RollingAverage
-from ..detect_cameras import find_cameras
-from ..calibrations import calibrations
 
 LOGGER = logging.getLogger(__name__)
-
-# TODO add these functionality
-# live
-# 	distance
 
 
 def main(args: argparse.Namespace):
@@ -41,11 +37,13 @@ def main(args: argparse.Namespace):
         source = USBCamera.from_calibration_file(
             camera.index, camera.calibration, camera.vidpid)
     else:
-        source = USBCamera(args.id, (1280, 720))  # TODO open camera in a smarter way
+        source = USBCamera(args.id, (1280, 720))
     cam = Processor(
         source,
         tag_family=args.tag_family.value,
         quad_decimate=args.quad_decimate,
+        tag_sizes=float(args.tag_size) / 1000,
+        calibration=source.calibration,
     )
 
     LOGGER.info("Press S to save image, press Q to exit")
@@ -65,6 +63,17 @@ def main(args: argparse.Namespace):
             frame = annotate_text(
                 frame, f"{avg_fps.average():.0f}", (7, 70),
                 text_scale=3, text_colour=(100, 255, 0))
+
+        if args.distance:
+            try:
+                for marker in markers:
+                    # Check we have pose data
+                    _ = marker.cartesian
+
+                    loc = (marker.pixel_centre[0], marker.pixel_centre[1]-20)
+                    frame = annotate_text(frame, f"dist={marker.distance}mm", loc)
+            except RuntimeError:
+                pass
 
         cv2.imshow('image', frame.colour_frame)
 
@@ -105,7 +114,10 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         '--quad_decimate', type=float, default=2,
         help="Set the level of decimation used in the detection stage")
 
-    # parser.add_argument('--tag_size', type=int, default=0)
-    # parser.add_argument('--distance', action='store_true')
+    parser.add_argument(
+        '--tag_size', type=int, default=0, help="The size of markers in millimeters")
+    parser.add_argument(
+        '--distance', action='store_true',
+        help="Annotate frames with the distance to the marker.")
 
     parser.set_defaults(func=main)

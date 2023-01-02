@@ -11,6 +11,7 @@ import cv2
 
 from ..frame_sources import VideoSource
 from ..marker import MarkerType
+from ..utils import annotate_text, load_calibration
 from ..vision import Processor
 
 LOGGER = logging.getLogger(__name__)
@@ -30,11 +31,16 @@ def main(args: argparse.Namespace) -> None:
     fps = source._video.get(cv2.CAP_PROP_FPS)
     width = int(source._video.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(source._video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    calibration = None
+    if args.calibration:
+        _, calibration = load_calibration(args.calibration)
 
     processer = Processor(
         source,
         tag_family=args.tag_family.value,
         quad_decimate=args.quad_decimate,
+        tag_sizes=float(args.tag_size) / 1000,
+        calibration=calibration,
     )
     output = cv2.VideoWriter(
         args.output_file, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
@@ -48,6 +54,18 @@ def main(args: argparse.Namespace) -> None:
 
         markers = processer._detect(frame)
         frame = processer._annotate(frame, markers)
+
+        if args.calibration:
+            try:
+                for marker in markers:
+                    # Check we have pose data
+                    _ = marker.cartesian
+
+                    loc = (marker.pixel_centre[0], marker.pixel_centre[1]-20)
+                    frame = annotate_text(frame, f"dist={marker.distance}mm", loc)
+            except RuntimeError:
+                pass
+
         # save frame
         output.write(frame.colour_frame)
 
@@ -83,7 +101,9 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         '--quad_decimate', type=float, default=2,
         help="Set the level of decimation used in the detection stage")
 
-    # parser.add_argument('--calibration', type=Path, default=None)
-    # parser.add_argument('--tag_sizes', default=None)
+    parser.add_argument(
+        '--calibration', type=Path, default=None, help="Calbration XML file to use.")
+    parser.add_argument(
+        '--tag_size', type=int, default=0, help="The size of markers in millimeters")
 
     parser.set_defaults(func=main)

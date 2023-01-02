@@ -49,7 +49,7 @@ class Processor:
         self,
         frame_source: Optional[FrameSource] = None,
         calibration: Optional[Tuple[float, float, float, float]] = None,
-        tag_sizes: Optional[Dict[int, float]] = None,
+        tag_sizes: Union[float, Dict[int, float], None] = None,
         *,
         tag_family: str = 'tag36h11',
         threads: int = 4,
