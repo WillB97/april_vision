@@ -48,7 +48,7 @@ def main(args: argparse.Namespace):
                 # Check we have pose data
                 _ = marker.cartesian
 
-                loc = (marker.pixel_centre[0], marker.pixel_centre[1]-20)
+                loc = (int(marker.pixel_centre[0]), int(marker.pixel_centre[1]-20))
                 frame = annotate_text(frame, f"dist={marker.distance}mm", loc)
         except RuntimeError:
             pass

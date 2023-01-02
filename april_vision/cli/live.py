@@ -25,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 def main(args: argparse.Namespace):
     """Live camera demonstration."""
     avg_fps = RollingAverage(50)
-    prev_frame_time = 0
+    prev_frame_time: float = 0
     file_num = 1
     if args.id is None:
         cameras = find_cameras(calibrations, include_uncalibrated=True)
@@ -70,7 +70,7 @@ def main(args: argparse.Namespace):
                     # Check we have pose data
                     _ = marker.cartesian
 
-                    loc = (marker.pixel_centre[0], marker.pixel_centre[1]-20)
+                    loc = (int(marker.pixel_centre[0]), int(marker.pixel_centre[1]-20))
                     frame = annotate_text(frame, f"dist={marker.distance}mm", loc)
             except RuntimeError:
                 pass
