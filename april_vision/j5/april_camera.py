@@ -4,7 +4,7 @@ import logging
 import os
 from pathlib import Path
 from threading import Thread
-from typing import Dict, Iterable, List, Optional, Set, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Set, Type, Union
 
 import cv2
 import numpy as np
@@ -127,7 +127,7 @@ class AprilTagHardwareBackend(Backend):
         )
         self._marker_offset = 0
         self._cam.marker_filter = self.marker_filter
-        self._mqttc = None
+        self._mqtt_publish: Optional[Callable[[str, Union[bytes, str]], None]] = None
         self._cam.detection_hook = self.annotated_frame_hook
 
     def see(
@@ -207,7 +207,7 @@ class AprilTagHardwareBackend(Backend):
 
         The image data is a base64 JPEG.
         """
-        if self._mqttc is None:
+        if self._mqtt_publish is None:
             return
 
         copied_frame = Frame(
@@ -230,6 +230,9 @@ class AprilTagHardwareBackend(Backend):
 
         To be run as a thread target.
         """
+        if self._mqtt_publish is None:
+            return
+
         encoded_frame = self.base64_encode_frame(frame)
         if encoded_frame is None:
             return
@@ -238,10 +241,9 @@ class AprilTagHardwareBackend(Backend):
 
         # The message is sent in a background thread
         try:
-            self._mqttc.publish(  # type: ignore[attr-defined]
+            self._mqtt_publish(
                 'camera/annotated',
                 encoded_frame,
-                auto_prefix_topic=False,
             )
         except ValueError:
             pass
