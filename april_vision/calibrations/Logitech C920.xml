@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibrationDate>"Sun Oct 10 19:16:56 2021"</calibrationDate>
+<framesCount>29</framesCount>
+<cameraResolution>
+  1280 720</cameraResolution>
+<cameraMatrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    9.0549264655359627e+02 0. 6.5427242672192540e+02 0.
+    9.0549264655359627e+02 3.9854915861502860e+02 0. 0. 1.</data></cameraMatrix>
+<cameraMatrix_std_dev type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0. 6.2175256922458502e+00 1.8535226511639644e+00
+    1.7114593020601732e+00</data></cameraMatrix_std_dev>
+<dist_coeffs type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    0. -9.8543749455773197e-02 0. 0. 6.4421420179972516e-02</data></dist_coeffs>
+<dist_coeffs_std_dev type_id="opencv-matrix">
+  <rows>5</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0. 1.3176496934923674e-02 0. 0. 2.6883843151663960e-02</data></dist_coeffs_std_dev>
+<avg_reprojection_error>6.6683521969915727e-01</avg_reprojection_error>
+<vidpid>"046d:082d" "046d:0892" "046d:08E5"</vidpid>
+</opencv_storage>

@@ -188,6 +188,12 @@ class AprilTagHardwareBackend(Backend):
     def marker_filter(self, markers: List[Marker]) -> List[Marker]:
         """Apply marker offset and remove markers that are not in the game."""
         filtered_markers: List[Marker] = []
+        if not isinstance(self._cam.tag_sizes, dict):
+            for marker in markers:
+                marker._id -= self._marker_offset
+                filtered_markers.append(marker)
+            return filtered_markers
+
         for marker in markers:
             if marker._id in self._cam.tag_sizes.keys():
                 marker._id -= self._marker_offset

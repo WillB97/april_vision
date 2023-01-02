@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibrationDate>"Sun Oct 10 16:29:49 2021"</calibrationDate>
+<framesCount>29</framesCount>
+<cameraResolution>
+  1280 720</cameraResolution>
+<cameraMatrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1.0059832255301474e+03 0. 6.3600363812582748e+02 0.
+    1.0059832255301474e+03 3.9032987567991756e+02 0. 0. 1.</data></cameraMatrix>
+<cameraMatrix_std_dev type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0. 1.8390897483985235e+01 4.9795155412210459e+00
+    5.5464984166225326e+00</data></cameraMatrix_std_dev>
+<dist_coeffs type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    6.8703433405016029e-02 0. 0. 0. -2.4193185280867940e-01</data></dist_coeffs>
+<dist_coeffs_std_dev type_id="opencv-matrix">
+  <rows>5</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    1.2370831283282813e-02 0. 0. 0. 7.8882690649474521e-02</data></dist_coeffs_std_dev>
+<avg_reprojection_error>4.8677611488489964e-01</avg_reprojection_error>
+<vidpid>"FaceTime HD Camera"</vidpid>
+</opencv_storage>

@@ -1,3 +1,7 @@
 [flake8]
 max_line_length = 95
-extend-ignore = D401,D105,D107
+extend-ignore =
+    D401,  # Don't require imperative mood docstrings.
+    D105,  # Ignore docstrings on magic methods
+    D107,  # Ignore docstrings on init methods
+    T000,  # Ignore TODO comments

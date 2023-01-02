@@ -82,6 +82,7 @@ def match_calibrations(
 ) -> List[CalibratedCamera]:
     """Filter found cameras to those that matching calibration files' USB VID & PID."""
     calibrated_cameras: List[CalibratedCamera] = []
+    uncalibrated_cameras: List[CalibratedCamera] = []
     calibration_map = generate_calibration_file_map(calibration_locations)
     LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
@@ -98,13 +99,13 @@ def match_calibrations(
         except KeyError:
             LOGGER.debug(f"No calibration found for for {camera.name}")
             if include_uncalibrated is True:
-                calibrated_cameras.append(CalibratedCamera(
+                uncalibrated_cameras.append(CalibratedCamera(
                     index=camera.index,
                     name=camera.name,
                     vidpid=camera.vidpid,
                 ))
 
-    return calibrated_cameras
+    return calibrated_cameras + uncalibrated_cameras
 
 
 def linux_discovery() -> List[CameraIdentifier]:
