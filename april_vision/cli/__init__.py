@@ -34,6 +34,7 @@ def build_argparser():
 
 
 def setup_logger(debug=False):
+    """Output all loggers to console with custom format at level INFO or DEBUG."""
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
     console_handler = logging.StreamHandler()
