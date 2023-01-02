@@ -113,7 +113,7 @@ def match_calibrations(
     return calibrated_cameras + uncalibrated_cameras
 
 
-def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path]]:
+def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path, str]]:
     """Use PyUSB to detect any supported USB VID/PID combinations connected to the system."""
     import libusb_package
     try:
@@ -122,13 +122,13 @@ def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, 
         LOGGER.warning("libusb_package failed to find a libusb backend.")
         return []
 
-    usable_devices: List[Tuple[str, Path]] = []
+    usable_devices: List[Tuple[str, Path, str]] = []
 
     for dev in usb_devices:
         vidpid = f"{dev.idVendor:04x}:{dev.idProduct:04x}"
         calibration = calibration_map.get(vidpid)
         if calibration is not None:
-            usable_devices.append((vidpid, calibration))
+            usable_devices.append((vidpid, calibration, calibration.stem))
 
     LOGGER.debug(f"Found calibration for the devices: {[dev[0] for dev in usable_devices]}")
     return usable_devices
@@ -261,7 +261,7 @@ def windows_discovery(
         usable_camera = usable_cameras[0]
         return [CalibratedCamera(
             index=selected_camera.index,
-            name=selected_camera.name,
+            name=usable_camera[2],
             vidpid=usable_camera[0],
             calibration=usable_camera[1],
         )]
