@@ -1,15 +1,41 @@
 """Generic utility functions."""
 from collections import deque
+from math import hypot
 from pathlib import Path
-from typing import Deque, Tuple, Union
+from typing import Deque, NamedTuple, Tuple, Union
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
-from .vision import Frame
+from .marker import Marker, PixelCoordinates
 
 Resolution = Tuple[int, int]
 CameraIntrinsic = Tuple[float, float, float, float]
+
+
+class Frame(NamedTuple):
+    """A tuple of original image and a greyscale version for fiducial detection."""
+
+    grey_frame: NDArray
+    colour_frame: NDArray
+
+    @classmethod
+    def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
+        """Load frame from a colour image in a numpy array."""
+        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
+
+        return cls(
+            grey_frame=grey_frame,
+            colour_frame=colour_frame,
+        )
+
+    @classmethod
+    def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
+        """Load an image file into the frame."""
+        colour_frame = cv2.imread(str(filepath))
+
+        return cls.from_colour_frame(colour_frame)
 
 
 def annotate_text(
@@ -58,6 +84,23 @@ def load_calibration(calibration_file: Union[str, Path]) -> Tuple[Resolution, Ca
         (width, height),
         (fx, fy, cx, cy),
     )
+
+
+def normalise_marker_text(marker: Marker) -> float:
+    """
+    Calculate text scale factor so that text on marker is a reasonable size.
+
+    Based on the distance between corner diagonals.
+    """
+    corners = marker.pixel_corners
+
+    def line_distance(p1: PixelCoordinates, p2: PixelCoordinates) -> float:
+        return hypot(p1.x - p2.x, p1.y - p2.y)
+
+    return max(
+        line_distance(corners[0], corners[2]),
+        line_distance(corners[1], corners[3]),
+    ) / 300
 
 
 class RollingAverage:

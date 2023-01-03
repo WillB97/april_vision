@@ -1,7 +1,7 @@
 """The top-level Processor class for marker detection and annotation."""
 import logging
 from pathlib import Path
-from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -10,32 +10,9 @@ from pyapriltags import Detector
 
 from .frame_sources import FrameSource
 from .marker import Marker
+from .utils import Frame, normalise_marker_text
 
 LOGGER = logging.getLogger(__name__)
-
-
-class Frame(NamedTuple):
-    """A tuple of original image and a greyscale version for fiducial detection."""
-
-    grey_frame: NDArray
-    colour_frame: NDArray
-
-    @classmethod
-    def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
-        """Load frame from a colour image in a numpy array."""
-        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
-
-        return cls(
-            grey_frame=grey_frame,
-            colour_frame=colour_frame,
-        )
-
-    @classmethod
-    def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
-        """Load an image file into the frame."""
-        colour_frame = cv2.imread(str(filepath))
-
-        return cls.from_colour_frame(colour_frame)
 
 
 class Processor:
@@ -122,7 +99,7 @@ class Processor:
         frame: Frame,
         markers: List[Marker],
         line_thickness: int = 2,
-        text_scale: float = 0.5,
+        text_scale: float = 1,
     ) -> Frame:
         """
         Annotate marker borders and ids onto frame.
@@ -168,13 +145,20 @@ class Processor:
                     thickness=line_thickness,
                 )
 
+                marker_text_scale = text_scale * normalise_marker_text(marker)
+
+                # Approximately center the text
+                text_origin = np.array(marker.pixel_centre, dtype=np.int32)
+                text_origin += np.array(
+                    [-40 * marker_text_scale, 10 * marker_text_scale], dtype=np.int32)
+
                 cv2.putText(
                     frame_type,
                     marker_id,
-                    np.array(marker.pixel_centre, dtype=np.int32),
+                    text_origin,
                     cv2.FONT_HERSHEY_DUPLEX,
-                    text_scale,
-                    color=(255, 0, 0),  # blue
+                    marker_text_scale,
+                    color=(255, 191, 0),  # deep sky blue
                     thickness=2,
                 )
 

@@ -16,7 +16,7 @@ from ..calibrations import calibrations
 from ..detect_cameras import find_cameras
 from ..frame_sources import USBCamera
 from ..marker import MarkerType
-from ..utils import RollingAverage, annotate_text
+from ..utils import RollingAverage, annotate_text, normalise_marker_text
 from ..vision import Processor
 
 LOGGER = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ def main(args: argparse.Namespace):
         markers = cam._detect(frame)
 
         if args.annotate:
-            cam._annotate(frame, markers, text_scale=0.5, line_thickness=2)
+            cam._annotate(frame, markers)
 
         new_frame_time = perf_counter()
         fps = 1 / (new_frame_time - prev_frame_time)
@@ -70,8 +70,17 @@ def main(args: argparse.Namespace):
                     # Check we have pose data
                     _ = marker.cartesian
 
-                    loc = (int(marker.pixel_centre[0]), int(marker.pixel_centre[1]-20))
-                    frame = annotate_text(frame, f"dist={marker.distance}mm", loc)
+                    text_scale = normalise_marker_text(marker)
+
+                    loc = (
+                        int(marker.pixel_centre[0] - 80 * text_scale),
+                        int(marker.pixel_centre[1] + 40 * text_scale),
+                    )
+                    frame = annotate_text(
+                        frame, f"dist={marker.distance}mm", loc,
+                        text_scale=0.8 * text_scale,
+                        text_colour=(255, 191, 0),  # deep sky blue
+                    )
             except RuntimeError:
                 pass
 
