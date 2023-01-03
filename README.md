@@ -28,8 +28,7 @@ If you need to run the calibration feature in the CLI you will need to install t
 ## Example
 
 ```python
-from april_vision import find_cameras, USBCamera, calibrations
-from april_vision import Processor, MarkerType
+from april_vision import Processor, USBCamera, calibrations, find_cameras
 
 cameras = find_cameras(calibrations)
 
@@ -47,7 +46,7 @@ source = USBCamera.from_calibration_file(
 
 cam = Processor(
     source,
-    tag_family=MarkerType.APRILTAG_36H11,
+    tag_family='tag36h11',
     quad_decimate=2.0,
     tag_sizes=0.08,
     calibration=source.calibration
