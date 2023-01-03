@@ -145,18 +145,19 @@ class Processor:
                     thickness=line_thickness,
                 )
 
-                text_scale *= normalise_marker_text(marker)
+                marker_text_scale = text_scale * normalise_marker_text(marker)
 
                 # Approximately center the text
                 text_origin = np.array(marker.pixel_centre, dtype=np.int32)
-                text_origin += np.array([-40 * text_scale, 10 * text_scale], dtype=np.int32)
+                text_origin += np.array(
+                    [-40 * marker_text_scale, 10 * marker_text_scale], dtype=np.int32)
 
                 cv2.putText(
                     frame_type,
                     marker_id,
                     text_origin,
                     cv2.FONT_HERSHEY_DUPLEX,
-                    text_scale,
+                    marker_text_scale,
                     color=(255, 191, 0),  # deep sky blue
                     thickness=2,
                 )
