@@ -1,8 +1,7 @@
 """The top-level Processor class for marker detection and annotation."""
 import logging
 from pathlib import Path
-from math import hypot
-from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -10,37 +9,10 @@ from numpy.typing import NDArray
 from pyapriltags import Detector
 
 from .frame_sources import FrameSource
-from .marker import Marker, PixelCoordinates
+from .marker import Marker
+from .utils import Frame, normalise_marker_text
 
 LOGGER = logging.getLogger(__name__)
-
-
-class Frame(NamedTuple):
-    """A tuple of original image and a greyscale version for fiducial detection."""
-
-    grey_frame: NDArray
-    colour_frame: NDArray
-
-    @classmethod
-    def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
-        """Load frame from a colour image in a numpy array."""
-        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
-
-        return cls(
-            grey_frame=grey_frame,
-            colour_frame=colour_frame,
-        )
-
-    @classmethod
-    def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
-        """Load an image file into the frame."""
-        colour_frame = cv2.imread(str(filepath))
-
-        return cls.from_colour_frame(colour_frame)
-
-
-def line_distance(p1: PixelCoordinates, p2: PixelCoordinates) -> float:
-    return hypot(p1.x - p2.x, p1.y - p2.y)
 
 
 class Processor:
@@ -173,14 +145,7 @@ class Processor:
                     thickness=line_thickness,
                 )
 
-                corners = marker.pixel_corners
-                # Scale the text to be a reasonable size based on the distance between
-                # corner diagonals
-                text_pre_scale = max(
-                    line_distance(corners[0], corners[2]),
-                    line_distance(corners[1], corners[3]),
-                ) / 300
-                text_scale *= text_pre_scale
+                text_scale *= normalise_marker_text(marker)
 
                 # Approximately center the text
                 text_origin = np.array(marker.pixel_centre, dtype=np.int32)
