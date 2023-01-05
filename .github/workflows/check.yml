@@ -33,3 +33,9 @@ jobs:
         name: package
         path: |
           dist
+    - name: Publish to PyPi
+      if: ${{ github.ref_type	== 'tag' }}
+      uses: pypa/gh-action-pypi-publish@v1.6.4
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        print_hash: true

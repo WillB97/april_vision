@@ -17,8 +17,8 @@ from .._version import __version__
 from ..detect_cameras import CalibratedCamera, find_cameras
 from ..frame_sources import USBCamera
 from ..marker import Marker, MarkerType
-from ..vision import Processor
 from ..utils import Frame
+from ..vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 
