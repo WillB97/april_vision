@@ -5,13 +5,13 @@ Takes a set of parameters and generates marker PDFs.
 """
 import argparse
 import logging
-from pathlib import Path
-
-import pyapriltags
-import numpy as np
 from enum import Enum
-from typing import NamedTuple, List
-from PIL import Image, ImageDraw, ImageOps, ImageFont
+from pathlib import Path
+from typing import List, NamedTuple, Tuple
+
+import numpy as np
+import pyapriltags
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from ..marker import MarkerType
 
@@ -53,7 +53,7 @@ class ApriltagFamily(NamedTuple):
     total_width: int
     reversed_border: bool
     nbits: int
-    bits: List[int]
+    bits: List[Tuple[int, int]]
     h: int
     name: str
 
@@ -132,7 +132,7 @@ def generate_tag_tile(
     tag_data: ApriltagFamily,
     args: argparse.Namespace,
     tag_id: int,
-) -> Image:
+) -> Image.Image:
     # Calculate the overall marker size
     pixel_size = args.tag_size // tag_data.width_at_border
     required_size = pixel_size * tag_data.total_width
@@ -145,7 +145,10 @@ def generate_tag_tile(
         tag_array = np.rot90(tag_array, k=2)
 
     marker_image = Image.fromarray(tag_array)
-    resized_image = marker_image.resize([mm_to_pixels(required_size)] * 2, resample=0)
+    resized_image = marker_image.resize(
+        (mm_to_pixels(required_size), mm_to_pixels(required_size)),
+        resample=0
+    )
 
     # Add grey border line
     bordered_image = ImageOps.expand(
