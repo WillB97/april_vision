@@ -5,9 +5,13 @@ from sys import platform
 from typing import List, Optional, Tuple, Union
 
 import cv2
+import numpy as np
 from numpy.typing import NDArray
 
 LOGGER = logging.getLogger(__name__)
+
+
+FrameArray = NDArray[np.generic]
 
 
 class FrameSource:
@@ -17,7 +21,7 @@ class FrameSource:
     Allows april_vision.Processor to be created prior to frames being available.
     """
 
-    def read(self, fresh: bool = True) -> NDArray:
+    def read(self, fresh: bool = True) -> FrameArray:
         """
         The method for getting a new frame.
 
@@ -141,7 +145,7 @@ class USBCamera(FrameSource):
             int(self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
 
-    def _optimise_camera(self, vidpid: str):
+    def _optimise_camera(self, vidpid: str) -> None:
         """Tweak the camera's image type and framerate to achieve the minimum frame time."""
         verified_vidpid = {'046d:0825', '046d:0807'}
         if not platform.startswith("linux"):
@@ -166,14 +170,14 @@ class USBCamera(FrameSource):
             except AssertionError as e:
                 LOGGER.warning(f"Failed to set property: {e}")
 
-    def _capture_single_frame(self) -> NDArray:
+    def _capture_single_frame(self) -> FrameArray:
         """Read a single frame from the camera's buffer."""
         ret, colour_frame = self._camera.read()
         if not ret:
             raise IOError("Failed to get frame from camera")
         return colour_frame
 
-    def read(self, fresh: bool = True) -> NDArray:
+    def read(self, fresh: bool = True) -> FrameArray:
         """
         Get another frame from the camera.
 
@@ -203,7 +207,7 @@ class VideoSource(FrameSource):
         """
         self._video = cv2.VideoCapture(str(filepath))
 
-    def read(self, fresh: bool = True) -> NDArray:
+    def read(self, fresh: bool = True) -> FrameArray:
         """
         Get the next frame from the video file.
 
@@ -230,6 +234,6 @@ class ImageSource(FrameSource):
         """
         self._frame = cv2.imread(str(filepath))
 
-    def read(self, fresh: bool = True) -> NDArray:
+    def read(self, fresh: bool = True) -> FrameArray:
         """Return the stored frame."""
         return self._frame

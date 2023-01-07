@@ -13,12 +13,12 @@ import argparse
 #     give performance result
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Iterate over images doing marker detection."""
     raise NotImplementedError("Marker benchmark is not implemented.")
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Marker_benchmark command parser."""
     parser = subparsers.add_parser("marker_benchmark")
 

@@ -6,8 +6,8 @@ from typing import Deque, NamedTuple, Tuple, Union
 
 import cv2
 import numpy as np
-from numpy.typing import NDArray
 
+from .frame_sources import FrameArray
 from .marker import Marker, PixelCoordinates
 
 Resolution = Tuple[int, int]
@@ -17,11 +17,11 @@ CameraIntrinsic = Tuple[float, float, float, float]
 class Frame(NamedTuple):
     """A tuple of original image and a greyscale version for fiducial detection."""
 
-    grey_frame: NDArray
-    colour_frame: NDArray
+    grey_frame: FrameArray
+    colour_frame: FrameArray
 
     @classmethod
-    def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
+    def from_colour_frame(cls, colour_frame: FrameArray) -> 'Frame':
         """Load frame from a colour image in a numpy array."""
         grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
 

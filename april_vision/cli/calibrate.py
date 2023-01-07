@@ -6,14 +6,21 @@ From: https://gist.github.com/naoki-mizuno/d25cbc3c59228291cabe50529d70894c
 import argparse
 import logging
 import sys
+from typing import Any, Iterable, List, Optional, Tuple
 
 import cv2
 import numpy as np
 
+from april_vision.frame_sources import FrameArray
+
 LOGGER = logging.getLogger(__name__)
 
 
-def read_chessboards(frames, aruco_dict, board):
+def read_chessboards(
+    frames: Iterable[FrameArray],
+    aruco_dict: Any,
+    board: Any,
+) -> Tuple[Any, Any, Any]:
     """Charuco base pose estimation."""
     all_corners = []
     all_ids = []
@@ -36,15 +43,20 @@ def read_chessboards(frames, aruco_dict, board):
     return all_corners, all_ids, imsize
 
 
-def capture_camera(cap, num=1, mirror=False, size=None):
+def capture_camera(
+    cap: cv2.VideoCapture,
+    num: int = 1,
+    mirror: bool = False,
+    size: Optional[Tuple[int, int]] = None,
+) -> List[FrameArray]:
     """Capture frames to be used for calibration."""
     frames = []
     LOGGER.info("Press space to capture frame.")
 
     while True:
-        ret, frame = cap.read()
+        _, frame = cap.read()
 
-        if mirror is True:
+        if mirror:
             frame = cv2.flip(frame, 1)
 
         if size is not None and len(size) == 2:
@@ -64,7 +76,13 @@ def capture_camera(cap, num=1, mirror=False, size=None):
     return frames
 
 
-def draw_axis(frame, camera_matrix, dist_coeff, aruco_dict, board):
+def draw_axis(
+    frame: FrameArray,
+    camera_matrix: Any,
+    dist_coeff: Any,
+    aruco_dict: Any,
+    board: Any,
+) -> FrameArray:
     """Annotate charuco marker target using calibration parameters."""
     corners, ids, rejected_points = cv2.aruco.detectMarkers(frame, aruco_dict)
     ret, c_corners, c_ids = cv2.aruco.interpolateCornersCharuco(
@@ -83,7 +101,7 @@ def draw_axis(frame, camera_matrix, dist_coeff, aruco_dict, board):
     return frame
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Charuco calibration."""
     try:
         import cv2.aruco  # type: ignore
@@ -106,7 +124,7 @@ def main(args: argparse.Namespace):
         LOGGER.error('No frame captured')
         sys.exit(1)
     all_corners, all_ids, imsize = read_chessboards(frames, aruco_dict, board)
-    ret, camera_matrix, dist_coeff, rvec, tvec = cv2.aruco.calibrateCameraCharuco(
+    _, camera_matrix, dist_coeff, _, _ = cv2.aruco.calibrateCameraCharuco(
         all_corners, all_ids, board, imsize, None, None,
     )
 
@@ -127,7 +145,7 @@ def main(args: argparse.Namespace):
     video_dev.release()
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Calibrate command parser."""
     parser = subparsers.add_parser(
         "calibrate",

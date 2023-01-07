@@ -22,7 +22,7 @@ from ..vision import Processor
 LOGGER = logging.getLogger(__name__)
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Live camera demonstration."""
     avg_fps = RollingAverage(50)
     prev_frame_time: float = 0
@@ -100,7 +100,7 @@ def main(args: argparse.Namespace):
             file_num += 1
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Live command parser."""
     parser = subparsers.add_parser(
         "live",

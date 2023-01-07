@@ -87,7 +87,7 @@ def main(args: argparse.Namespace) -> None:
         cv2.destroyAllWindows()
 
 
-def create_subparser(subparsers: argparse._SubParsersAction) -> None:
+def create_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Annotate_video command parser."""
     parser = subparsers.add_parser(
         "annotate_video",

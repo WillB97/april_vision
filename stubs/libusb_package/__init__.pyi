@@ -15,7 +15,8 @@
 # limitations under the License.
 
 import functools
-from typing import Any, Optional
+from typing import Any, Callable, Iterable, Optional, Union
+import usb
 
 from usb.backend import IBackend
 from pathlib import Path
@@ -32,4 +33,4 @@ def find_library(candidate: str) -> Optional[str]: ...
 def get_libusb1_backend() -> Optional["IBackend"]: ...
 
 
-def find(*args: Any, **kwargs: Any) -> Any: ...
+def find(find_all: bool, custom_match: Optional[Callable[[usb.core.Device], bool]] = None) -> Iterable[usb.core.Device]: ...

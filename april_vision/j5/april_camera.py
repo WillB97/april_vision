@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 
 from .._version import __version__
 from ..detect_cameras import CalibratedCamera, find_cameras
-from ..frame_sources import USBCamera
+from ..frame_sources import FrameArray, USBCamera
 from ..marker import Marker, MarkerType
 from ..utils import Frame
 from ..vision import Processor
@@ -63,7 +63,7 @@ class AprilCameraBoard(Board):
         return set()
 
     # Proxy methods from MarkerCamera object
-    def see(self, *, eager: bool = True, frame: Optional[NDArray] = None) -> List[Marker]:
+    def see(self, *, eager: bool = True, frame: Optional[FrameArray] = None) -> List[Marker]:
         """
         Capture an image and identify fiducial markers.
 
@@ -73,7 +73,7 @@ class AprilCameraBoard(Board):
         """
         return self._backend.see(frame=frame)
 
-    def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
+    def see_ids(self, *, frame: Optional[FrameArray] = None) -> List[int]:
         """
         Capture an image and identify fiducial markers.
 
@@ -82,7 +82,7 @@ class AprilCameraBoard(Board):
         """
         return self._backend.see_ids(frame=frame)
 
-    def capture(self) -> NDArray:
+    def capture(self) -> FrameArray:
         """
         Get the raw image data from the camera.
 
@@ -90,7 +90,7 @@ class AprilCameraBoard(Board):
         """
         return self._backend.capture_frame()
 
-    def save(self, path: Union[Path, str], *, frame: Optional[NDArray] = None) -> None:
+    def save(self, path: Union[Path, str], *, frame: Optional[FrameArray] = None) -> None:
         """Save an annotated image to a path."""
         self._backend.save_annotated_image(path, frame=frame)
 
@@ -134,18 +134,18 @@ class AprilTagHardwareBackend(Backend):
     def see(
         self,
         *,
-        frame: Optional[NDArray] = None,
+        frame: Optional[FrameArray] = None,
     ) -> List[Marker]:
         """Get markers that the camera can see."""
         return self._cam.see(frame=frame)
 
     def save_annotated_image(
-        self, file: Union[Path, str], *, frame: Optional[NDArray] = None,
+        self, file: Union[Path, str], *, frame: Optional[FrameArray] = None,
     ) -> None:
         """Save an annotated image to a file."""
         self._cam.save(file, frame=frame)
 
-    def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
+    def see_ids(self, *, frame: Optional[FrameArray] = None) -> List[int]:
         """
         Get a list of visible marker IDs.
 
@@ -153,7 +153,7 @@ class AprilTagHardwareBackend(Backend):
         """
         return self._cam.see_ids(frame=frame)
 
-    def capture_frame(self) -> NDArray:
+    def capture_frame(self) -> FrameArray:
         """
         Get the raw image data from the camera.
 
