@@ -40,7 +40,7 @@ def main(args: argparse.Namespace):
         source = USBCamera(args.id, (1280, 720))
     cam = Processor(
         source,
-        tag_family=args.tag_family.value,
+        tag_family=args.tag_family,
         quad_decimate=args.quad_decimate,
         tag_sizes=float(args.tag_size) / 1000,
         calibration=source.calibration,
@@ -116,7 +116,7 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         help="Display the frames per second that the preview is running at.")
 
     parser.add_argument(
-        '--tag_family', type=MarkerType, default=MarkerType.APRILTAG_36H11,
+        '--tag_family', default=MarkerType.APRILTAG_36H11.value,
         choices=[marker.value for marker in MarkerType],
         help="Set the marker family to detect, defaults to 'tag36h11'")
     parser.add_argument(
