@@ -69,7 +69,10 @@ def get_tag_family(family: str) -> ApriltagFamily:
         total_width=raw_tag_data.total_width,
         reversed_border=raw_tag_data.reversed_border,
         nbits=raw_tag_data.nbits,
-        bits=[(raw_tag_data.bit_x[i], raw_tag_data.bit_y[i]) for i in range(raw_tag_data.nbits)],
+        bits=[
+            (raw_tag_data.bit_x[i], raw_tag_data.bit_y[i])
+            for i in range(raw_tag_data.nbits)
+        ],
         h=raw_tag_data.h,
         name=raw_tag_data.name.decode("utf-8"),
     )
@@ -275,7 +278,10 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     parser.add_argument(
         "--filename",
         type=str,
-        help="Output filename. `id` is available for string format replacement (default: %(default)s)",
+        help=(
+            "Output filename. `id` available for string format replacement "
+            "(default: %(default)s)"
+        ),
         default="{id}.pdf",
     )
 
@@ -313,7 +319,11 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     parser.add_argument(
         "--description_format",
         type=str,
-        help="Text format for the description on the marker images. `marker_id` and `marker_type` are available for string format replacement. (default: %(default)s)",
+        help=(
+            "Text format for the description on the marker images. "
+            "`marker_id` and `marker_type` are available for string format replacement. "
+            "(default: %(default)s)"
+        ),
         default="{marker_type} {marker_id}",
     )
 
