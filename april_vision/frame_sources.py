@@ -72,7 +72,9 @@ class USBCamera(FrameSource):
                 LOGGER.warning(f"Failed to set property: {e}")
 
         # Maximise the framerate on Linux
-        self._optimise_camera(vidpid)
+        # NOTE optimisation is disabled currently due to
+        # 'Corrupt JPEG data: 5 extraneous bytes' seen on raspberry pi 4's
+        # self._optimise_camera(vidpid)
 
         self._buffer_length = int(self._camera.get(cv2.CAP_PROP_BUFFERSIZE))
 
