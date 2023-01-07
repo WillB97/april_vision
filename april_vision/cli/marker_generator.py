@@ -7,7 +7,7 @@ import argparse
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import List, NamedTuple, Tuple
+from typing import List, NamedTuple, Set, Tuple
 
 import numpy as np
 import pyapriltags
@@ -39,7 +39,7 @@ class PageSize(Enum):
     A4 = (210, 297)
 
     @property
-    def pixels(self) -> tuple[int, int]:
+    def pixels(self) -> Tuple[int, int]:
         return (
             mm_to_pixels(self.value[0]),
             mm_to_pixels(self.value[1]),
@@ -79,13 +79,13 @@ def get_tag_family(family: str) -> ApriltagFamily:
     return tag_data
 
 
-def parse_ranges(ranges: str) -> set[int]:
+def parse_ranges(ranges: str) -> Set[int]:
     """
     Parse a comma seprated list of numbers which may include ranges
     specified as hyphen-separated numbers.
     From https://stackoverflow.com/questions/6405208
     """
-    result: list[int] = []
+    result: List[int] = []
     for part in ranges.split(","):
         if "-" in part:
             a_, b_ = part.split("-")
