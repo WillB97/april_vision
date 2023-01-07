@@ -3,7 +3,7 @@
 PYMODULE:=april_vision
 TESTS:=tests
 
-all: lint type build
+all: type lint isort-check build
 
 lint:
 	flake8 $(PYMODULE)
