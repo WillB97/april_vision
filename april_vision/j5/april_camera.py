@@ -13,12 +13,12 @@ from j5.boards import Board
 from j5.components.component import Component
 from numpy.typing import NDArray
 
-from .._version import __version__
-from ..detect_cameras import CalibratedCamera, find_cameras
-from ..frame_sources import FrameArray, USBCamera
-from ..marker import Marker, MarkerType
-from ..utils import Frame
-from ..vision import Processor
+from april_vision._version import __version__
+from april_vision.detect_cameras import CalibratedCamera, find_cameras
+from april_vision.frame_sources import FrameArray, USBCamera
+from april_vision.marker import Marker, MarkerType
+from april_vision.utils import Frame
+from april_vision.vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 

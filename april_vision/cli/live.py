@@ -12,12 +12,13 @@ from time import perf_counter
 
 import cv2
 
-from ..calibrations import calibrations
-from ..detect_cameras import find_cameras
-from ..frame_sources import USBCamera
-from ..marker import MarkerType
-from ..utils import RollingAverage, annotate_text, normalise_marker_text
-from ..vision import Processor
+from april_vision.calibrations import calibrations
+from april_vision.detect_cameras import find_cameras
+from april_vision.frame_sources import USBCamera
+from april_vision.marker import MarkerType
+from april_vision.utils import (RollingAverage, annotate_text,
+                                normalise_marker_text)
+from april_vision.vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 

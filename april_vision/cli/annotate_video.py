@@ -9,10 +9,11 @@ from pathlib import Path
 
 import cv2
 
-from ..frame_sources import VideoSource
-from ..marker import MarkerType
-from ..utils import annotate_text, load_calibration, normalise_marker_text
-from ..vision import Processor
+from april_vision.frame_sources import VideoSource
+from april_vision.marker import MarkerType
+from april_vision.utils import (annotate_text, load_calibration,
+                                normalise_marker_text)
+from april_vision.vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 
