@@ -12,7 +12,7 @@ subcommands = [
     # "camera_benchmark",
     "live",
     # "marker_benchmark",
-    # "marker_generator",
+    "marker_generator",
     "vision_debug",
 ]
 
