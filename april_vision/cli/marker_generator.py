@@ -12,6 +12,7 @@ from typing import List, NamedTuple, Set, Tuple
 import numpy as np
 import pyapriltags
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+from pypdf import PdfMerger
 
 from ..marker import MarkerType
 
@@ -59,6 +60,10 @@ class ApriltagFamily(NamedTuple):
 
 
 def get_tag_family(family: str) -> ApriltagFamily:
+    """
+    Use the C-types in pyapriltags to get the tag family object.
+    This object contains the required data to draw all the tags for a given family.
+    """
     d = pyapriltags.Detector(families=family)
     raw_tag_data = d.tag_families[family].contents
 
@@ -98,6 +103,10 @@ def parse_ranges(ranges: str) -> Set[int]:
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> np.ndarray:
+    """
+    Uses the tag family object to generate a marker, returns this data as a 2d numpy array
+    where each of the cells is 1 pixel of the marker.
+    """
     # Create grid of tag size
     dim = tag_data.total_width
     tag = np.ones((dim, dim), dtype=np.uint8) * 255
@@ -133,6 +142,10 @@ def generate_tag_tile(
     args: argparse.Namespace,
     tag_id: int,
 ) -> Image.Image:
+    """
+    Uses the tag family object to generate a marker image.
+    The marker is scaled to the correct size and is annotated with a border and text.
+    """
     # Calculate the overall marker size
     pixel_size = args.tag_size // tag_data.width_at_border
     required_size = pixel_size * tag_data.total_width
@@ -231,7 +244,9 @@ def generate_tag_tile(
 
 
 def main(args: argparse.Namespace):
-    """Annotate an image file using the provided args."""
+    """
+    Create markers and marker PDFs using the parameters provided on the command line.
+    """
     tag_data = get_tag_family(args.tag_family)
 
     # Get list of markers we want to make
@@ -245,6 +260,8 @@ def main(args: argparse.Namespace):
 
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(exist_ok=True, parents=True)
+
+    generated_files = []
 
     # Generate markers
     for marker_id in marker_ids:
@@ -283,15 +300,25 @@ def main(args: argparse.Namespace):
 
                     paper_img.paste(image_tile, (x_loc, y_loc))
 
+        generated_files.append(output_dir / args.filename.format(id=marker_id))
         paper_img.save(
             output_dir / args.filename.format(id=marker_id),
             quality=100,
             dpi=(DPI, DPI),
         )
 
+    if args.merge_pdf is not None:
+        merger = PdfMerger()
+        for pdf in generated_files:
+            merger.append(pdf)
+
+        merger.write(output_dir / args.merge_pdf)
+        merger.close()
+
 
 def create_subparser(subparsers: argparse._SubParsersAction):
     """Marker_generator command parser."""
+
     parser = subparsers.add_parser(
         "marker_generator",
         description="Generate a PDF containing markers",
@@ -313,6 +340,12 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         ),
         default="{id}.pdf",
     )
+    parser.add_argument(
+        "--merge_pdf",
+        help="Merge all the outputted PDFs into a single PDF of the provided filename",
+        type=str,
+        default=None,
+    )
 
     # Args for modifying type and size
     parser.add_argument(
@@ -327,9 +360,10 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         type=int,
     )
     parser.add_argument(
-        "--aruco_orientation",
-        help="Rotate marker 180 for aruco orientation",
-        action="store_true",
+        "--no_aruco_orientation",
+        help="Rotate marker 180 for standard orientation",
+        action="store_false",
+        dest="aruco_orientation",
     )
     parser.add_argument(
         "--range",
@@ -345,12 +379,6 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         choices=sorted([size.name for size in PageSize]),
         default="A4",
     )
-    # parser.add_argument(
-    #     "--force-a4",
-    #     help="Output the PDF onto A4, splitting as necessary",
-    #     action="store_true",
-    # )
-
     parser.add_argument(
         "--page_mode",
         type=str,
