@@ -21,17 +21,12 @@ DPI = 72
 BORDER_FILL = "lightgrey"
 
 
-def mm_to_inches(mm: int) -> float:
+def mm_to_pixels(mm: int) -> int:
     """
-    Convert millimeters to inches
+    Convert millimeters to pixels
     """
     inches = mm / 25.4
-    inches = round(inches, 4)
-    return inches
-
-
-def mm_to_pixels(mm: int) -> int:
-    return int(mm_to_inches(mm) * DPI)
+    return int(inches * DPI)
 
 
 class PageSize(Enum):
@@ -44,6 +39,11 @@ class PageSize(Enum):
             mm_to_pixels(self.value[0]),
             mm_to_pixels(self.value[1]),
         )
+
+
+class PageMode(Enum):
+    SINGLE = 1
+    TILE = 2
 
 
 class ApriltagFamily(NamedTuple):
@@ -249,14 +249,40 @@ def main(args: argparse.Namespace):
     # Generate markers
     for marker_id in marker_ids:
         image_tile = generate_tag_tile(tag_data, args, tag_id=marker_id)
+        tile_size = image_tile.size[0]
+
         paper_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
-        paper_img.paste(
-            image_tile,
-            (
-                (page_size.pixels[0] - image_tile.size[0]) // 2,
-                (page_size.pixels[1] - image_tile.size[0]) // 2,
-            ),
-        )
+
+        page_mode = PageMode[args.page_mode]
+
+        if page_mode == PageMode.SINGLE:
+            if args.bottom_padding is None:
+                x_loc = (page_size.pixels[0] - tile_size) // 2
+                y_loc = (page_size.pixels[1] - tile_size) // 2
+                paper_img.paste(image_tile, (x_loc, y_loc))
+            else:
+                x_loc = (page_size.pixels[0] - tile_size) // 2
+
+                # Awkward math as we extended the tile beyond the border as extra area for
+                # the text, The size of the image tile does not match the border
+                marker_sqaure_size = mm_to_pixels(args.tag_size // tag_data.width_at_border)
+                y_loc = (page_size.pixels[1]
+                         - mm_to_pixels(args.bottom_padding)
+                         - (marker_sqaure_size * (tag_data.total_width + 1))
+                         - args.border_width
+                         )
+                paper_img.paste(image_tile, (x_loc, y_loc))
+
+        elif page_mode == PageMode.TILE:
+            for row in range(args.row_num):
+                for col in range(args.column_num):
+                    col_space_px = mm_to_pixels(args.column_spacing)
+                    row_space_px = mm_to_pixels(args.row_spacing)
+                    x_loc = ((col_space_px + tile_size) * col) + col_space_px
+                    y_loc = ((row_space_px + tile_size) * row) + row_space_px
+
+                    paper_img.paste(image_tile, (x_loc, y_loc))
+
         paper_img.save(
             output_dir / args.filename.format(id=marker_id),
             quality=100,
@@ -272,12 +298,12 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         help="Generate a PDF containing markers",
     )
 
+    # Args for output filename/location
     parser.add_argument(
         "output_dir",
         help="The directory to save the output files to",
         type=Path,
     )
-
     parser.add_argument(
         "--filename",
         type=str,
@@ -288,12 +314,30 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         default="{id}.pdf",
     )
 
+    # Args for modifying type and size
+    parser.add_argument(
+        "--tag_family", default=MarkerType.APRILTAG_36H11.value,
+        choices=[marker.value for marker in MarkerType],
+        help="Set the marker family to detect, defaults to 'tag36h11'",
+    )
+    parser.add_argument(
+        "--tag_size",
+        help="The size of markers in millimeters (default: %(default)s)",
+        default=100,
+        type=int,
+    )
+    parser.add_argument(
+        "--aruco_orientation",
+        help="Rotate marker 180 for aruco orientation",
+        action="store_true",
+    )
     parser.add_argument(
         "--range",
         help="Marker ids to output, can use '-' or ',' to specify lists and ranges",
         default="ALL",
     )
 
+    # Args for modifying page size and marker layout
     parser.add_argument(
         "--page_size",
         type=str,
@@ -301,13 +345,55 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         choices=sorted([size.name for size in PageSize]),
         default="A4",
     )
-
     # parser.add_argument(
     #     "--force-a4",
     #     help="Output the PDF onto A4, splitting as necessary",
     #     action="store_true",
     # )
 
+    parser.add_argument(
+        "--page_mode",
+        type=str,
+        help="Page arrangement method. (default: %(default)s)",
+        choices=sorted([mode.name for mode in PageMode]),
+        default="SINGLE",
+    )
+
+    # Options for a SINGLE layout
+    parser.add_argument(
+        "--bottom_padding",
+        help="Distance in mm between bottom border of marker and the bottom of the page",
+        default=None,
+        type=int,
+    )
+
+    # Options for a TILE layout
+    parser.add_argument(
+        "--column_num",
+        help="Set number of columns of markers",
+        default=1,
+        type=int,
+    )
+    parser.add_argument(
+        "--column_spacing",
+        help="Set spacing between columns of markers",
+        default=0,
+        type=int,
+    )
+    parser.add_argument(
+        "--row_num",
+        help="Set number of rows of markers",
+        default=1,
+        type=int,
+    )
+    parser.add_argument(
+        "--row_spacing",
+        help="Set number of rows of markers",
+        default=0,
+        type=int,
+    )
+
+    # Args for modifying text
     parser.add_argument(
         "--no_number",
         help="Do not place marker id number on the marker",
@@ -330,36 +416,18 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         default="{marker_type} {marker_id}",
     )
 
-    parser.add_argument(
-        "--tag_family", default=MarkerType.APRILTAG_36H11.value,
-        choices=[marker.value for marker in MarkerType],
-        help="Set the marker family to detect, defaults to 'tag36h11'")
-
-    parser.add_argument(
-        "--tag_size",
-        help="The size of markers in millimeters (default: %(default)s)",
-        default=100,
-        type=int,
-    )
-
+    # Args for modifying grey border
     parser.add_argument(
         "--border_width",
         help="Size of the border in pixels (default: %(default)s)",
         default=1,
         type=int,
     )
-
     parser.add_argument(
         "--tick_length",
         help="Length of center tick lines in pixels (default: %(default)s)",
         default=10,
         type=int,
-    )
-
-    parser.add_argument(
-        "--aruco_orientation",
-        help="Rotate marker 180 for aruco orientation",
-        action="store_true",
     )
 
     parser.set_defaults(func=main)
