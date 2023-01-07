@@ -1,3 +1,6 @@
+[tool.mypy]
+mypy_path = "stubs"
+
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"

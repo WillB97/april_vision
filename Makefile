@@ -9,7 +9,7 @@ lint:
 	flake8 $(PYMODULE)
 
 type:
-	mypy $(PYMODULE) stubs
+	mypy $(PYMODULE)
 
 test:
 	pytest --cov=$(PYMODULE) $(TESTS)

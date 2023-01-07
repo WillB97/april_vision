@@ -51,6 +51,7 @@ def main(args: argparse.Namespace):
     while True:
         frame = cam._capture()
         markers = cam._detect(frame)
+        print(markers)
 
         if args.annotate:
             cam._annotate(frame, markers)
@@ -82,7 +83,7 @@ def main(args: argparse.Namespace):
                         text_colour=(255, 191, 0),  # deep sky blue
                     )
             except RuntimeError:
-                pass
+                raise
 
         cv2.imshow('image', frame.colour_frame)
 
