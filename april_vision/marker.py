@@ -8,7 +8,7 @@ where x is forward, y is left and z is upward.
 import os
 from enum import Enum
 from math import acos, atan2, pi
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Any, List, NamedTuple, Tuple, TypedDict, cast
 
 import numpy as np
 from numpy.linalg import norm as hypotenuse
@@ -94,7 +94,7 @@ class CartesianCoordinates(NamedTuple):
     z: float
 
     @classmethod
-    def from_tvec(cls, x: float, y: float, z: float):
+    def from_tvec(cls, x: float, y: float, z: float) -> 'CartesianCoordinates':
         """
         Convert coordinate system to standard right-handed cartesian system.
 
@@ -185,7 +185,7 @@ class SphericalCoordinate(NamedTuple):
             return self.theta
 
     @classmethod
-    def from_tvec(cls, x: float, y: float, z: float):
+    def from_tvec(cls, x: float, y: float, z: float) -> 'SphericalCoordinate':
         """
         Convert coordinate system to standard right-handed cartesian system.
 
@@ -210,6 +210,8 @@ RotationMatrix = Tuple[ThreeTuple, ThreeTuple, ThreeTuple]
 class Orientation:
     """The orientation of an object in 3-D space."""
 
+    _quaternion: Quaternion
+
     __MARKER_ORIENTATION_CORRECTION = Quaternion(matrix=np.array([
         [1, 0, 0],
         [0, -1, 0],
@@ -221,7 +223,7 @@ class Orientation:
         [0, 0, -1],
     ]))
 
-    def __init__(self, rotation_matrix: NDArray, aruco_orientation: bool = True):
+    def __init__(self, rotation_matrix: NDArray[np.int8], aruco_orientation: bool = True):
         """
         Construct a quaternion given the rotation matrix in the camera's coordinate system.
 
@@ -344,7 +346,7 @@ class Orientation:
         Returns:
             A 3x3 rotation matrix as a tuple of tuples.
         """
-        return self.__rotation_matrix.tolist()
+        return cast(RotationMatrix, self.__rotation_matrix.tolist())
 
     @property
     def quaternion(self) -> Quaternion:
@@ -355,6 +357,16 @@ class Orientation:
         return "Orientation(rot_x={}, rot_y={}, rot_z={})".format(
             self.rot_x, self.rot_y, self.rot_z,
         )
+
+
+class MarkerDict(TypedDict, total=False):
+    """The representation of a marker as a dictionary."""
+
+    id: int
+    size: int
+    pixel_corners: Any
+    rvec: Any
+    tvec: Any
 
 
 class Marker:
@@ -443,9 +455,9 @@ class Marker:
             return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> MarkerDict:
         """The marker data as a dict."""
-        marker_dict = {
+        marker_dict: MarkerDict = {
             "id": self._id,
             "size": self.__size,
             "pixel_corners": self._pixel_corners,

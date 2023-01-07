@@ -17,7 +17,7 @@ subcommands = [
 ]
 
 
-def build_argparser():
+def build_argparser() -> argparse.ArgumentParser:
     """Load subparsers from available subcommands."""
     parser = argparse.ArgumentParser()
 
@@ -33,7 +33,7 @@ def build_argparser():
     return parser
 
 
-def setup_logger(debug=False):
+def setup_logger(debug: bool = False) -> None:
     """Output all loggers to console with custom format at level INFO or DEBUG."""
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
@@ -49,7 +49,7 @@ def setup_logger(debug=False):
         root_logger.setLevel(logging.DEBUG)
 
 
-def main():
+def main() -> None:
     """CLI entry-point."""
     parser = build_argparser()
     args = parser.parse_args()

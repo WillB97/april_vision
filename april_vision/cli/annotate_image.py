@@ -9,15 +9,16 @@ from pathlib import Path
 
 import cv2
 
-from ..frame_sources import ImageSource
-from ..marker import MarkerType
-from ..utils import annotate_text, load_calibration, normalise_marker_text
-from ..vision import Processor
+from april_vision.frame_sources import ImageSource
+from april_vision.marker import MarkerType
+from april_vision.utils import (annotate_text, load_calibration,
+                                normalise_marker_text)
+from april_vision.vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Annotate an image file using the provided args."""
     input_file = Path(args.input_file)
     if not input_file.exists():
@@ -72,7 +73,7 @@ def main(args: argparse.Namespace):
         cv2.destroyAllWindows()
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Annotate_image command parser."""
     parser = subparsers.add_parser(
         "annotate_image",

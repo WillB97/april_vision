@@ -5,10 +5,9 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
-from numpy.typing import NDArray
 from pyapriltags import Detector
 
-from .frame_sources import FrameSource
+from .frame_sources import FrameArray, FrameSource
 from .marker import Marker
 from .utils import Frame, normalise_marker_text
 
@@ -18,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 class Processor:
     """A pyaprilTags wrapper for fiducial detection from frame sources."""
 
-    capture_filter: Callable[[NDArray], NDArray]
+    capture_filter: Callable[[FrameArray], FrameArray]
     marker_filter: Callable[[List[Marker]], List[Marker]]
     detection_hook: Callable[[Frame, List[Marker]], None]
 
@@ -178,11 +177,11 @@ class Processor:
 
         cv2.imwrite(str(path), output_frame)
 
-    def capture(self) -> NDArray:
+    def capture(self) -> FrameArray:
         """Get the raw image data from the camera."""
         return self._capture().colour_frame
 
-    def see(self, *, frame: Optional[NDArray] = None) -> List[Marker]:
+    def see(self, *, frame: Optional[FrameArray] = None) -> List[Marker]:
         """Get markers that the camera can see."""
         if frame is None:
             frames = self._capture()
@@ -190,7 +189,7 @@ class Processor:
             frames = Frame.from_colour_frame(frame)
         return self._detect(frames)
 
-    def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
+    def see_ids(self, *, frame: Optional[FrameArray] = None) -> List[int]:
         """Get a list of visible marker IDs."""
         if frame is None:
             frames = self._capture()
@@ -199,7 +198,7 @@ class Processor:
         markers = self._detect(frames)
         return [marker.id for marker in markers]
 
-    def save(self, name: Union[str, Path], *, frame: Optional[NDArray] = None) -> None:
+    def save(self, name: Union[str, Path], *, frame: Optional[FrameArray] = None) -> None:
         """Save an annotated image to a file."""
         if frame is None:
             frames = self._capture()

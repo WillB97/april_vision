@@ -12,17 +12,18 @@ from time import perf_counter
 
 import cv2
 
-from ..calibrations import calibrations
-from ..detect_cameras import find_cameras
-from ..frame_sources import USBCamera
-from ..marker import MarkerType
-from ..utils import RollingAverage, annotate_text, normalise_marker_text
-from ..vision import Processor
+from april_vision.calibrations import calibrations
+from april_vision.detect_cameras import find_cameras
+from april_vision.frame_sources import USBCamera
+from april_vision.marker import MarkerType
+from april_vision.utils import (RollingAverage, annotate_text,
+                                normalise_marker_text)
+from april_vision.vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Live camera demonstration."""
     avg_fps = RollingAverage(50)
     prev_frame_time: float = 0
@@ -51,6 +52,7 @@ def main(args: argparse.Namespace):
     while True:
         frame = cam._capture()
         markers = cam._detect(frame)
+        print(markers)
 
         if args.annotate:
             cam._annotate(frame, markers)
@@ -82,7 +84,7 @@ def main(args: argparse.Namespace):
                         text_colour=(255, 191, 0),  # deep sky blue
                     )
             except RuntimeError:
-                pass
+                raise
 
         cv2.imshow('image', frame.colour_frame)
 
@@ -99,7 +101,7 @@ def main(args: argparse.Namespace):
             file_num += 1
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Live command parser."""
     parser = subparsers.add_parser(
         "live",

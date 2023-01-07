@@ -3,13 +3,13 @@
 PYMODULE:=april_vision
 TESTS:=tests
 
-all: lint type build
+all: type lint isort-check build
 
 lint:
 	flake8 $(PYMODULE)
 
 type:
-	mypy $(PYMODULE) stubs
+	mypy $(PYMODULE)
 
 test:
 	pytest --cov=$(PYMODULE) $(TESTS)
