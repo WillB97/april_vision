@@ -251,11 +251,31 @@ def main(args: argparse.Namespace):
     """
     tag_data = get_tag_family(args.tag_family)
 
+    LOGGER.info("Marker family info:")
+    LOGGER.info(f"    Tag family:       {tag_data.name}")
+    LOGGER.info(f"    Valid markers:    0-{tag_data.ncodes - 1}")
+    LOGGER.info(f"    Total width:      {tag_data.total_width}")
+    LOGGER.info(f"    Width at border:  {tag_data.width_at_border}")
+    LOGGER.info(f"    Reversed border:  {tag_data.reversed_border}")
+    LOGGER.info(f"    Num bits:         {tag_data.nbits}")
+    LOGGER.info(f"    Hamming distance: {tag_data.h}")
+
     # Get list of markers we want to make
     if args.range == "ALL":
         marker_ids = [num for num in range(tag_data.ncodes)]
     else:
-        marker_ids = list(parse_ranges(args.range))
+        try:
+            marker_ids = list(parse_ranges(args.range))
+        except ValueError:
+            LOGGER.error("Invalid marker number range provided")
+            exit(1)
+
+    if (max(marker_ids) > (tag_data.ncodes - 1)) or (min(marker_ids) < 0):
+        LOGGER.error("Supplied marker number lies outside permitted values for marker family")
+        LOGGER.error(f"Permitted marker range: 0-{tag_data.ncodes - 1}")
+        exit(1)
+
+    LOGGER.info(f"Generating {len(marker_ids)} markers")
 
     # Output page size and location
     page_size = PageSize[args.page_size]
@@ -267,6 +287,8 @@ def main(args: argparse.Namespace):
 
     # Generate markers
     for marker_id in marker_ids:
+        LOGGER.info(f"Creating marker: {marker_id}")
+
         image_tile = generate_tag_tile(tag_data, args, tag_id=marker_id)
         tile_size = image_tile.size[0]
 
@@ -293,11 +315,16 @@ def main(args: argparse.Namespace):
                 output_img.paste(image_tile, (x_loc, y_loc))
 
             generated_files.append(output_dir / args.filename.format(id=marker_id))
-            output_img.save(
-                output_dir / args.filename.format(id=marker_id),
-                quality=100,
-                dpi=(DPI, DPI),
-            )
+            try:
+                output_img.save(
+                    output_dir / args.filename.format(id=marker_id),
+                    quality=100,
+                    dpi=(DPI, DPI),
+                )
+            except ValueError as error:
+                LOGGER.error(f"Invalid output file format: '{args.filename}'")
+                LOGGER.error(error)
+                exit(1)
 
         elif page_mode == PageMode.TILE:
             output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
@@ -312,11 +339,16 @@ def main(args: argparse.Namespace):
                     output_img.paste(image_tile, (x_loc, y_loc))
 
             generated_files.append(output_dir / args.filename.format(id=marker_id))
-            output_img.save(
-                output_dir / args.filename.format(id=marker_id),
-                quality=100,
-                dpi=(DPI, DPI),
-            )
+            try:
+                output_img.save(
+                    output_dir / args.filename.format(id=marker_id),
+                    quality=100,
+                    dpi=(DPI, DPI),
+                )
+            except ValueError as error:
+                LOGGER.error(f"Invalid output file format: '{args.filename}'")
+                LOGGER.error(error)
+                exit(1)
 
         elif page_mode == PageMode.CROP:
             if args.crop_size is None:
@@ -331,11 +363,16 @@ def main(args: argparse.Namespace):
             y_loc = (crop_pixels - tile_size) // 2
             output_img.paste(image_tile, (x_loc, y_loc))
 
-            output_img.save(
-                output_dir / args.filename.format(id=marker_id),
-                quality=100,
-                dpi=(DPI, DPI),
-            )
+            try:
+                output_img.save(
+                    output_dir / args.filename.format(id=marker_id),
+                    quality=100,
+                    dpi=(DPI, DPI),
+                )
+            except ValueError as error:
+                LOGGER.error(f"Invalid output file format: '{args.filename}'")
+                LOGGER.error(error)
+                exit(1)
 
         elif page_mode == PageMode.SPLIT:
             output_img_1 = Image.new("RGB", page_size.pixels, (255, 255, 255))
@@ -364,23 +401,40 @@ def main(args: argparse.Namespace):
             output_img_2.paste(image_half_right, (x_loc, y_loc))
 
             generated_files.append(output_dir / args.filename.format(id=marker_id))
-            output_img_1.save(
-                output_dir / args.filename.format(id=marker_id),
-                quality=100,
-                dpi=(DPI, DPI),
-                save_all=True,
-                append_images=[
-                    output_img_2
-                ],
-            )
+            try:
+                output_img_1.save(
+                    output_dir / args.filename.format(id=marker_id),
+                    quality=100,
+                    dpi=(DPI, DPI),
+                    save_all=True,
+                    append_images=[
+                        output_img_2
+                    ],
+                )
+            except ValueError as error:
+                LOGGER.error(f"Invalid output file format: '{args.filename}'")
+                LOGGER.error(error)
+                exit(1)
 
     if args.merge_pdf is not None:
-        merger = PdfMerger()
-        for pdf in generated_files:
-            merger.append(pdf)
+        if args.filename.lower().endswith(".pdf"):
+            LOGGER.info("Starting to merge PDFs")
+            merger = PdfMerger()
+            for pdf in generated_files:
+                merger.append(pdf)
 
-        merger.write(output_dir / args.merge_pdf)
-        merger.close()
+            if args.merge_pdf.lower().endswith(".pdf"):
+                merger.write(output_dir / args.merge_pdf)
+            else:
+                merger.write(output_dir / (args.merge_pdf + '.pdf'))
+
+            merger.close()
+            LOGGER.info("Merge PDF complete")
+        else:
+            LOGGER.error((
+                "PDF merge was enabled but no PDFs were generated, "
+                f"output format '{args.filename}'"
+            ))
 
 
 def create_subparser(subparsers: argparse._SubParsersAction):
