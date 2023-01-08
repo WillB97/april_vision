@@ -415,47 +415,50 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     )
 
     # Args for modifying type and size
-    parser.add_argument(
+    tag_group = parser.add_argument_group('TAGS')
+    tag_group.add_argument(
         "--tag_family", default=MarkerType.APRILTAG_36H11.value,
         choices=[marker.value for marker in MarkerType],
         help="Set the marker family to detect, defaults to 'tag36h11'",
     )
-    parser.add_argument(
+    tag_group.add_argument(
         "--tag_size",
         help="The size of markers in millimeters (default: %(default)s)",
         default=100,
         type=int,
     )
-    parser.add_argument(
+    tag_group.add_argument(
         "--no_aruco_orientation",
         help="Rotate marker 180 for standard orientation",
         action="store_false",
         dest="aruco_orientation",
     )
-    parser.add_argument(
+    tag_group.add_argument(
         "--range",
         help="Marker ids to output, can use '-' or ',' to specify lists and ranges",
         default="ALL",
     )
 
     # Args for modifying page size and marker layout
-    parser.add_argument(
+    page_group = parser.add_argument_group('PAGE')
+    page_group.add_argument(
         "--page_size",
         type=str,
         help="Page size. (default: %(default)s)",
         choices=sorted([size.name for size in PageSize]),
         default="A4",
     )
-    parser.add_argument(
+    page_group.add_argument(
         "--page_mode",
         type=str,
-        help="Page arrangement method. (default: %(default)s)",
+        help="Page generation method. (default: %(default)s)",
         choices=sorted([mode.name for mode in PageMode]),
         default="SINGLE",
     )
 
     # Options for a SINGLE layout
-    parser.add_argument(
+    single_group = parser.add_argument_group('mode: SINGLE')
+    single_group.add_argument(
         "--bottom_padding",
         help="Distance in mm between bottom border of marker and the bottom of the page",
         default=None,
@@ -463,25 +466,26 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     )
 
     # Options for a TILE layout
-    parser.add_argument(
+    tile_group = parser.add_argument_group('mode: TILE')
+    tile_group.add_argument(
         "--column_num",
         help="Set number of columns of markers",
         default=1,
         type=int,
     )
-    parser.add_argument(
+    tile_group.add_argument(
         "--column_spacing",
         help="Set spacing between columns of markers",
         default=0,
         type=int,
     )
-    parser.add_argument(
+    tile_group.add_argument(
         "--row_num",
         help="Set number of rows of markers",
         default=1,
         type=int,
     )
-    parser.add_argument(
+    tile_group.add_argument(
         "--row_spacing",
         help="Set number of rows of markers",
         default=0,
@@ -489,7 +493,8 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     )
 
     # Options for CROP layout
-    parser.add_argument(
+    crop_group = parser.add_argument_group('mode: CROP')
+    crop_group.add_argument(
         "--crop_size",
         help=(
             "Set dimension in mm of the cropped image in a CROP page mode, "
@@ -500,18 +505,19 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     )
 
     # Args for modifying text
-    parser.add_argument(
+    text_group = parser.add_argument_group('TEXT')
+    text_group.add_argument(
         "--no_number",
         help="Do not place marker id number on the marker",
         action="store_true",
     )
-    parser.add_argument(
+    text_group.add_argument(
         "--number_size",
         help="Set the text size of the id number on the marker",
         default=10,
         type=int,
     )
-    parser.add_argument(
+    text_group.add_argument(
         "--description_format",
         type=str,
         help=(
@@ -523,13 +529,14 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     )
 
     # Args for modifying grey border
-    parser.add_argument(
+    border_group = parser.add_argument_group('STYLE')
+    border_group.add_argument(
         "--border_width",
         help="Size of the border in pixels (default: %(default)s)",
         default=1,
         type=int,
     )
-    parser.add_argument(
+    border_group.add_argument(
         "--tick_length",
         help="Length of center tick lines in pixels (default: %(default)s)",
         default=10,
