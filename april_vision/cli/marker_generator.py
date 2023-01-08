@@ -270,11 +270,11 @@ def main(args: argparse.Namespace):
         image_tile = generate_tag_tile(tag_data, args, tag_id=marker_id)
         tile_size = image_tile.size[0]
 
-        output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
-
         page_mode = PageMode[args.page_mode]
 
         if page_mode == PageMode.SINGLE:
+            output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
+
             if args.bottom_padding is None:
                 x_loc = (page_size.pixels[0] - tile_size) // 2
                 y_loc = (page_size.pixels[1] - tile_size) // 2
@@ -292,7 +292,16 @@ def main(args: argparse.Namespace):
                          )
                 output_img.paste(image_tile, (x_loc, y_loc))
 
+            generated_files.append(output_dir / args.filename.format(id=marker_id))
+            output_img.save(
+                output_dir / args.filename.format(id=marker_id),
+                quality=100,
+                dpi=(DPI, DPI),
+            )
+
         elif page_mode == PageMode.TILE:
+            output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
+
             for row in range(args.row_num):
                 for col in range(args.column_num):
                     col_space_px = mm_to_pixels(args.column_spacing)
@@ -301,6 +310,13 @@ def main(args: argparse.Namespace):
                     y_loc = ((row_space_px + tile_size) * row) + row_space_px
 
                     output_img.paste(image_tile, (x_loc, y_loc))
+
+            generated_files.append(output_dir / args.filename.format(id=marker_id))
+            output_img.save(
+                output_dir / args.filename.format(id=marker_id),
+                quality=100,
+                dpi=(DPI, DPI),
+            )
 
         elif page_mode == PageMode.CROP:
             if args.crop_size is None:
@@ -315,15 +331,48 @@ def main(args: argparse.Namespace):
             y_loc = (crop_pixels - tile_size) // 2
             output_img.paste(image_tile, (x_loc, y_loc))
 
-        elif page_mode == PageMode.SPLIT:
-            pass
+            output_img.save(
+                output_dir / args.filename.format(id=marker_id),
+                quality=100,
+                dpi=(DPI, DPI),
+            )
 
-        generated_files.append(output_dir / args.filename.format(id=marker_id))
-        output_img.save(
-            output_dir / args.filename.format(id=marker_id),
-            quality=100,
-            dpi=(DPI, DPI),
-        )
+        elif page_mode == PageMode.SPLIT:
+            output_img_1 = Image.new("RGB", page_size.pixels, (255, 255, 255))
+            output_img_2 = Image.new("RGB", page_size.pixels, (255, 255, 255))
+
+            # Draw text outside the marker in top right corner
+            marker_sqaure_size = mm_to_pixels(args.tag_size // tag_data.width_at_border)
+
+            image_draw_text = ImageDraw.Draw(image_tile)
+            image_draw_text.text(
+                (tile_size - marker_sqaure_size, (marker_sqaure_size // 2)),
+                args.description_format.format(
+                    marker_type=tag_data.name, marker_id=marker_id
+                ),
+                anchor="rm",
+                font=ImageFont.truetype("NotoSans-Regular.ttf", marker_sqaure_size // 2),
+            )
+
+            image_half_left = image_tile.crop((0, 0, tile_size // 2, tile_size))
+            image_half_right = image_tile.crop((tile_size // 2, 0, tile_size, tile_size))
+
+            x_loc = (page_size.pixels[0] - image_half_left.size[0]) // 2
+            y_loc = (page_size.pixels[1] - image_half_left.size[1]) // 2
+
+            output_img_1.paste(image_half_left, (x_loc, y_loc))
+            output_img_2.paste(image_half_right, (x_loc, y_loc))
+
+            generated_files.append(output_dir / args.filename.format(id=marker_id))
+            output_img_1.save(
+                output_dir / args.filename.format(id=marker_id),
+                quality=100,
+                dpi=(DPI, DPI),
+                save_all=True,
+                append_images=[
+                    output_img_2
+                ],
+            )
 
     if args.merge_pdf is not None:
         merger = PdfMerger()
