@@ -45,6 +45,8 @@ class PageSize(Enum):
 class PageMode(Enum):
     SINGLE = 1
     TILE = 2
+    CROP = 3
+    SPLIT = 4
 
 
 class ApriltagFamily(NamedTuple):
@@ -268,7 +270,7 @@ def main(args: argparse.Namespace):
         image_tile = generate_tag_tile(tag_data, args, tag_id=marker_id)
         tile_size = image_tile.size[0]
 
-        paper_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
+        output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
 
         page_mode = PageMode[args.page_mode]
 
@@ -276,7 +278,7 @@ def main(args: argparse.Namespace):
             if args.bottom_padding is None:
                 x_loc = (page_size.pixels[0] - tile_size) // 2
                 y_loc = (page_size.pixels[1] - tile_size) // 2
-                paper_img.paste(image_tile, (x_loc, y_loc))
+                output_img.paste(image_tile, (x_loc, y_loc))
             else:
                 x_loc = (page_size.pixels[0] - tile_size) // 2
 
@@ -288,7 +290,7 @@ def main(args: argparse.Namespace):
                          - (marker_sqaure_size * (tag_data.total_width + 1))
                          - args.border_width
                          )
-                paper_img.paste(image_tile, (x_loc, y_loc))
+                output_img.paste(image_tile, (x_loc, y_loc))
 
         elif page_mode == PageMode.TILE:
             for row in range(args.row_num):
@@ -298,10 +300,26 @@ def main(args: argparse.Namespace):
                     x_loc = ((col_space_px + tile_size) * col) + col_space_px
                     y_loc = ((row_space_px + tile_size) * row) + row_space_px
 
-                    paper_img.paste(image_tile, (x_loc, y_loc))
+                    output_img.paste(image_tile, (x_loc, y_loc))
+
+        elif page_mode == PageMode.CROP:
+            if args.crop_size is None:
+                pixel_size = args.tag_size // tag_data.width_at_border
+                required_size = pixel_size * tag_data.total_width
+                crop_pixels = mm_to_pixels(required_size) + args.border_width
+            else:
+                crop_pixels = mm_to_pixels(args.crop_size)
+
+            output_img = Image.new("RGB", (crop_pixels, crop_pixels), (255, 255, 255))
+            x_loc = (crop_pixels - tile_size) // 2
+            y_loc = (crop_pixels - tile_size) // 2
+            output_img.paste(image_tile, (x_loc, y_loc))
+
+        elif page_mode == PageMode.SPLIT:
+            pass
 
         generated_files.append(output_dir / args.filename.format(id=marker_id))
-        paper_img.save(
+        output_img.save(
             output_dir / args.filename.format(id=marker_id),
             quality=100,
             dpi=(DPI, DPI),
@@ -418,6 +436,17 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         "--row_spacing",
         help="Set number of rows of markers",
         default=0,
+        type=int,
+    )
+
+    # Options for CROP layout
+    parser.add_argument(
+        "--crop_size",
+        help=(
+            "Set dimension in mm of the cropped image in a CROP page mode, "
+            "defaults to the marker border"
+        ),
+        default=None,
         type=int,
     )
 
