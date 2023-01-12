@@ -6,6 +6,7 @@ import logging
 from april_vision._version import version
 
 subcommands = [
+    "tools",
     "annotate_image",
     "annotate_video",
     "calibrate",
