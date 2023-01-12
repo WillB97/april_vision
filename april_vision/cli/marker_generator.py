@@ -7,14 +7,14 @@ import argparse
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import List, NamedTuple, Set, Tuple
+from typing import Tuple
 
 import numpy as np
-import pyapriltags
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pypdf import PdfMerger
 
 from ..marker import MarkerType
+from .utils import ApriltagFamily, get_tag_family, parse_ranges
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,61 +47,6 @@ class PageMode(Enum):
     TILE = 2
     CROP = 3
     SPLIT = 4
-
-
-class ApriltagFamily(NamedTuple):
-    ncodes: int
-    codes: List[int]
-    width_at_border: int
-    total_width: int
-    reversed_border: bool
-    nbits: int
-    bits: List[Tuple[int, int]]
-    h: int
-    name: str
-
-
-def get_tag_family(family: str) -> ApriltagFamily:
-    """
-    Use the C-types in pyapriltags to get the tag family object.
-    This object contains the required data to draw all the tags for a given family.
-    """
-    d = pyapriltags.Detector(families=family)
-    raw_tag_data = d.tag_families[family].contents
-
-    tag_data = ApriltagFamily(
-        ncodes=raw_tag_data.ncodes,
-        codes=[raw_tag_data.codes[i] for i in range(raw_tag_data.ncodes)],
-        width_at_border=raw_tag_data.width_at_border,
-        total_width=raw_tag_data.total_width,
-        reversed_border=raw_tag_data.reversed_border,
-        nbits=raw_tag_data.nbits,
-        bits=[
-            (raw_tag_data.bit_x[i], raw_tag_data.bit_y[i])
-            for i in range(raw_tag_data.nbits)
-        ],
-        h=raw_tag_data.h,
-        name=raw_tag_data.name.decode("utf-8"),
-    )
-    return tag_data
-
-
-def parse_ranges(ranges: str) -> Set[int]:
-    """
-    Parse a comma seprated list of numbers which may include ranges
-    specified as hyphen-separated numbers.
-    From https://stackoverflow.com/questions/6405208
-    """
-    result: List[int] = []
-    for part in ranges.split(","):
-        if "-" in part:
-            a_, b_ = part.split("-")
-            a, b = int(a_), int(b_)
-            result.extend(range(a, b + 1))
-        else:
-            a = int(part)
-            result.append(a)
-    return set(result)
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> np.ndarray:
@@ -250,15 +195,7 @@ def main(args: argparse.Namespace):
     Create markers and marker PDFs using the parameters provided on the command line.
     """
     tag_data = get_tag_family(args.tag_family)
-
-    LOGGER.info("Marker family info:")
-    LOGGER.info(f"    Tag family:       {tag_data.name}")
-    LOGGER.info(f"    Valid markers:    0-{tag_data.ncodes - 1}")
-    LOGGER.info(f"    Total width:      {tag_data.total_width}")
-    LOGGER.info(f"    Width at border:  {tag_data.width_at_border}")
-    LOGGER.info(f"    Reversed border:  {tag_data.reversed_border}")
-    LOGGER.info(f"    Num bits:         {tag_data.nbits}")
-    LOGGER.info(f"    Hamming distance: {tag_data.h}")
+    LOGGER.info(tag_data)
 
     # Get list of markers we want to make
     if args.range == "ALL":
