@@ -6,6 +6,7 @@ From: https://gist.github.com/naoki-mizuno/d25cbc3c59228291cabe50529d70894c
 import argparse
 import logging
 import sys
+from datetime import datetime
 
 import cv2
 import numpy as np
@@ -30,7 +31,7 @@ def read_chessboards(frames, aruco_dict, board):
                 all_corners.append(c_corners)
                 all_ids.append(c_ids)
         else:
-            LOGGER.error('Failed!')
+            LOGGER.error("Failed!")
 
     imsize = gray.shape
     return all_corners, all_ids, imsize
@@ -50,14 +51,14 @@ def capture_camera(cap, num=1, mirror=False, size=None):
         if size is not None and len(size) == 2:
             frame = cv2.resize(frame, size)
 
-        cv2.imshow('Frame', frame)
+        cv2.imshow("Frame", frame)
 
         k = cv2.waitKey(1)
         if k == 27:  # Esc
             break
         elif k == 10 or k == 32:  # Enter or Space
             frames.append(frame)
-            LOGGER.info('Frame captured!')
+            LOGGER.info("Frame captured!")
             if len(frames) == num:
                 break
 
@@ -76,9 +77,9 @@ def draw_axis(frame, camera_matrix, dist_coeff, aruco_dict, board):
     # cv2.aruco.drawDetectedCornersCharuco(frame, c_corners, c_ids)
     # cv2.aruco.drawDetectedMarkers(frame, corners, ids)
     # cv2.aruco.drawDetectedMarkers(frame, rejected_points, borderColor=(100, 0, 240))
-    LOGGER.info('Translation : {0}'.format(p_tvec))
-    LOGGER.info('Rotation    : {0}'.format(p_rvec))
-    LOGGER.info('Distance from camera: {0} m'.format(np.linalg.norm(p_tvec)))
+    LOGGER.info("Translation : {0}".format(p_tvec))
+    LOGGER.info("Rotation    : {0}".format(p_rvec))
+    LOGGER.info("Distance from camera: {0} m".format(np.linalg.norm(p_tvec)))
 
     return frame
 
@@ -103,7 +104,7 @@ def main(args: argparse.Namespace):
 
     frames = capture_camera(video_dev, args.frame_count)
     if len(frames) == 0:
-        LOGGER.error('No frame captured')
+        LOGGER.error("No frame captured")
         sys.exit(1)
     all_corners, all_ids, imsize = read_chessboards(frames, aruco_dict, board)
     ret, camera_matrix, dist_coeff, rvec, tvec = cv2.aruco.calibrateCameraCharuco(
@@ -113,18 +114,36 @@ def main(args: argparse.Namespace):
     LOGGER.info(f"> Camera matrix\n{camera_matrix}")
     LOGGER.info(f"> Distortion coefficients\n{dist_coeff}")
 
-    height = int(video_dev.get(cv2.CAP_PROP_FRAME_WIDTH))
-    width = int(video_dev.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    LOGGER.info(f"> Resolution\n{height}x{width}")
-
-    LOGGER.info("Capture frame to test calibration.")
-    test_frame = capture_camera(video_dev, 1)[0]
-    test_frame = draw_axis(test_frame, camera_matrix, dist_coeff, aruco_dict, board)
-
-    cv2.imshow('Frame', test_frame)
-    cv2.waitKey(0)
+    width = int(video_dev.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(video_dev.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    LOGGER.info(f"> Resolution\n{width}x{height}")
 
     video_dev.release()
+
+    LOGGER.info("Generating calibration XML file")
+    if args.cal_filename.lower().endswith(".xml"):
+        output_filename = args.cal_filename
+    else:
+        output_filename += ".xml"
+    file = cv2.FileStorage(args.cal_filename, cv2.FILE_STORAGE_WRITE)
+
+    calibrationDate = datetime.now().strftime("%a %d %b %Y %H:%M:%S")
+    file.write("calibrationDate", calibrationDate)
+
+    file.write("framesCount", args.frame_count)
+
+    file.startWriteStruct("cameraResolution", cv2.FileNode_SEQ)
+    file.write("", width)
+    file.write("", height)
+    file.endWriteStruct()
+
+    file.write("cameraMatrix", camera_matrix)
+    file.write("dist_coeffs", dist_coeff)
+
+    if args.vidpid is not None:
+        file.write("vidpid", args.vidpid)
+
+    file.release()
 
 
 def create_subparser(subparsers: argparse._SubParsersAction):
@@ -139,12 +158,16 @@ def create_subparser(subparsers: argparse._SubParsersAction):
         https://calib.io/pages/camera-calibration-pattern-generator
         260x200mm, 6x8 squares, 30mm checkers.
         """)
-    parser.add_argument('camera', type=int, help="The camera index")
+    parser.add_argument("camera", type=int, help="The camera index")
     parser.add_argument(
-        '--resolution', type=int, nargs=2, default=None,
+        "--resolution", type=int, nargs=2, default=None,
         help="Force camera resolution")
     parser.add_argument(
-        '-n', '--frame_count', type=int, default=15,
-        help="Number of frames to use for calbration.")
+        "-n", "--frame_count", type=int, default=15,
+        help="Number of frames to use for calbration")
+    parser.add_argument(
+        "--vidpid", type=str, default=None,
+        help="VID and PID to be put on the calibration file")
+    parser.add_argument("cal_filename", type=str, help="Filename of output calibration file")
 
     parser.set_defaults(func=main)
