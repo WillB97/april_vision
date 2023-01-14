@@ -150,6 +150,20 @@ IMREAD_REDUCED_GRAYSCALE_4: int
 IMREAD_REDUCED_GRAYSCALE_8: int
 IMREAD_UNCHANGED: int
 
+FILE_NODE_NONE: int
+FILE_NODE_INT: int
+FILE_NODE_REAL: int
+FILE_NODE_FLOAT: int
+FILE_NODE_STR: int
+FILE_NODE_STRING: int
+FILE_NODE_SEQ: int
+FILE_NODE_MAP: int
+FILE_NODE_TYPE_MASK: int
+FILE_NODE_FLOW: int
+FILE_NODE_UNIFORM: int
+FILE_NODE_EMPTY: int
+FILE_NODE_NAMED: int
+
 
 def cvtColor(src: Mat, code: int, dts: Mat = ..., dstCn: int = ...) -> Mat: ...
 def imread(filename: str, flags: int = ...) -> Mat: ...
@@ -177,6 +191,10 @@ class Node:
 class FileStorage:
     def __init__(self, filename: str, flags: int, encoding: str = ...) -> None: ...
     def getNode(self, nodename: str) -> Node: ...
+    def write(self, nodename: str, payload: typing.Any) -> None: ...
+    def release(self) -> None: ...
+    def startWriteStruct(self, nodename: str, flags: int) -> None: ...
+    def endWriteStruct(self) -> None: ...
 
 
 class VideoCapture:

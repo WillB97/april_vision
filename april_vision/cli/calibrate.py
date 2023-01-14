@@ -132,7 +132,7 @@ def main(args: argparse.Namespace):
 
     file.write("framesCount", args.frame_count)
 
-    file.startWriteStruct("cameraResolution", cv2.FileNode_SEQ)
+    file.startWriteStruct("cameraResolution", cv2.FILE_NODE_SEQ)
     file.write("", width)
     file.write("", height)
     file.endWriteStruct()
