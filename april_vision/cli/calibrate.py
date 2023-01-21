@@ -141,7 +141,8 @@ def main(args: argparse.Namespace):
     file.write("dist_coeffs", dist_coeff)
 
     if args.vidpid is not None:
-        file.write("vidpid", args.vidpid)
+        # Wrap the str in quotes so it is outputed and loaded correctly
+        file.write("vidpid", f'"{args.vidpid}"')
 
     file.release()
 
@@ -161,6 +162,7 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     parser.add_argument("camera", type=int, help="The camera index")
     parser.add_argument(
         "--resolution", type=int, nargs=2, default=None,
+        metavar=("WIDTH", "HEIGHT"),
         help="Force camera resolution")
     parser.add_argument(
         "-n", "--frame_count", type=int, default=15,
