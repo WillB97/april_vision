@@ -202,7 +202,7 @@ def main(args: argparse.Namespace):
         marker_ids = [num for num in range(tag_data.ncodes)]
     else:
         try:
-            marker_ids = list(parse_ranges(args.range))
+            marker_ids = parse_ranges(args.range)
         except ValueError:
             LOGGER.error("Invalid marker number range provided")
             exit(1)

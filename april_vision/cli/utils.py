@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Set, Tuple
+from typing import List, NamedTuple, Tuple
 
 import pyapriltags
 
@@ -51,7 +51,7 @@ def get_tag_family(family: str) -> ApriltagFamily:
     return tag_data
 
 
-def parse_ranges(ranges: str) -> Set[int]:
+def parse_ranges(ranges: str) -> List[int]:
     """
     Parse a comma seprated list of numbers which may include ranges
     specified as hyphen-separated numbers.
@@ -66,4 +66,4 @@ def parse_ranges(ranges: str) -> Set[int]:
         else:
             a = int(part)
             result.append(a)
-    return set(result)
+    return result
