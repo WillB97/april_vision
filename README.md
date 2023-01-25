@@ -77,6 +77,10 @@ april_vision live
     Live camera demonstration with marker annotation
 ```
 ```
+april_vision marker_generator
+    Generate a PDF containing markers
+```
+```
 april_vision vision_debug
     Generate the debug images of the vision processing steps
 ```

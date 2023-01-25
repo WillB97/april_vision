@@ -6,13 +6,14 @@ import logging
 from april_vision._version import version
 
 subcommands = [
+    "tools",
     "annotate_image",
     "annotate_video",
     "calibrate",
     # "camera_benchmark",
     "live",
     # "marker_benchmark",
-    # "marker_generator",
+    "marker_generator",
     "vision_debug",
 ]
 
