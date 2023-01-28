@@ -5,8 +5,11 @@ Setting the environment variable ZOLOTO_LEGACY_AXIS uses the axis that were
 used in zoloto<0.9.0. Otherwise the conventional right-handed axis is used
 where x is forward, y is left and z is upward.
 """
+from __future__ import annotations
+
 import os
 from enum import Enum
+import math
 from math import acos, atan2, pi
 from typing import Any, Dict, List, NamedTuple, Tuple
 
@@ -111,7 +114,7 @@ class CartesianCoordinates(NamedTuple):
             return cls(x=z * 1000, y=-x * 1000, z=-y * 1000)
 
 
-class SphericalCoordinate(NamedTuple):
+class MathematicalSphericalCoordinate(NamedTuple):
     """
     A 3 dimesional spherical coordinate location.
 
@@ -135,54 +138,26 @@ class SphericalCoordinate(NamedTuple):
     phi: float
 
     @property
-    def rot_x(self) -> float:
-        """
-        Rotation around the x-axis.
-
-        Conventional:  This is unused.
-        Legacy: A rotation up to down around the camera, in radians. Values
-                increase as the marker moves towards the bottom of the image.
-                A zero value is halfway up the image.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return self.phi - (pi / 2)
-        else:
-            raise AttributeError(
-                "That axis is not available in the selected coordinate system.")
-
-    @property
     def rot_y(self) -> float:
         """
         Rotation around the y-axis.
 
-        Conventional: A rotation up to down around the camera, in radians.
-                      Values increase as the marker moves towards the bottom
-                      of the image. A zero value is halfway up the image.
-        Legacy: A rotation left to right around the camera, in radians. Values
-                increase as the marker moves towards the right of the image.
-                A zero value is on the centerline of the image.
+        A rotation up to down around the camera, in radians. Values increase as
+        the marker moves towards the bottom of the image. A zero value is
+        halfway up the image.
         """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return -self.theta
-        else:
-            return self.phi - (pi / 2)
+        return self.phi - (pi / 2)
 
     @property
     def rot_z(self) -> float:
         """
         Rotation around the z-axis.
 
-        Conventional: A rotation right to left around the camera, in radians.
-                      Values increase as the marker moves towards the left of
-                      the image. A zero value is on the centerline of the
-                      image.
-        Legacy: This is unused.
+        A rotation right to left around the camera, in radians. Values increase
+        as the marker moves towards the left of the image. A zero value is on
+        the centerline of the image.
         """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            raise AttributeError(
-                "That axis is not available in the selected coordinate system.")
-        else:
-            return self.theta
+        return self.theta
 
     @classmethod
     def from_tvec(cls, x: float, y: float, z: float):
@@ -201,6 +176,63 @@ class SphericalCoordinate(NamedTuple):
         theta = atan2(_y, _x)
         phi = acos(_z / dist)
         return cls(int(dist * 1000), theta, phi)
+
+
+class SphericalCoordinates(NamedTuple):
+    """
+    Spherical coordinates, rotated onto their side.
+
+    These are Zoloto-compatible.
+
+    This is comparable to the ISO convention for spherical coordinates, applied
+    to our rotated axes. Here θ is measured down from the y-axis (rather than
+    the usual z-axis) while φ is measured around the y-axis.
+
+    See https://en.wikipedia.org/wiki/Spherical_coordinate_system and
+    https://studentrobotics.org/docs/programming/sr/vision/#SphericalCoordinates.
+
+    :param float theta: Polar angle, θ, in radians. This is the angle "down"
+        from the y-axis to the vector which points to the location. For points
+        with zero cartesian x-coordinate value, this can be viewed as the
+        rotation about the x-axis. Zero is on the positive y-axis.
+    :param float phi: Azimuth angle, φ, in radians. This is the angle from the
+        x-axis around the polar (y-axis) to the projection of the point on the
+        x-z plane. This can be viewed as rotation about the y-axis. Zero is at
+        the centre of the image.
+    :param float distance: Radial distance from the origin.
+    """
+
+    theta: float
+    phi: float
+    distance: int
+
+    @property
+    def rot_x(self) -> float:
+        """Approximate rotation around the x-axis, an alias for ``self.theta``."""
+        return self.theta
+
+    @property
+    def rot_y(self) -> float:
+        """Rotation around the y-axis, an alias for ``self.phi``."""
+        return self.phi
+
+    @property
+    def dist(self) -> float:
+        """Polar radius to the point, an alias for ``self.distance``."""
+        return self.distance
+
+    @classmethod
+    def from_cartesian(cls, cartesian: CartesianCoordinates) -> SphericalCoordinates:
+        if not any(cartesian):
+            return SphericalCoordinates(0, 0, 0)
+
+        distance = math.sqrt(sum(x**2 for x in cartesian))
+        x, y, z = cartesian
+        return SphericalCoordinates(
+            distance=int(distance),
+            theta=math.acos(y / distance),
+            phi=math.atan2(z, x),
+        )
 
 
 ThreeTuple = Tuple[float, float, float]
@@ -430,10 +462,12 @@ class Marker:
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
-    def spherical(self) -> SphericalCoordinate:
+    def spherical(self) -> SphericalCoordinates:
         """The spherical coordinates of the marker's location relative to the camera."""
+        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
+            return SphericalCoordinates.from_cartesian(self.cartesian)
         if self._tvec is not None:
-            return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
+            return MathematicalSphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
         raise RuntimeError("This marker was detected with an uncalibrated camera")
 
     @property
