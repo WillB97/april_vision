@@ -37,7 +37,7 @@ def main(args: argparse.Namespace) -> None:
 
     processer = Processor(
         source,
-        tag_family=args.tag_family.value,
+        tag_family=args.tag_family,
         quad_decimate=args.quad_decimate,
         tag_sizes=float(args.tag_size) / 1000,
         calibration=calibration,
