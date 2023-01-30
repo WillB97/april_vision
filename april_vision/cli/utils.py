@@ -14,7 +14,7 @@ class ApriltagFamily(NamedTuple):
     h: int
     name: str
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         data = "Marker family info:\n"
         data += f"    Tag family:       {self.name}\n"
         data += f"    Valid markers:    0-{self.ncodes - 1}\n"
