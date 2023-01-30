@@ -8,7 +8,7 @@ where x is forward, y is left and z is upward.
 import os
 from enum import Enum
 from math import acos, atan2, pi
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Any, Dict, Iterator, List, NamedTuple, Tuple
 
 import numpy as np
 from numpy.linalg import norm as hypotenuse
@@ -335,6 +335,14 @@ class Orientation:
         Specifically intrinsic Tait-Bryan angles following the z-y'-x'' convention.
         """
         return self._quaternion.yaw_pitch_roll
+
+    def __iter__(self) -> Iterator[float]:
+        """
+        Get an iterator over the rotation angles.
+        Returns:
+            An iterator of floating point angles in order x, y, z.
+        """
+        return iter([self.rot_x, self.rot_y, self.rot_z])
 
     @property
     def rotation_matrix(self) -> RotationMatrix:
