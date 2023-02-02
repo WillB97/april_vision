@@ -87,7 +87,8 @@ def main(args: argparse.Namespace):
         cv2.imshow('image', frame.colour_frame)
 
         button = cv2.waitKey(1) & 0xFF
-        if button == ord('q'):
+        if (button == ord('q')) or (button == 27):
+            # Quit on q or ESC key
             break
         elif button == ord('s'):
             filename = f'saved_image{file_num:03d}.jpg'
@@ -110,7 +111,8 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     parser.add_argument(
         "--id", type=int, default=None, help="Override the camera index to use.")
     parser.add_argument(
-        "--annotate", action='store_true', help="Annotate detected markers in the frames.")
+        "--no_annotate", action='store_false', dest='annotate',
+        help="Turn off marker annotation for detected markers.")
     parser.add_argument(
         '--fps', action='store_true',
         help="Display the frames per second that the preview is running at.")
