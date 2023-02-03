@@ -84,6 +84,37 @@ def main(args: argparse.Namespace):
             except RuntimeError:
                 pass
 
+        for marker in markers:
+            output = "#{}, {}, ({}, {})".format(
+                marker.id,
+                marker.marker_type.value.strip('tag'),
+                int(marker.pixel_centre.x),
+                int(marker.pixel_centre.y),
+            )
+            # Check we have pose data
+            has_pose = True
+            try:
+                _ = marker.cartesian
+            except RuntimeError:
+                has_pose = False
+
+            if has_pose:
+                output += ", D={}, θ={}, φ={} | x={}, y={}, z={} | r={}, p={}, y={}".format(
+                    int(marker.distance),
+                    int(marker.spherical.theta),
+                    int(marker.spherical.phi),
+                    int(marker.cartesian.x),
+                    int(marker.cartesian.y),
+                    int(marker.cartesian.z),
+                    int(marker.orientation.roll),
+                    int(marker.orientation.pitch),
+                    int(marker.orientation.yaw),
+                )
+            else:
+                output += ", no values for pose estimation"
+
+            LOGGER.info(output)
+
         cv2.imshow('image', frame.colour_frame)
 
         button = cv2.waitKey(1) & 0xFF
