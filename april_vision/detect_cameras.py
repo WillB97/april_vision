@@ -43,8 +43,7 @@ def find_cameras(
     elif platform.startswith("darwin"):
         cameras = mac_discovery()
     elif platform == "win32":
-        valid_cameras = windows_discovery(calibration_map, include_uncalibrated)
-        return valid_cameras
+        cameras = windows_discovery()
     else:
         cameras = default_discovery()
 
@@ -220,53 +219,44 @@ def mac_discovery() -> List[CameraIdentifier]:
     return cameras
 
 
-def windows_discovery(
-    calibration_map: Dict[str, Path],
-    include_uncalibrated: bool,
-) -> List[CalibratedCamera]:
+def windows_discovery() -> List[CameraIdentifier]:
     """
-    Discovery method for Windows using PyUSB and the fallback discovery method.
+    Discovery method for Windows using windowsRT API.
 
-    This cannot identify which index corresponds to the found USB VID & PID
-    so is unable to provide a useful output when more than one USB camera with
-    calibration is connected.
-    The returned camera is a combination of the found USB VID & PID and the
-    first openable camera index.
+    Results are only valid for the MSMF opencv backend.
+    This matches camera indexes to their USB VID & PID and omits indexes
+    that are not USB cameras.
     """
-    found_cameras = default_discovery()
-    if include_uncalibrated:
-        # We lack the information to match which camera is which so treat them
-        # all as uncalibrated
-        LOGGER.debug("Assuming all cameras are uncalibrated")
-        return [
-            CalibratedCamera(
-                index=camera.index,
-                name=camera.name,
-                vidpid=camera.vidpid,
-            ) for camera in found_cameras
-        ]
+    import asyncio
 
-    if len(found_cameras) == 0:
-        return []
+    import winrt.windows.devices.enumeration as windows_devices
 
-    selected_camera = found_cameras[0]
-    LOGGER.debug(f"Selecting camera index {selected_camera.index}")
+    async def get_camera_info():
+        # Find all devices in device class 4 (video capture)
+        return await windows_devices.DeviceInformation.find_all_async(4)
 
-    usable_cameras = usable_present_devices(calibration_map)
-    if len(usable_cameras) > 1:
-        raise RuntimeError(
-            "Naive calibration selection is only supported when a single compatible "
-            "device is connected")
-    elif len(usable_cameras) == 1:
-        usable_camera = usable_cameras[0]
-        return [CalibratedCamera(
-            index=selected_camera.index,
-            name=usable_camera[2],
-            vidpid=usable_camera[0],
-            calibration=usable_camera[1],
-        )]
-    else:
-        return []
+    connected_cameras = asyncio.run(get_camera_info())
+
+    cameras = []
+    for index, device in enumerate(connected_cameras):
+        m = re.search(r'USB#VID_([0-9,A-F]{4})&PID_([0-9,A-F]{4})', device.id)
+        if m is None:
+            continue
+
+        vid = int(m.groups()[0], 16)
+        pid = int(m.groups()[1], 16)
+
+        vidpid = f'{vid:04x}:{pid:04x}'
+
+        LOGGER.debug(f"Found camera at index {index}: {device.name}")
+
+        cameras.append(CameraIdentifier(
+            index=index,
+            name=device.name,
+            vidpid=vidpid,
+        ))
+
+    return cameras
 
 
 def default_discovery() -> List[CameraIdentifier]:
