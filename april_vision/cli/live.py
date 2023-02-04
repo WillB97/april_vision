@@ -8,6 +8,7 @@ Option to save the current view of the camera.
 import argparse
 import logging
 import os
+from math import degrees
 from time import perf_counter
 
 import cv2
@@ -101,14 +102,14 @@ def main(args: argparse.Namespace):
             if has_pose:
                 output += ", D={}, θ={}, φ={} | x={}, y={}, z={} | r={}, p={}, y={}".format(
                     int(marker.distance),
-                    int(marker.spherical.theta),
-                    int(marker.spherical.phi),
+                    int(degrees(marker.spherical.theta)),
+                    int(degrees(marker.spherical.phi)),
                     int(marker.cartesian.x),
                     int(marker.cartesian.y),
                     int(marker.cartesian.z),
-                    int(marker.orientation.roll),
-                    int(marker.orientation.pitch),
-                    int(marker.orientation.yaw),
+                    int(degrees(marker.orientation.roll)),
+                    int(degrees(marker.orientation.pitch)),
+                    int(degrees(marker.orientation.yaw)),
                 )
             else:
                 output += ", no values for pose estimation"
