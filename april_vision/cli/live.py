@@ -8,6 +8,7 @@ Option to save the current view of the camera.
 import argparse
 import logging
 import os
+from math import degrees
 from time import perf_counter
 
 import cv2
@@ -84,10 +85,42 @@ def main(args: argparse.Namespace):
             except RuntimeError:
                 pass
 
+        for marker in markers:
+            output = "#{}, {}, ({}, {})".format(
+                marker.id,
+                marker.marker_type.value.strip('tag'),
+                int(marker.pixel_centre.x),
+                int(marker.pixel_centre.y),
+            )
+            # Check we have pose data
+            has_pose = True
+            try:
+                _ = marker.cartesian
+            except RuntimeError:
+                has_pose = False
+
+            if has_pose:
+                output += ", D={}, θ={}, φ={} | x={}, y={}, z={} | r={}, p={}, y={}".format(
+                    int(marker.distance),
+                    int(degrees(marker.spherical.theta)),
+                    int(degrees(marker.spherical.phi)),
+                    int(marker.cartesian.x),
+                    int(marker.cartesian.y),
+                    int(marker.cartesian.z),
+                    int(degrees(marker.orientation.roll)),
+                    int(degrees(marker.orientation.pitch)),
+                    int(degrees(marker.orientation.yaw)),
+                )
+            else:
+                output += ", no values for pose estimation"
+
+            LOGGER.info(output)
+
         cv2.imshow('image', frame.colour_frame)
 
         button = cv2.waitKey(1) & 0xFF
-        if button == ord('q'):
+        if (button == ord('q')) or (button == 27):
+            # Quit on q or ESC key
             break
         elif button == ord('s'):
             filename = f'saved_image{file_num:03d}.jpg'
@@ -110,7 +143,8 @@ def create_subparser(subparsers: argparse._SubParsersAction):
     parser.add_argument(
         "--id", type=int, default=None, help="Override the camera index to use.")
     parser.add_argument(
-        "--annotate", action='store_true', help="Annotate detected markers in the frames.")
+        "--no_annotate", action='store_false', dest='annotate',
+        help="Turn off marker annotation for detected markers.")
     parser.add_argument(
         '--fps', action='store_true',
         help="Display the frames per second that the preview is running at.")
