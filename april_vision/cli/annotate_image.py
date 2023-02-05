@@ -17,7 +17,7 @@ from ..vision import Processor
 LOGGER = logging.getLogger(__name__)
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Annotate an image file using the provided args."""
     input_file = Path(args.input_file)
     if not input_file.exists():
@@ -72,7 +72,7 @@ def main(args: argparse.Namespace):
         cv2.destroyAllWindows()
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Annotate_image command parser."""
     parser = subparsers.add_parser(
         "annotate_image",

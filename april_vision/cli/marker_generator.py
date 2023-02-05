@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pypdf import PdfMerger
 
@@ -49,7 +50,7 @@ class PageMode(Enum):
     SPLIT = 4
 
 
-def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> np.ndarray:
+def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
     """
     Uses the tag family object to generate a marker, returns this data as a 2d numpy array
     where each of the cells is 1 pixel of the marker.
@@ -190,7 +191,7 @@ def generate_tag_tile(
     return text_border_image
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """
     Create markers and marker PDFs using the parameters provided on the command line.
     """
@@ -374,7 +375,7 @@ def main(args: argparse.Namespace):
             ))
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Marker_generator command parser."""
 
     parser = subparsers.add_parser(

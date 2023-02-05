@@ -8,7 +8,7 @@ where x is forward, y is left and z is upward.
 import os
 from enum import Enum
 from math import acos, atan2, pi
-from typing import Any, Dict, Iterator, List, NamedTuple, Tuple
+from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, cast
 
 import numpy as np
 from numpy.linalg import norm as hypotenuse
@@ -94,7 +94,7 @@ class CartesianCoordinates(NamedTuple):
     z: float
 
     @classmethod
-    def from_tvec(cls, x: float, y: float, z: float):
+    def from_tvec(cls, x: float, y: float, z: float) -> 'CartesianCoordinates':
         """
         Convert coordinate system to standard right-handed cartesian system.
 
@@ -185,7 +185,7 @@ class SphericalCoordinate(NamedTuple):
             return self.theta
 
     @classmethod
-    def from_tvec(cls, x: float, y: float, z: float):
+    def from_tvec(cls, x: float, y: float, z: float) -> 'SphericalCoordinate':
         """
         Convert coordinate system to standard right-handed cartesian system.
 
@@ -352,7 +352,7 @@ class Orientation:
         Returns:
             A 3x3 rotation matrix as a tuple of tuples.
         """
-        return self.__rotation_matrix.tolist()
+        return cast(RotationMatrix, self.__rotation_matrix.tolist())
 
     @property
     def quaternion(self) -> Quaternion:

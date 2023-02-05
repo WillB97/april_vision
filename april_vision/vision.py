@@ -199,7 +199,12 @@ class Processor:
         markers = self._detect(frames)
         return [marker.id for marker in markers]
 
-    def save(self, name: Union[str, Path], *, frame: Optional[NDArray] = None) -> None:
+    def save(
+        self,
+        name: Union[str, Path],
+        *,
+        frame: Optional[NDArray] = None,
+    ) -> None:
         """Save an annotated image to a file."""
         if frame is None:
             frames = self._capture()

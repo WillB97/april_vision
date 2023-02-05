@@ -7,14 +7,19 @@ import argparse
 import logging
 import sys
 from datetime import datetime
+from typing import Any, Iterable, List, Tuple
 
 import cv2
-import numpy as np
+from numpy.typing import NDArray
 
 LOGGER = logging.getLogger(__name__)
 
 
-def read_chessboards(frames, aruco_dict, board):
+def read_chessboards(
+    frames: Iterable[NDArray],
+    aruco_dict: Any,
+    board: Any,
+) -> Tuple[Any, Any, Any]:
     """Charuco base pose estimation."""
     all_corners = []
     all_ids = []
@@ -37,7 +42,12 @@ def read_chessboards(frames, aruco_dict, board):
     return all_corners, all_ids, imsize
 
 
-def capture_camera(cap, num=1, mirror=False, size=None):
+def capture_camera(
+    cap: cv2.VideoCapture,
+    num: int = 1,
+    mirror: bool = False,
+    size: Tuple[int, int] = None,
+) -> List[NDArray]:
     """Capture frames to be used for calibration."""
     frames = []
     LOGGER.info("Press space to capture frame.")
@@ -65,26 +75,7 @@ def capture_camera(cap, num=1, mirror=False, size=None):
     return frames
 
 
-def draw_axis(frame, camera_matrix, dist_coeff, aruco_dict, board):
-    """Annotate charuco marker target using calibration parameters."""
-    corners, ids, rejected_points = cv2.aruco.detectMarkers(frame, aruco_dict)
-    ret, c_corners, c_ids = cv2.aruco.interpolateCornersCharuco(
-        corners, ids, frame, board)
-    ret, p_rvec, p_tvec = cv2.aruco.estimatePoseCharucoBoard(
-        c_corners, c_ids, board, camera_matrix, dist_coeff, None, None)
-    cv2.drawFrameAxes(
-        frame, camera_matrix, dist_coeff,  p_rvec, p_tvec, 0.1)
-    # cv2.aruco.drawDetectedCornersCharuco(frame, c_corners, c_ids)
-    # cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-    # cv2.aruco.drawDetectedMarkers(frame, rejected_points, borderColor=(100, 0, 240))
-    LOGGER.info("Translation : {0}".format(p_tvec))
-    LOGGER.info("Rotation    : {0}".format(p_rvec))
-    LOGGER.info("Distance from camera: {0} m".format(np.linalg.norm(p_tvec)))
-
-    return frame
-
-
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Charuco calibration."""
     try:
         import cv2.aruco  # type: ignore
@@ -147,7 +138,7 @@ def main(args: argparse.Namespace):
     file.release()
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Calibrate command parser."""
     parser = subparsers.add_parser(
         "calibrate",

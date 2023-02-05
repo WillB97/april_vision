@@ -8,12 +8,12 @@ import argparse
 # TODO Impliment this
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Measure the FPS for different resolutions."""
     raise NotImplementedError("Camera benchmark is not implemented.")
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Camera_benchmark command parser."""
     parser = subparsers.add_parser("camera_benchmark")
 
