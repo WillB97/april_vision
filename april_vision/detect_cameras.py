@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Optional
 
 import cv2
 
@@ -112,27 +112,6 @@ def match_calibrations(
     return calibrated_cameras + uncalibrated_cameras
 
 
-def usable_present_devices(calibration_map: Dict[str, Path]) -> List[Tuple[str, Path, str]]:
-    """Use PyUSB to detect any supported USB VID/PID combinations connected to the system."""
-    import libusb_package
-    try:
-        usb_devices = libusb_package.find(find_all=True)
-    except ValueError:
-        LOGGER.warning("libusb_package failed to find a libusb backend.")
-        return []
-
-    usable_devices: List[Tuple[str, Path, str]] = []
-
-    for dev in usb_devices:
-        vidpid = f"{dev.idVendor:04x}:{dev.idProduct:04x}"
-        calibration = calibration_map.get(vidpid)
-        if calibration is not None:
-            usable_devices.append((vidpid, calibration, calibration.stem))
-
-    LOGGER.debug(f"Found calibration for the devices: {[dev[0] for dev in usable_devices]}")
-    return usable_devices
-
-
 def linux_discovery() -> List[CameraIdentifier]:
     """
     Discovery method for Linux using Video4Linux.
@@ -229,13 +208,13 @@ def windows_discovery() -> List[CameraIdentifier]:
     """
     import asyncio
 
-    import winrt.windows.devices.enumeration as windows_devices
+    import winrt.windows.devices.enumeration as windows_devices  # type: ignore
 
-    async def get_camera_info():
-        # Find all devices in device class 4 (video capture)
-        return await windows_devices.DeviceInformation.find_all_async(4)
+    async def get_camera_info():  # type: ignore
+        device_class = windows_devices.DeviceClass.VIDEO_CAPTURE
+        return await windows_devices.DeviceInformation.find_all_async(device_class)
 
-    connected_cameras = asyncio.run(get_camera_info())
+    connected_cameras = asyncio.run(get_camera_info())  # type: ignore
 
     cameras = []
     for index, device in enumerate(connected_cameras):
