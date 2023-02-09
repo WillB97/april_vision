@@ -1,16 +1,14 @@
 import argparse
-import logging
+
+from tabulate import tabulate
 
 from april_vision.calibrations import calibrations
 from april_vision.detect_cameras import find_cameras
 
-LOGGER = logging.getLogger(__name__)
-
 
 def main(args: argparse.Namespace) -> None:
     cameras = find_cameras(calibrations, include_uncalibrated=True)
-    for camera in cameras:
-        LOGGER.info(camera)
+    print(tabulate(cameras, headers="keys"))
 
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:

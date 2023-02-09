@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 def main(args: argparse.Namespace) -> None:
     tag_data = get_tag_family(args.tag_family)
-    LOGGER.info(tag_data)
+    print(tag_data)
 
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
