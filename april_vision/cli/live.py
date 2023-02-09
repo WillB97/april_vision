@@ -83,6 +83,8 @@ def main(args: argparse.Namespace) -> None:
                         text_colour=(255, 191, 0),  # deep sky blue
                     )
             except RuntimeError:
+                # Catches RuntimeError from having no pose data
+                # Due to either, no calibration or no tag size
                 pass
 
         for marker in markers:
