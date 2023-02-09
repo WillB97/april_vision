@@ -3,6 +3,7 @@ import importlib
 
 subcommands = [
     "family_details",
+    "list_cameras",
 ]
 
 
