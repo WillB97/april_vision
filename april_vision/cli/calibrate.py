@@ -112,10 +112,10 @@ def main(args: argparse.Namespace) -> None:
     video_dev.release()
 
     LOGGER.info("Generating calibration XML file")
-    if args.cal_filename.lower().endswith(".xml"):
-        output_filename = args.cal_filename
-    else:
+    output_filename = args.cal_filename
+    if not args.cal_filename.lower().endswith(".xml"):
         output_filename += ".xml"
+
     file = cv2.FileStorage(args.cal_filename, cv2.FILE_STORAGE_WRITE)
 
     calibrationDate = datetime.now().strftime("%a %d %b %Y %H:%M:%S")
