@@ -8,12 +8,12 @@ from ..utils import get_tag_family
 LOGGER = logging.getLogger(__name__)
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     tag_data = get_tag_family(args.tag_family)
     LOGGER.info(tag_data)
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Print the details about a marker family."""
     parser = subparsers.add_parser(
         "family_details",

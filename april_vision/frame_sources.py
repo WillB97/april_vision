@@ -141,7 +141,7 @@ class USBCamera(FrameSource):
             int(self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
 
-    def _optimise_camera(self, vidpid: str):
+    def _optimise_camera(self, vidpid: str) -> None:
         """Tweak the camera's image type and framerate to achieve the minimum frame time."""
         verified_vidpid = {'046d:0825', '046d:0807'}
         if not platform.startswith("linux"):

@@ -6,7 +6,7 @@ subcommands = [
 ]
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "tools",
         description="A collection of useful tools",

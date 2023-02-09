@@ -9,6 +9,7 @@ import logging
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Generator, List
 
 import cv2
 from PIL import Image
@@ -35,7 +36,7 @@ ps_files = [
 
 
 @contextmanager
-def pushd(new_dir):
+def pushd(new_dir: str) -> Generator[None, None, None]:
     """Enter a directory for the context and return to the previous on exiting."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
@@ -45,7 +46,7 @@ def pushd(new_dir):
         os.chdir(previous_dir)
 
 
-def process_debug(preserve=True, collage=True, clean=False):
+def process_debug(preserve: bool = True, collage: bool = True, clean: bool = False) -> None:
     """Convert debug outputs to PNG and optionally collage the images."""
     new_files = []
 
@@ -74,7 +75,7 @@ def process_debug(preserve=True, collage=True, clean=False):
                     pass
 
 
-def create_collage(files, out):
+def create_collage(files: List[str], out: str) -> None:
     """Create a collage of the debug images."""
     LOGGER.info("Generating debug collage.")
     img = Image.open(files[-1])
@@ -91,7 +92,7 @@ def create_collage(files, out):
     LOGGER.info("Generated debug collage.")
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     """Generate the debug images of the vision processing steps."""
     if not args.input_file.exists():
         LOGGER.fatal("Input file does not exist.")
@@ -114,7 +115,7 @@ def main(args: argparse.Namespace):
             clean=args.collage_only)
 
 
-def create_subparser(subparsers: argparse._SubParsersAction):
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Vision_debug command parser."""
     parser = subparsers.add_parser(
         "vision_debug",
