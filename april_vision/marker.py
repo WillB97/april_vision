@@ -51,7 +51,7 @@ class PixelCoordinates(NamedTuple):
 
 class CartesianCoordinates(NamedTuple):
     """
-    A 3 dimesional cartesian coordinate in the standard right-handed cartesian system.
+    A 3 dimensional cartesian coordinate in the standard right-handed cartesian system.
 
     Origin is at the camera.
 
@@ -67,22 +67,6 @@ class CartesianCoordinates(NamedTuple):
     Increasing values indicate greater distance above the centre of the image.
 
     More information: https://w.wiki/5zbE
-
-    Legacy:
-    The X axis is horizontal relative to the camera's perspective, i.e: left &
-    right within the frame of the image. Zero is at the centre of the image.
-    Increasing values indicate greater distance to the right.
-
-    The Y axis is vertical relative to the camera's perspective, i.e: up & down
-    within the frame of the image. Zero is at the centre of the image.
-    Increasing values indicate greater distance below the centre of the image.
-
-    The Z axis extends directly away from the camera. Zero is at the camera.
-    Increasing values indicate greater distance from the camera.
-
-    These match traditional cartesian coordinates when the camera is facing
-    upwards.
-
 
     :param float x: X coordinate, in millimeters
     :param float y: Y coordinate, in millimeters
@@ -105,17 +89,14 @@ class CartesianCoordinates(NamedTuple):
         :param float y: The y-axis is down in the image taken by the camera.
         :param float z: The z-axis points from the camera center out the camera lens.
         """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return cls(x=x * 1000, y=y * 1000, z=z * 1000)
-        else:
-            return cls(x=z * 1000, y=-x * 1000, z=-y * 1000)
+        return cls(x=z * 1000, y=-x * 1000, z=-y * 1000)
 
 
 class SphericalCoordinate(NamedTuple):
     """
-    A 3 dimesional spherical coordinate location.
+    A 3 dimensional spherical coordinate location.
 
-    The convential spherical coordinate in mathematical notation where θ is
+    # The conventional spherical coordinate in mathematical notation where θ is
     a rotation around the vertical axis and φ is measured as the angle from
     the vertical axis.
     More information: https://mathworld.wolfram.com/SphericalCoordinates.html
@@ -133,56 +114,6 @@ class SphericalCoordinate(NamedTuple):
     distance: int
     theta: float
     phi: float
-
-    @property
-    def rot_x(self) -> float:
-        """
-        Rotation around the x-axis.
-
-        Conventional:  This is unused.
-        Legacy: A rotation up to down around the camera, in radians. Values
-                increase as the marker moves towards the bottom of the image.
-                A zero value is halfway up the image.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return self.phi - (pi / 2)
-        else:
-            raise AttributeError(
-                "That axis is not available in the selected coordinate system.")
-
-    @property
-    def rot_y(self) -> float:
-        """
-        Rotation around the y-axis.
-
-        Conventional: A rotation up to down around the camera, in radians.
-                      Values increase as the marker moves towards the bottom
-                      of the image. A zero value is halfway up the image.
-        Legacy: A rotation left to right around the camera, in radians. Values
-                increase as the marker moves towards the right of the image.
-                A zero value is on the centerline of the image.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return -self.theta
-        else:
-            return self.phi - (pi / 2)
-
-    @property
-    def rot_z(self) -> float:
-        """
-        Rotation around the z-axis.
-
-        Conventional: A rotation right to left around the camera, in radians.
-                      Values increase as the marker moves towards the left of
-                      the image. A zero value is on the centerline of the
-                      image.
-        Legacy: This is unused.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            raise AttributeError(
-                "That axis is not available in the selected coordinate system.")
-        else:
-            return self.theta
 
     @classmethod
     def from_tvec(cls, x: float, y: float, z: float) -> 'SphericalCoordinate':
@@ -207,23 +138,25 @@ ThreeTuple = Tuple[float, float, float]
 RotationMatrix = Tuple[ThreeTuple, ThreeTuple, ThreeTuple]
 
 
-class Orientation:
-    """The orientation of an object in 3-D space."""
+class Orientation(NamedTuple):
+    """
+    The orientation of an object in 3-D space.
 
-    __MARKER_ORIENTATION_CORRECTION = Quaternion(matrix=np.array([
-        [1, 0, 0],
-        [0, -1, 0],
-        [0, 0, -1],
-    ]))
-    __ZOLOTO_LEGACY_ORIENTATION = Quaternion(matrix=np.array([
-        [-1, 0, 0],
-        [0, 1, 0],
-        [0, 0, -1],
-    ]))
+    :param float yaw:   Get yaw of the marker, a rotation about the vertical axis, in radians.
+                        Positive values indicate a rotation clockwise from the perspective of the marker.
+                        Zero values have the marker facing the camera square-on.
+    :param float pitch: Get pitch of the marker, a rotation about the transverse axis, in radians.
+                        Positive values indicate a rotation upwards from the perspective of the marker.
+                        Zero values have the marker facing the camera square-on.
+    :param float roll:  Get roll of the marker, a rotation about the longitudinal axis, in radians.
+                        Positive values indicate a rotation clockwise from the perspective of the marker.
+                        Zero values have the marker facing the camera square-on.
+    """
 
-    def __init__(self, rotation_matrix: NDArray, aruco_orientation: bool = True):
+    @classmethod
+    def from_rvec_matrix(cls, rotation_matrix: NDArray, aruco_orientation: bool = True) -> 'Orientation':
         """
-        Construct a quaternion given the rotation matrix in the camera's coordinate system.
+        Calculate the yaw, pitch and roll given the rotation matrix in the camera's coordinate system.
 
         More information:
         https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
@@ -231,118 +164,35 @@ class Orientation:
         # Calculate the quaternion of the rotation in the camera's coordinate system
         initial_rot = Quaternion(matrix=rotation_matrix)
         # remap quaternion to global coordinate system from the token's perspective
+
+        return cls.from_quaternion(initial_rot, aruco_orientation)
+
+    @classmethod
+    def from_quaternion(cls, quaternion: Quaternion, aruco_orientation: bool = True) -> 'Orientation':
+        """
+        Calculate the yaw, pitch and roll given the quaternion in the camera's coordinate system.
+
+        More information:
+        https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
+        """
+        # remap quaternion to global coordinate system from the token's perspective
         quaternion = Quaternion(
-            initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y,
+            quaternion.w, -quaternion.z, -quaternion.x, quaternion.y,
         )
         if aruco_orientation:
             # Rotate the quaternion so 0 roll is a marker the correct way up
-            quaternion *= self.__MARKER_ORIENTATION_CORRECTION
+            marker_orientation_correction = Quaternion(matrix=np.array([
+                [1, 0, 0],
+                [0, -1, 0],
+                [0, 0, -1],
+            ]))
 
-        self.__rotation_matrix = quaternion.rotation_matrix
+            quaternion *= marker_orientation_correction
 
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            self._quaternion = initial_rot * self.__ZOLOTO_LEGACY_ORIENTATION
-        else:
-            self._quaternion = quaternion
+        obj = cls(*quaternion.yaw_pitch_roll)
+        obj._quaternion = quaternion
 
-        self._yaw_pitch_roll = quaternion.yaw_pitch_roll
-
-    @property
-    def rot_x(self) -> float:
-        """
-        Get rotation angle around X axis in radians.
-
-        The roll rotation with zero as the April Tags marker reference point
-        at the top left of the marker.
-
-        Legacy: The inverted pitch rotation with zero as the marker facing
-                directly away from the camera and a positive rotation being
-                downward.
-                The practical effect of this is that an April Tags marker
-                facing the camera square-on will have a value of ``pi`` (or
-                equivalently ``-pi``).
-        """
-        return self.yaw_pitch_roll[2]
-
-    @property
-    def rot_y(self) -> float:
-        """
-        Get rotation angle around Y axis in radians.
-
-        The pitch rotation with zero as the marker facing the camera square-on
-        and a positive rotation being upward.
-
-        Legacy: The inverted yaw rotation with zero as the marker facing the
-                camera square-on and a positive rotation being
-                counter-clockwise.
-        """
-        return self.yaw_pitch_roll[1]
-
-    @property
-    def rot_z(self) -> float:
-        """
-        Get rotation angle around Z axis in radians.
-
-        The yaw rotation with zero as the marker facing the camera square-on
-        and a positive rotation being clockwise.
-
-        Legacy: The roll rotation with zero as the marker facing the camera
-                square-on and a positive rotation being clockwise.
-        """
-        return self.yaw_pitch_roll[0]
-
-    @property
-    def yaw(self) -> float:
-        """
-        Get yaw of the marker, a rotation about the vertical axis, in radians.
-
-        Positive values indicate a rotation clockwise from the perspective of
-        the marker.
-
-        Zero values have the marker facing the camera square-on.
-        """
-        return self._yaw_pitch_roll[0]
-
-    @property
-    def pitch(self) -> float:
-        """
-        Get pitch of the marker, a rotation about the transverse axis, in radians.
-
-        Positive values indicate a rotation upwards from the perspective of the
-        marker.
-
-        Zero values have the marker facing the camera square-on.
-        """
-        return self._yaw_pitch_roll[1]
-
-    @property
-    def roll(self) -> float:
-        """
-        Get roll of the marker, a rotation about the longitudinal axis, in radians.
-
-        Positive values indicate a rotation clockwise from the perspective of
-        the marker.
-
-        Zero values have the marker facing the camera square-on.
-        """
-        return self._yaw_pitch_roll[2]
-
-    @property
-    def yaw_pitch_roll(self) -> ThreeTuple:
-        """
-        Get the equivalent yaw-pitch-roll angles.
-
-        Specifically intrinsic Tait-Bryan angles following the z-y'-x'' convention.
-        """
-        return self._quaternion.yaw_pitch_roll
-
-    def __iter__(self) -> Iterator[float]:
-        """
-        Get an iterator over the rotation angles.
-        Returns:
-            An iterator of floating point angles in order x, y, z.
-        """
-        return iter([self.rot_x, self.rot_y, self.rot_z])
+        return obj
 
     @property
     def rotation_matrix(self) -> RotationMatrix:
@@ -352,18 +202,12 @@ class Orientation:
         Returns:
             A 3x3 rotation matrix as a tuple of tuples.
         """
-        return cast(RotationMatrix, self.__rotation_matrix.tolist())
+        return cast(RotationMatrix, self._quaternion.rotation_matrix.tolist())
 
     @property
-    def quaternion(self) -> Quaternion:
+    def quaternion(self) -> Tuple[float, float, float, float]:
         """Get the quaternion represented by this orientation."""
-        return self._quaternion
-
-    def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__} "
-            f"rot_x={self.rot_x} rot_y={self.rot_y} rot_z={self.rot_z}>"
-        )
+        return self._quaternion.elements
 
 
 class Marker:
