@@ -9,3 +9,5 @@ extend-ignore =
     D107,
     # Ignore TODO comments
     T000,
+per-file-ignores =
+    april_vision/__init__.py:E402
