@@ -1,5 +1,6 @@
 """An AprilTags wrapper with camera discovery and axis conversion."""
 import os
+
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 from ._version import __version__
