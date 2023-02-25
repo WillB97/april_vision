@@ -1,20 +1,18 @@
 """
 Classes for marker detections and various axis representations.
-
-Setting the environment variable ZOLOTO_LEGACY_AXIS uses the axis that were
-used in zoloto<0.9.0. Otherwise the conventional right-handed axis is used
-where x is forward, y is left and z is upward.
 """
-import os
 from enum import Enum
-from math import acos, atan2, pi
-from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, cast
+from math import acos, atan2
+from typing import NamedTuple, Optional, Tuple, cast
 
 import numpy as np
 from numpy.linalg import norm as hypotenuse
 from numpy.typing import NDArray
 from pyapriltags import Detection
 from pyquaternion import Quaternion
+
+ThreeTuple = Tuple[float, float, float]
+RotationMatrix = Tuple[ThreeTuple, ThreeTuple, ThreeTuple]
 
 
 class MarkerType(Enum):
@@ -101,7 +99,7 @@ class SphericalCoordinate(NamedTuple):
     the vertical axis.
     More information: https://mathworld.wolfram.com/SphericalCoordinates.html
 
-    :param float distance: Radial distance from the origin, in millimeters.
+    :param float r: Radial distance from the origin, in millimeters.
     :param float theta: Azimuth angle, θ, in radians. This is the angle from
         directly in front of the camera to the vector which points to the
         location in the horizontal plane. A positive value indicates a
@@ -111,7 +109,7 @@ class SphericalCoordinate(NamedTuple):
         Zero is directly upward.
     """
 
-    distance: int
+    r: int
     theta: float
     phi: float
 
@@ -128,14 +126,10 @@ class SphericalCoordinate(NamedTuple):
         """
         _x, _y, _z = z, -x, -y
 
-        dist = hypotenuse([_x, _y, _z])
+        r = hypotenuse([_x, _y, _z])
         theta = atan2(_y, _x)
-        phi = acos(_z / dist)
-        return cls(int(dist * 1000), theta, phi)
-
-
-ThreeTuple = Tuple[float, float, float]
-RotationMatrix = Tuple[ThreeTuple, ThreeTuple, ThreeTuple]
+        phi = acos(_z / r)
+        return cls(int(r * 1000), theta, phi)
 
 
 class Orientation(NamedTuple):
@@ -143,20 +137,33 @@ class Orientation(NamedTuple):
     The orientation of an object in 3-D space.
 
     :param float yaw:   Get yaw of the marker, a rotation about the vertical axis, in radians.
-                        Positive values indicate a rotation clockwise from the perspective of the marker.
+                        Positive values indicate a rotation clockwise from the perspective of
+                        the marker.
                         Zero values have the marker facing the camera square-on.
-    :param float pitch: Get pitch of the marker, a rotation about the transverse axis, in radians.
-                        Positive values indicate a rotation upwards from the perspective of the marker.
+    :param float pitch: Get pitch of the marker, a rotation about the transverse axis, in
+                        radians.
+                        Positive values indicate a rotation upwards from the perspective of
+                        the marker.
                         Zero values have the marker facing the camera square-on.
-    :param float roll:  Get roll of the marker, a rotation about the longitudinal axis, in radians.
-                        Positive values indicate a rotation clockwise from the perspective of the marker.
+    :param float roll:  Get roll of the marker, a rotation about the longitudinal axis,
+                        in radians.
+                        Positive values indicate a rotation clockwise from the perspective of
+                        the marker.
                         Zero values have the marker facing the camera square-on.
     """
 
+    yaw: float
+    pitch: float
+    roll: float
+
     @classmethod
-    def from_rvec_matrix(cls, rotation_matrix: NDArray, aruco_orientation: bool = True) -> 'Orientation':
+    def from_rvec_matrix(
+        cls,
+        rotation_matrix: NDArray,
+        aruco_orientation: bool = True
+    ) -> 'Orientation':
         """
-        Calculate the yaw, pitch and roll given the rotation matrix in the camera's coordinate system.
+        Calculate yaw, pitch, roll given the rotation matrix in the camera's coordinate system.
 
         More information:
         https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
@@ -168,9 +175,13 @@ class Orientation(NamedTuple):
         return cls.from_quaternion(initial_rot, aruco_orientation)
 
     @classmethod
-    def from_quaternion(cls, quaternion: Quaternion, aruco_orientation: bool = True) -> 'Orientation':
+    def from_quaternion(
+        cls,
+        quaternion: Quaternion,
+        aruco_orientation: bool = True
+    ) -> 'Orientation':
         """
-        Calculate the yaw, pitch and roll given the quaternion in the camera's coordinate system.
+        Calculate yaw, pitch, roll given the quaternion in the camera's coordinate system.
 
         More information:
         https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
@@ -190,121 +201,115 @@ class Orientation(NamedTuple):
             quaternion *= marker_orientation_correction
 
         obj = cls(*quaternion.yaw_pitch_roll)
-        obj._quaternion = quaternion
 
         return obj
 
-    @property
-    def rotation_matrix(self) -> RotationMatrix:
-        """
-        Get the rotation matrix represented by this orientation.
+    # @property
+    # def rotation_matrix(self) -> RotationMatrix:
+    #     """
+    #     Get the rotation matrix represented by this orientation.
 
-        Returns:
-            A 3x3 rotation matrix as a tuple of tuples.
-        """
-        return cast(RotationMatrix, self._quaternion.rotation_matrix.tolist())
+    #     Returns:
+    #         A 3x3 rotation matrix as a tuple of tuples.
+    #     """
+    #     return cast(RotationMatrix, self._quaternion.rotation_matrix.tolist())
 
-    @property
-    def quaternion(self) -> Tuple[float, float, float, float]:
-        """Get the quaternion represented by this orientation."""
-        return self._quaternion.elements
+    # @property
+    # def quaternion(self) -> Tuple[float, float, float, float]:
+    #     """Get the quaternion represented by this orientation."""
+    #     return self._quaternion.elements
 
 
-class Marker:
-    """Wrapper of a marker detection with axis and rotation calculated."""
+PixelCorners = Tuple[PixelCoordinates, PixelCoordinates, PixelCoordinates, PixelCoordinates]
 
-    def __init__(
-        self,
+
+class Marker(NamedTuple):
+    """
+    Wrapper of a marker detection with axis and rotation calculated.
+    """
+
+    rvec: Optional[NDArray]
+    tvec: Optional[NDArray]
+
+    id: int
+    size: int
+    marker_type: MarkerType
+    pixel_corners: PixelCorners
+    pixel_centre: PixelCoordinates
+
+    distance: float = 0
+    bearing: float = 0
+
+    cartesian: CartesianCoordinates = CartesianCoordinates(0, 0, 0)
+    spherical: SphericalCoordinate = SphericalCoordinate(0, 0, 0)
+    orientation: Orientation = Orientation(0, 0, 0)
+
+    aruco_orientation: bool = True
+
+    @classmethod
+    def from_detection(
+        cls,
         marker: Detection,
         *,
         aruco_orientation: bool = True,
-    ):
-        self.marker = marker
+    ) -> 'Marker':
+        _tag_size = int((marker.tag_size or 0) * 1000)
 
-        self.__marker_type = MarkerType(marker.tag_family.decode('utf-8'))
-        self._id = marker.tag_id
-        self.__pixel_center = PixelCoordinates(*marker.center.tolist())
-        self._pixel_corners = marker.corners.tolist()
-        self.__size = int(marker.tag_size * 1000) if marker.tag_size is not None else 0
-        self._tvec = marker.pose_t
-        self._rvec = marker.pose_R
-        self.__aruco_orientation = aruco_orientation
-
-        if self._tvec is not None:
-            self.__distance = int(hypotenuse(self._tvec) * 1000)
-        else:
-            self.__distance = 0
-
-    def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__} id={self.id} size={self.size} "
-            f"type={self.marker_type.name} distance={self.distance}>")
-
-    @property  # noqa: A003
-    def id(self) -> int:  # noqa: A003
-        """The marker id number."""
-        return self._id
-
-    @property
-    def size(self) -> int:
-        """The size of the detected marker in millimeters."""
-        return self.__size
-
-    @property
-    def marker_type(self) -> MarkerType:
-        """The family of the detected marker, likely tag36h11."""
-        return self.__marker_type
-
-    @property
-    def pixel_corners(self) -> List[PixelCoordinates]:
-        """The pixels of the corners of the marker in the image."""
-        return [
+        _pixel_corners = tuple(
             PixelCoordinates(x, y)
-            for x, y in self._pixel_corners
-        ]
+            for x, y in marker.corners.tolist()
+        )
+        _pixel_centre = PixelCoordinates(*marker.center.tolist())
 
-    @property
-    def pixel_centre(self) -> PixelCoordinates:
-        """The pixel location of the center of the marker in the image."""
-        return self.__pixel_center
+        if marker.pose_t is not None and marker.pose_R is not None:
+            _distance = int(hypotenuse(marker.pose_t) * 1000)
 
-    @property
-    def distance(self) -> int:
-        """The distance between the marker and camera, in millimeters."""
-        if self._tvec is not None and self._rvec is not None:
-            return self.__distance
-        return 0
+            _bearing = 0  # TODO
 
-    @property
-    def orientation(self) -> Orientation:
-        """The marker's orientation."""
-        if self._rvec is not None:
-            return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
-        raise RuntimeError("This marker was detected with an uncalibrated camera")
-
-    @property
-    def spherical(self) -> SphericalCoordinate:
-        """The spherical coordinates of the marker's location relative to the camera."""
-        if self._tvec is not None:
-            return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
-        raise RuntimeError("This marker was detected with an uncalibrated camera")
-
-    @property
-    def cartesian(self) -> CartesianCoordinates:
-        """The cartesian coordinates of the marker's location relative to the camera."""
-        if self._tvec is not None:
-            return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
-        raise RuntimeError("This marker was detected with an uncalibrated camera")
-
-    def as_dict(self) -> Dict[str, Any]:
-        """The marker data as a dict."""
-        marker_dict = {
-            "id": self._id,
-            "size": self.__size,
-            "pixel_corners": self._pixel_corners,
-        }
-        if self._tvec is not None and self._rvec is not None:
-            marker_dict.update(
-                {"rvec": self._rvec.tolist(), "tvec": self._tvec.tolist()},
+            _cartesian = CartesianCoordinates.from_tvec(
+                *marker.pose_t.flatten().tolist()
             )
-        return marker_dict
+
+            _spherical = SphericalCoordinate.from_tvec(
+                *marker.pose_t.flatten().tolist()
+            )
+
+            _orientation = Orientation.from_rvec_matrix(
+                marker.pose_R,
+                aruco_orientation=aruco_orientation,
+            )
+
+            return cls(
+                rvec=marker.pose_R,
+                tvec=marker.pose_t,
+                id=marker.tag_id,
+                size=_tag_size,
+                marker_type=MarkerType(marker.tag_family.decode('utf-8')),
+                pixel_corners=cast(PixelCorners, _pixel_corners),
+                pixel_centre=_pixel_centre,
+                distance=_distance,
+                bearing=_bearing,
+                cartesian=_cartesian,
+                spherical=_spherical,
+                orientation=_orientation,
+                aruco_orientation=aruco_orientation
+            )
+        else:
+            return cls(
+                rvec=None,
+                tvec=None,
+                id=marker.tag_id,
+                size=_tag_size,
+                marker_type=MarkerType(marker.tag_family.decode('utf-8')),
+                pixel_corners=cast(PixelCorners, _pixel_corners),
+                pixel_centre=_pixel_centre,
+                aruco_orientation=aruco_orientation
+            )
+
+    def has_pose(self) -> bool:
+        return (self.rvec is not None or self.tvec is not None)
+
+    # def __str__(self) -> str:
+    #     return (
+    #         f"<{self.__class__.__name__} id={self.id} size={self.size} "
+    #         f"type={self.marker_type.name} distance={self.distance}>")

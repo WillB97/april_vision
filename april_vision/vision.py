@@ -81,7 +81,7 @@ class Processor:
 
         markers: List[Marker] = []
         for detection in detections:
-            markers.append(Marker(
+            markers.append(Marker.from_detection(
                 detection,
                 aruco_orientation=self._aruco_orientation,
             ))
