@@ -2,7 +2,7 @@
 Classes for marker detections and various axis representations.
 """
 from enum import Enum
-from math import acos, atan2
+from math import acos, atan2, cos, sin
 from typing import NamedTuple, Optional, Tuple, cast
 
 import numpy as np
@@ -204,20 +204,46 @@ class Orientation(NamedTuple):
 
         return obj
 
-    # @property
-    # def rotation_matrix(self) -> RotationMatrix:
-    #     """
-    #     Get the rotation matrix represented by this orientation.
+    @property
+    def rotation_matrix(self) -> RotationMatrix:
+        """
+        Get the rotation matrix represented by this orientation.
+        https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_(z-y%E2%80%B2-x%E2%80%B3_intrinsic)_%E2%86%92_rotation_matrix
 
-    #     Returns:
-    #         A 3x3 rotation matrix as a tuple of tuples.
-    #     """
-    #     return cast(RotationMatrix, self._quaternion.rotation_matrix.tolist())
+        Returns:
+            A 3x3 rotation matrix as a tuple of tuples.
+        """
+        psi, theta, phi = self.yaw, self.pitch, self.roll
 
-    # @property
-    # def quaternion(self) -> Tuple[float, float, float, float]:
-    #     """Get the quaternion represented by this orientation."""
-    #     return self._quaternion.elements
+        A12 = -cos(theta) * sin(psi) + sin(phi) * sin(theta) * cos(psi)
+        A13 = sin(phi) * sin(psi) + cos(phi) * sin(theta) * cos(psi)
+        A22 = cos(theta) * cos(psi) + sin(phi) * sin(theta) * sin(psi)
+        A23 = -sin(phi) * cos(psi) + cos(phi) * sin(theta) * sin(psi)
+
+        matrix = (
+            (cos(theta) * cos(psi), A12, A13),
+            (cos(theta) * sin(psi), A22, A23),
+            (-sin(theta), sin(phi) * cos(theta), cos(phi) * cos(theta)),
+        )
+
+        return cast(RotationMatrix, matrix)
+
+    @property
+    def quaternion(self) -> Tuple[float, float, float, float]:
+        """
+        Get the quaternion represented by this orientation.
+        https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_(z-y%E2%80%B2-x%E2%80%B3_intrinsic)_%E2%86%92_quaternion
+
+        Returns:
+            A 4-tuple hamiltonian quaternion.
+        """
+        psi_2, theta_2, phi_2 = self.yaw / 2, self.pitch / 2, self.roll / 2
+        w = cos(phi_2) * cos(theta_2) * cos(psi_2) + sin(phi_2) * sin(theta_2) * sin(psi_2)
+        i = sin(phi_2) * cos(theta_2) * cos(psi_2) - cos(phi_2) * sin(theta_2) * sin(psi_2)
+        j = cos(phi_2) * sin(theta_2) * cos(psi_2) + sin(phi_2) * cos(theta_2) * sin(psi_2)
+        k = cos(phi_2) * cos(theta_2) * sin(psi_2) - sin(phi_2) * sin(theta_2) * cos(psi_2)
+
+        return (w, i, j, k)
 
 
 PixelCorners = Tuple[PixelCoordinates, PixelCoordinates, PixelCoordinates, PixelCoordinates]
@@ -307,7 +333,7 @@ class Marker(NamedTuple):
             )
 
     def has_pose(self) -> bool:
-        return (self.rvec is not None or self.tvec is not None)
+        return (self.rvec is not None and self.tvec is not None)
 
     # def __str__(self) -> str:
     #     return (
