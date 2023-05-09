@@ -207,7 +207,8 @@ class Orientation(NamedTuple):
     def rotation_matrix(self) -> RotationMatrix:
         """
         Get the rotation matrix represented by this orientation.
-        https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_(z-y%E2%80%B2-x%E2%80%B3_intrinsic)_%E2%86%92_rotation_matrix
+
+        Conversion calculation: https://w.wiki/6gbp
 
         Returns:
             A 3x3 rotation matrix as a tuple of tuples.
@@ -231,7 +232,8 @@ class Orientation(NamedTuple):
     def quaternion(self) -> Tuple[float, float, float, float]:
         """
         Get the quaternion represented by this orientation.
-        https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_(z-y%E2%80%B2-x%E2%80%B3_intrinsic)_%E2%86%92_quaternion
+
+        Conversion calculation: https://w.wiki/6gbq
 
         Returns:
             A 4-tuple hamiltonian quaternion.
