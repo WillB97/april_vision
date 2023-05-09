@@ -2,7 +2,7 @@
 Classes for marker detections and various axis representations.
 """
 from enum import Enum
-from math import acos, atan2, cos, sin
+from math import acos, atan2, cos, degrees, sin
 from typing import NamedTuple, Optional, Tuple, cast
 
 import numpy as np
@@ -170,7 +170,6 @@ class Orientation(NamedTuple):
         """
         # Calculate the quaternion of the rotation in the camera's coordinate system
         initial_rot = Quaternion(matrix=rotation_matrix)
-        # remap quaternion to global coordinate system from the token's perspective
 
         return cls.from_quaternion(initial_rot, aruco_orientation)
 
@@ -264,6 +263,7 @@ class Marker(NamedTuple):
     pixel_centre: PixelCoordinates
 
     distance: float = 0
+    # In degrees, increasing clockwise
     bearing: float = 0
 
     cartesian: CartesianCoordinates = CartesianCoordinates(0, 0, 0)
@@ -290,11 +290,10 @@ class Marker(NamedTuple):
         if marker.pose_t is not None and marker.pose_R is not None:
             _distance = int(hypotenuse(marker.pose_t) * 1000)
 
-            _bearing = 0  # TODO
-
             _cartesian = CartesianCoordinates.from_tvec(
                 *marker.pose_t.flatten().tolist()
             )
+            _bearing = degrees(atan2(-_cartesian.y, _cartesian.x))
 
             _spherical = SphericalCoordinate.from_tvec(
                 *marker.pose_t.flatten().tolist()
