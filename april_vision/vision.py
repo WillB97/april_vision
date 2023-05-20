@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Processor:
-    """A pyaprilTags wrapper for fiducial detection from frame sources."""
+    """A pyapriltags wrapper for fiducial detection from frame sources."""
 
     capture_filter: Callable[[NDArray], NDArray]
     marker_filter: Callable[[List[Marker]], List[Marker]]
@@ -34,6 +34,7 @@ class Processor:
         aruco_orientation: bool = True,
         name: str = "Camera",
         vidpid: str = "",
+        mask_unknown_size_tags: bool = False,
     ) -> None:
         self.capture_filter = lambda frame: frame
         self.marker_filter = lambda markers: markers
@@ -51,6 +52,7 @@ class Processor:
         if tag_sizes is None:
             tag_sizes = {}
         self.tag_sizes = tag_sizes
+        self.mask_unknown_size_tags = mask_unknown_size_tags
 
         self.detector = Detector(
             families=tag_family,
@@ -81,6 +83,10 @@ class Processor:
 
         markers: List[Marker] = []
         for detection in detections:
+            if self.mask_unknown_size_tags and isinstance(self.tag_sizes, dict):
+                # remove detections of marker ids we don't have a size for
+                if detection.tag_id not in self.tag_sizes:
+                    continue
             markers.append(Marker.from_detection(
                 detection,
                 aruco_orientation=self._aruco_orientation,
