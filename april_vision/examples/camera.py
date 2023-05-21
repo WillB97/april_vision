@@ -1,17 +1,18 @@
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from numpy.typing import NDArray
 
 from .._version import __version__
 from ..detect_cameras import CalibratedCamera, find_cameras
 from ..frame_sources import USBCamera
-from ..marker import Marker
-from ..vision import Processor
 from ..helpers.markers import generate_marker_size_mapping
 from ..helpers.sender import Base64Sender
+from ..marker import Marker
+from ..utils import Frame
+from ..vision import Processor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -100,11 +101,24 @@ class AprilCamera:
     ) -> None:
         self._cam.set_marker_sizes(tag_sizes)
 
+    def set_detection_hook(self, callback: Callable[[Frame, List[Marker]], None]):
+        self._cam.detection_hook = callback
 
-def setup_cameras(tag_sizes: Union[float, Dict[int, float]]) -> Dict[str, AprilCamera]:
+
+def setup_cameras(
+    tag_sizes: Union[float, Dict[int, float]],
+    publish_func: Optional[Callable[[str, bytes], None]] = None,
+) -> Dict[str, AprilCamera]:
     expanded_tag_sizes = generate_marker_size_mapping(tag_sizes)
+
+    if publish_func:
+        frame_sender = Base64Sender(publish_func)
+
     cameras = AprilCamera.discover()
+
     for camera in cameras.values():
         camera.set_marker_sizes(expanded_tag_sizes)
+        if publish_func:
+            camera.set_detection_hook(frame_sender.annotated_frame_hook)
 
     return cameras
