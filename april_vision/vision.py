@@ -226,3 +226,9 @@ class Processor:
     def close(self) -> None:
         """Close the underlying capture device."""
         self._frame_source.close()
+
+    def set_marker_sizes(
+        self,
+        tag_sizes: Union[float, Dict[int, float]],
+    ) -> None:
+        self.tag_sizes = tag_sizes
