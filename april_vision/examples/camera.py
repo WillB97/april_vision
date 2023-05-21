@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 
 from numpy.typing import NDArray
 
@@ -101,12 +101,12 @@ class AprilCamera:
     ) -> None:
         self._cam.set_marker_sizes(tag_sizes)
 
-    def set_detection_hook(self, callback: Callable[[Frame, List[Marker]], None]):
+    def set_detection_hook(self, callback: Callable[[Frame, List[Marker]], None]) -> None:
         self._cam.detection_hook = callback
 
 
 def setup_cameras(
-    tag_sizes: Union[float, Dict[int, float]],
+    tag_sizes: Dict[Iterable[int], int],
     publish_func: Optional[Callable[[str, bytes], None]] = None,
 ) -> Dict[str, AprilCamera]:
     expanded_tag_sizes = generate_marker_size_mapping(tag_sizes)

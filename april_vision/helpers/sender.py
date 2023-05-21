@@ -1,6 +1,6 @@
 import base64
 from threading import Thread
-from typing import List, Optional, Callable
+from typing import Callable, List, Optional
 
 import cv2
 import numpy as np

@@ -4,7 +4,7 @@ from typing import Dict, Iterable
 
 def generate_marker_size_mapping(
     marker_sizes: Dict[Iterable[int], int],
-) -> None:
+) -> Dict[int, float]:
     tag_sizes: Dict[int, float] = {}
 
     for marker_ids, marker_size in marker_sizes.items():
