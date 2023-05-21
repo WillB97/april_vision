@@ -167,7 +167,7 @@ def generate_tag_tile(
             f"{tag_id}",
             fill=BORDER_FILL,
             anchor="mm",
-            font=ImageFont.truetype("NotoSans-Regular.ttf", args.number_size),
+            font=ImageFont.truetype(args.font, args.number_size),
         )
 
     # Expand the tile to add a white border with a width of 1 marker square
@@ -185,7 +185,7 @@ def generate_tag_tile(
             marker_type=tag_data.name, marker_id=tag_id
         ),
         anchor="lm",
-        font=ImageFont.truetype("NotoSans-Regular.ttf", marker_sqaure_size // 2),
+        font=ImageFont.truetype(args.font, args.number_size),
     )
 
     return text_border_image
@@ -326,7 +326,7 @@ def main(args: argparse.Namespace) -> None:
                     marker_type=tag_data.name, marker_id=marker_id
                 ),
                 anchor="rm",
-                font=ImageFont.truetype("NotoSans-Regular.ttf", marker_sqaure_size // 2),
+                font=ImageFont.truetype(args.font, args.number_size),
             )
 
             image_half_left = image_tile.crop((0, 0, tile_size // 2, tile_size))
@@ -518,6 +518,12 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
             "(default: %(default)s)"
         ),
         default="{marker_type} {marker_id}",
+    )
+    text_group.add_argument(
+        "--font",
+        help="Set the text font (default: %(default)s)",
+        default="calibri.ttf",
+        type=str,
     )
 
     # Args for modifying grey border
