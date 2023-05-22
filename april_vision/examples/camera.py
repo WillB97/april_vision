@@ -1,11 +1,11 @@
 import logging
-import os
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
 from numpy.typing import NDArray
 
 from .._version import __version__
+from ..calibrations import calibrations
 from ..detect_cameras import CalibratedCamera, find_cameras
 from ..frame_sources import USBCamera
 from ..helpers.markers import generate_marker_size_mapping
@@ -34,8 +34,7 @@ class AprilCamera:
         return {
             (serial := f"{camera_data.name} - {camera_data.index}"):
             cls(camera_data.index, camera_data=camera_data, serial_num=serial)
-            for camera_data in find_cameras(
-                os.environ.get('OPENCV_CALIBRATIONS', '.').split(':'))
+            for camera_data in find_cameras(calibrations)
         }
 
     def __init__(self, camera_id: int, camera_data: CalibratedCamera, serial_num: str) -> None:
