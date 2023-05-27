@@ -5,7 +5,7 @@ os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 from ._version import __version__
 from .calibrations import calibrations
-from .detect_cameras import find_cameras, CalibratedCamera
+from .detect_cameras import CalibratedCamera, find_cameras
 from .frame_sources import FrameSource, USBCamera
 from .helpers import generate_marker_size_mapping
 from .marker import (CartesianCoordinates, Marker, Orientation,
