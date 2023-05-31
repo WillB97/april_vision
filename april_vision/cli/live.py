@@ -89,7 +89,11 @@ def main(args: argparse.Namespace) -> None:
             )
 
             if marker.has_pose():
-                output += ", r={}, θ={}, φ={} | x={}, y={}, z={} | r={}, p={}, y={}".format(
+                output += (
+                    ", | b={} | r={}, θ={}, φ={} | "
+                    "x={}, y={}, z={} | r={}, p={}, y={}"
+                ).format(
+                    int(marker.bearing),
                     int(marker.spherical.r),
                     int(degrees(marker.spherical.theta)),
                     int(degrees(marker.spherical.phi)),
