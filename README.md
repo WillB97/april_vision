@@ -28,59 +28,36 @@ If you need to run the calibration feature in the CLI you will need to install t
 ## Example
 
 ```python
-from april_vision import Processor, USBCamera, calibrations, find_cameras
+from april_vision.examples.camera import setup_cameras
 
-cameras = find_cameras(calibrations)
+# Markers 0-100 are 80mm in size
+tag_sizes = {
+    range(0, 100): 80
+}
 
-try:
-    camera = cameras[0]
-except IndexError:
+# Returns a dict of index and camera
+cameras = setup_cameras(tag_sizes)
+
+if len(cameras) == 0:
     print("No cameras found")
-    exit()
 
-source = USBCamera.from_calibration_file(
-    camera.index,
-    camera.calibration,
-    camera.vidpid
-)
-
-cam = Processor(
-    source,
-    tag_family='tag36h11',
-    quad_decimate=2.0,
-    tag_sizes=0.08,
-    calibration=source.calibration
-)
-
-markers = cam.see_ids()
-print(markers)
+for name, cam in cameras.items():
+    print(name)
+    print(cam.see())
 ```
 
 ## Tools
 
-When installed april_vision can be used on the command line providing a few useful tools. Each of the tools listed below contain help text on correct usage accessed via the `-h` argument.
+When installed april_vision can be used on the command line providing the following list of useful tools. Each of the tools contain help text on correct usage accessed via the `-h` argument.
 
-```
-april_vision annotate_image
-    Annotate an image file with the detected markers
-```
-```
-april_vision annotate_video
-    Annotate a video file with the detected markers
-```
-```
-april_vision calibrate
-    Generate camera calibration using a ChArUco board
-```
-```
-april_vision live
-    Live camera demonstration with marker annotation
-```
-```
-april_vision marker_generator
-    Generate a PDF containing markers
-```
-```
-april_vision vision_debug
-    Generate the debug images of the vision processing steps
+```bash
+annotate_image
+annotate_video
+calibrate
+live
+marker_generator
+vision_debug
+tools
+    family_details
+    list_cameras
 ```

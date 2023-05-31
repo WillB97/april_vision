@@ -64,8 +64,8 @@ def main(args: argparse.Namespace) -> None:
                     text_scale = normalise_marker_text(marker)
 
                     loc = (
-                        int(marker.pixel_centre[0] - 80 * text_scale),
-                        int(marker.pixel_centre[1] + 40 * text_scale),
+                        int(marker.pixel_centre.x - 80 * text_scale),
+                        int(marker.pixel_centre.y + 40 * text_scale),
                     )
                     frame = annotate_text(
                         frame, f"dist={marker.distance}mm", loc,
