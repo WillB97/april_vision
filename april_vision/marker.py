@@ -319,7 +319,7 @@ class Marker(NamedTuple):
                 cartesian=_cartesian,
                 spherical=_spherical,
                 orientation=_orientation,
-                aruco_orientation=aruco_orientation
+                aruco_orientation=aruco_orientation,
             )
         else:
             return cls(
@@ -330,13 +330,14 @@ class Marker(NamedTuple):
                 marker_type=MarkerType(marker.tag_family.decode('utf-8')),
                 pixel_corners=cast(PixelCorners, _pixel_corners),
                 pixel_centre=_pixel_centre,
-                aruco_orientation=aruco_orientation
+                aruco_orientation=aruco_orientation,
             )
 
     def has_pose(self) -> bool:
         return (self.rvec is not None and self.tvec is not None)
 
-    # def __str__(self) -> str:
-    #     return (
-    #         f"<{self.__class__.__name__} id={self.id} size={self.size} "
-    #         f"type={self.marker_type.name} distance={self.distance}>")
+    def __repr__(self) -> str:
+        return (
+            f"<{self.__class__.__name__} id={self.id} distance={self.distance:.0f}mm "
+            f"bearing={self.bearing:.0f}° size={self.size}mm type={self.marker_type.name}>"
+        )
