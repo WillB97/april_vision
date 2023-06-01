@@ -231,4 +231,9 @@ class Processor:
         self,
         tag_sizes: Union[float, Dict[int, float]],
     ) -> None:
+        """
+        Set the size of tags that are used by pyapriltags for pose estimation.
+
+        Sizes are in meters.
+        """
         self.tag_sizes = tag_sizes

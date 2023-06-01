@@ -12,6 +12,15 @@ from ..vision import Processor
 
 
 class Base64Sender:
+    """
+    A helper class to encode and send frame data using the publish callback.
+
+    The image data is a base64 encoded JPEG bytestring.
+    :param annotated: Controls whether images are annotated with detections
+                      before sending. This will copy the frame prior to annotation.
+    :param threaded: Controls whether encoding and sending the image is processed
+                     in a thread or blocks.
+    """
     def __init__(
         self,
         publish_callback: Callable[[str, bytes], None],
@@ -27,8 +36,10 @@ class Base64Sender:
 
     def annotated_frame_hook(self, frame: Frame, markers: List[Marker]) -> None:
         """
+        The hook function called in the detection hook.
 
-        The image data is a base64 JPEG.
+        Optionally annotates a copy of the frame, possibly in a background
+        thread, depending on the instance settings.
         """
         copied_frame = Frame(
             np.array(frame.grey_frame, copy=True),

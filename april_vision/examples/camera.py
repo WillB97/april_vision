@@ -93,9 +93,18 @@ class AprilCamera:
         self,
         tag_sizes: Union[float, Dict[int, float]],
     ) -> None:
+        """
+        Set the size of tags that are used for pose estimation.
+
+        If a dict is given for tag_sizes, only marker IDs that are keys of the
+        dict will be detected.
+        """
         self._cam.set_marker_sizes(tag_sizes)
 
     def set_detection_hook(self, callback: Callable[[Frame, List[Marker]], None]) -> None:
+        """
+        Setup a callback to be run after each dectection.
+        """
         self._cam.detection_hook = callback
 
 
@@ -103,6 +112,12 @@ def setup_cameras(
     tag_sizes: Dict[Iterable[int], int],
     publish_func: Optional[Callable[[str, bytes], None]] = None,
 ) -> Dict[str, AprilCamera]:
+    """
+    Find all connected cameras with calibration and configure tag sizes.
+
+    Optionally set a callback to send a base64 encode JPEG bytestream of each
+    image detection is run on.
+    """
     expanded_tag_sizes = generate_marker_size_mapping(tag_sizes)
 
     if publish_func:

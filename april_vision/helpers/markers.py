@@ -5,6 +5,10 @@ from typing import Dict, Iterable
 def generate_marker_size_mapping(
     marker_sizes: Dict[Iterable[int], int],
 ) -> Dict[int, float]:
+    """
+    Unroll a dict of iterables into a dict of floats.
+    To be used in pose estimation.
+    """
     tag_sizes: Dict[int, float] = {}
 
     for marker_ids, marker_size in marker_sizes.items():
