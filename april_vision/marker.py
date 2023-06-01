@@ -1,20 +1,18 @@
 """
 Classes for marker detections and various axis representations.
-
-Setting the environment variable ZOLOTO_LEGACY_AXIS uses the axis that were
-used in zoloto<0.9.0. Otherwise the conventional right-handed axis is used
-where x is forward, y is left and z is upward.
 """
-import os
 from enum import Enum
-from math import acos, atan2, pi
-from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, cast
+from math import acos, atan2, cos, degrees, sin
+from typing import NamedTuple, Optional, Tuple, cast
 
 import numpy as np
 from numpy.linalg import norm as hypotenuse
 from numpy.typing import NDArray
 from pyapriltags import Detection
 from pyquaternion import Quaternion
+
+ThreeTuple = Tuple[float, float, float]
+RotationMatrix = Tuple[ThreeTuple, ThreeTuple, ThreeTuple]
 
 
 class MarkerType(Enum):
@@ -51,7 +49,7 @@ class PixelCoordinates(NamedTuple):
 
 class CartesianCoordinates(NamedTuple):
     """
-    A 3 dimesional cartesian coordinate in the standard right-handed cartesian system.
+    A 3 dimensional cartesian coordinate in the standard right-handed cartesian system.
 
     Origin is at the camera.
 
@@ -67,22 +65,6 @@ class CartesianCoordinates(NamedTuple):
     Increasing values indicate greater distance above the centre of the image.
 
     More information: https://w.wiki/5zbE
-
-    Legacy:
-    The X axis is horizontal relative to the camera's perspective, i.e: left &
-    right within the frame of the image. Zero is at the centre of the image.
-    Increasing values indicate greater distance to the right.
-
-    The Y axis is vertical relative to the camera's perspective, i.e: up & down
-    within the frame of the image. Zero is at the centre of the image.
-    Increasing values indicate greater distance below the centre of the image.
-
-    The Z axis extends directly away from the camera. Zero is at the camera.
-    Increasing values indicate greater distance from the camera.
-
-    These match traditional cartesian coordinates when the camera is facing
-    upwards.
-
 
     :param float x: X coordinate, in millimeters
     :param float y: Y coordinate, in millimeters
@@ -105,22 +87,19 @@ class CartesianCoordinates(NamedTuple):
         :param float y: The y-axis is down in the image taken by the camera.
         :param float z: The z-axis points from the camera center out the camera lens.
         """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return cls(x=x * 1000, y=y * 1000, z=z * 1000)
-        else:
-            return cls(x=z * 1000, y=-x * 1000, z=-y * 1000)
+        return cls(x=z * 1000, y=-x * 1000, z=-y * 1000)
 
 
 class SphericalCoordinate(NamedTuple):
     """
-    A 3 dimesional spherical coordinate location.
+    A 3 dimensional spherical coordinate location.
 
-    The convential spherical coordinate in mathematical notation where θ is
+    # The conventional spherical coordinate in mathematical notation where θ is
     a rotation around the vertical axis and φ is measured as the angle from
     the vertical axis.
     More information: https://mathworld.wolfram.com/SphericalCoordinates.html
 
-    :param float distance: Radial distance from the origin, in millimeters.
+    :param float r: Radial distance from the origin, in millimeters.
     :param float theta: Azimuth angle, θ, in radians. This is the angle from
         directly in front of the camera to the vector which points to the
         location in the horizontal plane. A positive value indicates a
@@ -130,59 +109,9 @@ class SphericalCoordinate(NamedTuple):
         Zero is directly upward.
     """
 
-    distance: int
+    r: int
     theta: float
     phi: float
-
-    @property
-    def rot_x(self) -> float:
-        """
-        Rotation around the x-axis.
-
-        Conventional:  This is unused.
-        Legacy: A rotation up to down around the camera, in radians. Values
-                increase as the marker moves towards the bottom of the image.
-                A zero value is halfway up the image.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return self.phi - (pi / 2)
-        else:
-            raise AttributeError(
-                "That axis is not available in the selected coordinate system.")
-
-    @property
-    def rot_y(self) -> float:
-        """
-        Rotation around the y-axis.
-
-        Conventional: A rotation up to down around the camera, in radians.
-                      Values increase as the marker moves towards the bottom
-                      of the image. A zero value is halfway up the image.
-        Legacy: A rotation left to right around the camera, in radians. Values
-                increase as the marker moves towards the right of the image.
-                A zero value is on the centerline of the image.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            return -self.theta
-        else:
-            return self.phi - (pi / 2)
-
-    @property
-    def rot_z(self) -> float:
-        """
-        Rotation around the z-axis.
-
-        Conventional: A rotation right to left around the camera, in radians.
-                      Values increase as the marker moves towards the left of
-                      the image. A zero value is on the centerline of the
-                      image.
-        Legacy: This is unused.
-        """
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            raise AttributeError(
-                "That axis is not available in the selected coordinate system.")
-        else:
-            return self.theta
 
     @classmethod
     def from_tvec(cls, x: float, y: float, z: float) -> 'SphericalCoordinate':
@@ -197,270 +126,218 @@ class SphericalCoordinate(NamedTuple):
         """
         _x, _y, _z = z, -x, -y
 
-        dist = hypotenuse([_x, _y, _z])
+        r = hypotenuse([_x, _y, _z])
         theta = atan2(_y, _x)
-        phi = acos(_z / dist)
-        return cls(int(dist * 1000), theta, phi)
+        phi = acos(_z / r)
+        return cls(int(r * 1000), theta, phi)
 
 
-ThreeTuple = Tuple[float, float, float]
-RotationMatrix = Tuple[ThreeTuple, ThreeTuple, ThreeTuple]
+class Orientation(NamedTuple):
+    """
+    The orientation of an object in 3-D space.
 
+    :param float yaw:   Get yaw of the marker, a rotation about the vertical axis, in radians.
+                        Positive values indicate a rotation clockwise from the perspective of
+                        the marker.
+                        Zero values have the marker facing the camera square-on.
+    :param float pitch: Get pitch of the marker, a rotation about the transverse axis, in
+                        radians.
+                        Positive values indicate a rotation upwards from the perspective of
+                        the marker.
+                        Zero values have the marker facing the camera square-on.
+    :param float roll:  Get roll of the marker, a rotation about the longitudinal axis,
+                        in radians.
+                        Positive values indicate a rotation clockwise from the perspective of
+                        the marker.
+                        Zero values have the marker facing the camera square-on.
+    """
 
-class Orientation:
-    """The orientation of an object in 3-D space."""
+    yaw: float
+    pitch: float
+    roll: float
 
-    __MARKER_ORIENTATION_CORRECTION = Quaternion(matrix=np.array([
-        [1, 0, 0],
-        [0, -1, 0],
-        [0, 0, -1],
-    ]))
-    __ZOLOTO_LEGACY_ORIENTATION = Quaternion(matrix=np.array([
-        [-1, 0, 0],
-        [0, 1, 0],
-        [0, 0, -1],
-    ]))
-
-    def __init__(self, rotation_matrix: NDArray, aruco_orientation: bool = True):
+    @classmethod
+    def from_rvec_matrix(
+        cls,
+        rotation_matrix: NDArray,
+        aruco_orientation: bool = True
+    ) -> 'Orientation':
         """
-        Construct a quaternion given the rotation matrix in the camera's coordinate system.
+        Calculate yaw, pitch, roll given the rotation matrix in the camera's coordinate system.
 
         More information:
         https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
         """
         # Calculate the quaternion of the rotation in the camera's coordinate system
         initial_rot = Quaternion(matrix=rotation_matrix)
+
+        return cls.from_quaternion(initial_rot, aruco_orientation)
+
+    @classmethod
+    def from_quaternion(
+        cls,
+        quaternion: Quaternion,
+        aruco_orientation: bool = True
+    ) -> 'Orientation':
+        """
+        Calculate yaw, pitch, roll given the quaternion in the camera's coordinate system.
+
+        More information:
+        https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
+        """
         # remap quaternion to global coordinate system from the token's perspective
         quaternion = Quaternion(
-            initial_rot.w, -initial_rot.z, -initial_rot.x, initial_rot.y,
+            quaternion.w, -quaternion.z, -quaternion.x, quaternion.y,
         )
         if aruco_orientation:
             # Rotate the quaternion so 0 roll is a marker the correct way up
-            quaternion *= self.__MARKER_ORIENTATION_CORRECTION
+            marker_orientation_correction = Quaternion(matrix=np.array([
+                [1, 0, 0],
+                [0, -1, 0],
+                [0, 0, -1],
+            ]))
 
-        self.__rotation_matrix = quaternion.rotation_matrix
+            quaternion *= marker_orientation_correction
 
-        if os.environ.get('ZOLOTO_LEGACY_AXIS'):
-            self._quaternion = initial_rot * self.__ZOLOTO_LEGACY_ORIENTATION
-        else:
-            self._quaternion = quaternion
+        obj = cls(*quaternion.yaw_pitch_roll)
 
-        self._yaw_pitch_roll = quaternion.yaw_pitch_roll
-
-    @property
-    def rot_x(self) -> float:
-        """
-        Get rotation angle around X axis in radians.
-
-        The roll rotation with zero as the April Tags marker reference point
-        at the top left of the marker.
-
-        Legacy: The inverted pitch rotation with zero as the marker facing
-                directly away from the camera and a positive rotation being
-                downward.
-                The practical effect of this is that an April Tags marker
-                facing the camera square-on will have a value of ``pi`` (or
-                equivalently ``-pi``).
-        """
-        return self.yaw_pitch_roll[2]
-
-    @property
-    def rot_y(self) -> float:
-        """
-        Get rotation angle around Y axis in radians.
-
-        The pitch rotation with zero as the marker facing the camera square-on
-        and a positive rotation being upward.
-
-        Legacy: The inverted yaw rotation with zero as the marker facing the
-                camera square-on and a positive rotation being
-                counter-clockwise.
-        """
-        return self.yaw_pitch_roll[1]
-
-    @property
-    def rot_z(self) -> float:
-        """
-        Get rotation angle around Z axis in radians.
-
-        The yaw rotation with zero as the marker facing the camera square-on
-        and a positive rotation being clockwise.
-
-        Legacy: The roll rotation with zero as the marker facing the camera
-                square-on and a positive rotation being clockwise.
-        """
-        return self.yaw_pitch_roll[0]
-
-    @property
-    def yaw(self) -> float:
-        """
-        Get yaw of the marker, a rotation about the vertical axis, in radians.
-
-        Positive values indicate a rotation clockwise from the perspective of
-        the marker.
-
-        Zero values have the marker facing the camera square-on.
-        """
-        return self._yaw_pitch_roll[0]
-
-    @property
-    def pitch(self) -> float:
-        """
-        Get pitch of the marker, a rotation about the transverse axis, in radians.
-
-        Positive values indicate a rotation upwards from the perspective of the
-        marker.
-
-        Zero values have the marker facing the camera square-on.
-        """
-        return self._yaw_pitch_roll[1]
-
-    @property
-    def roll(self) -> float:
-        """
-        Get roll of the marker, a rotation about the longitudinal axis, in radians.
-
-        Positive values indicate a rotation clockwise from the perspective of
-        the marker.
-
-        Zero values have the marker facing the camera square-on.
-        """
-        return self._yaw_pitch_roll[2]
-
-    @property
-    def yaw_pitch_roll(self) -> ThreeTuple:
-        """
-        Get the equivalent yaw-pitch-roll angles.
-
-        Specifically intrinsic Tait-Bryan angles following the z-y'-x'' convention.
-        """
-        return self._quaternion.yaw_pitch_roll
-
-    def __iter__(self) -> Iterator[float]:
-        """
-        Get an iterator over the rotation angles.
-        Returns:
-            An iterator of floating point angles in order x, y, z.
-        """
-        return iter([self.rot_x, self.rot_y, self.rot_z])
+        return obj
 
     @property
     def rotation_matrix(self) -> RotationMatrix:
         """
         Get the rotation matrix represented by this orientation.
 
+        Conversion calculation: https://w.wiki/6gbp
+
         Returns:
             A 3x3 rotation matrix as a tuple of tuples.
         """
-        return cast(RotationMatrix, self.__rotation_matrix.tolist())
+        psi, theta, phi = self.yaw, self.pitch, self.roll
 
-    @property
-    def quaternion(self) -> Quaternion:
-        """Get the quaternion represented by this orientation."""
-        return self._quaternion
+        A12 = -cos(theta) * sin(psi) + sin(phi) * sin(theta) * cos(psi)
+        A13 = sin(phi) * sin(psi) + cos(phi) * sin(theta) * cos(psi)
+        A22 = cos(theta) * cos(psi) + sin(phi) * sin(theta) * sin(psi)
+        A23 = -sin(phi) * cos(psi) + cos(phi) * sin(theta) * sin(psi)
 
-    def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__} "
-            f"rot_x={self.rot_x} rot_y={self.rot_y} rot_z={self.rot_z}>"
+        matrix = (
+            (cos(theta) * cos(psi), A12, A13),
+            (cos(theta) * sin(psi), A22, A23),
+            (-sin(theta), sin(phi) * cos(theta), cos(phi) * cos(theta)),
         )
 
+        return cast(RotationMatrix, matrix)
 
-class Marker:
-    """Wrapper of a marker detection with axis and rotation calculated."""
+    @property
+    def quaternion(self) -> Tuple[float, float, float, float]:
+        """
+        Get the quaternion represented by this orientation.
 
-    def __init__(
-        self,
+        Conversion calculation: https://w.wiki/6gbq
+
+        Returns:
+            A 4-tuple hamiltonian quaternion.
+        """
+        psi_2, theta_2, phi_2 = self.yaw / 2, self.pitch / 2, self.roll / 2
+        w = cos(phi_2) * cos(theta_2) * cos(psi_2) + sin(phi_2) * sin(theta_2) * sin(psi_2)
+        i = sin(phi_2) * cos(theta_2) * cos(psi_2) - cos(phi_2) * sin(theta_2) * sin(psi_2)
+        j = cos(phi_2) * sin(theta_2) * cos(psi_2) + sin(phi_2) * cos(theta_2) * sin(psi_2)
+        k = cos(phi_2) * cos(theta_2) * sin(psi_2) - sin(phi_2) * sin(theta_2) * cos(psi_2)
+
+        return (w, i, j, k)
+
+
+PixelCorners = Tuple[PixelCoordinates, PixelCoordinates, PixelCoordinates, PixelCoordinates]
+
+
+class Marker(NamedTuple):
+    """
+    Wrapper of a marker detection with axis and rotation calculated.
+    """
+
+    rvec: Optional[NDArray]
+    tvec: Optional[NDArray]
+
+    id: int
+    size: int
+    marker_type: MarkerType
+    pixel_corners: PixelCorners
+    pixel_centre: PixelCoordinates
+
+    distance: float = 0
+    # In degrees, increasing clockwise
+    bearing: float = 0
+
+    cartesian: CartesianCoordinates = CartesianCoordinates(0, 0, 0)
+    spherical: SphericalCoordinate = SphericalCoordinate(0, 0, 0)
+    orientation: Orientation = Orientation(0, 0, 0)
+
+    aruco_orientation: bool = True
+
+    @classmethod
+    def from_detection(
+        cls,
         marker: Detection,
         *,
         aruco_orientation: bool = True,
-    ):
-        self.marker = marker
+    ) -> 'Marker':
+        _tag_size = int((marker.tag_size or 0) * 1000)
 
-        self.__marker_type = MarkerType(marker.tag_family.decode('utf-8'))
-        self._id = marker.tag_id
-        self.__pixel_center = PixelCoordinates(*marker.center.tolist())
-        self._pixel_corners = marker.corners.tolist()
-        self.__size = int(marker.tag_size * 1000) if marker.tag_size is not None else 0
-        self._tvec = marker.pose_t
-        self._rvec = marker.pose_R
-        self.__aruco_orientation = aruco_orientation
+        _pixel_corners = tuple(
+            PixelCoordinates(x, y)
+            for x, y in marker.corners.tolist()
+        )
+        _pixel_centre = PixelCoordinates(*marker.center.tolist())
 
-        if self._tvec is not None:
-            self.__distance = int(hypotenuse(self._tvec) * 1000)
+        if marker.pose_t is not None and marker.pose_R is not None:
+            _distance = int(hypotenuse(marker.pose_t) * 1000)
+
+            _cartesian = CartesianCoordinates.from_tvec(
+                *marker.pose_t.flatten().tolist()
+            )
+            _bearing = degrees(atan2(-_cartesian.y, _cartesian.x))
+
+            _spherical = SphericalCoordinate.from_tvec(
+                *marker.pose_t.flatten().tolist()
+            )
+
+            _orientation = Orientation.from_rvec_matrix(
+                marker.pose_R,
+                aruco_orientation=aruco_orientation,
+            )
+
+            return cls(
+                rvec=marker.pose_R,
+                tvec=marker.pose_t,
+                id=marker.tag_id,
+                size=_tag_size,
+                marker_type=MarkerType(marker.tag_family.decode('utf-8')),
+                pixel_corners=cast(PixelCorners, _pixel_corners),
+                pixel_centre=_pixel_centre,
+                distance=_distance,
+                bearing=_bearing,
+                cartesian=_cartesian,
+                spherical=_spherical,
+                orientation=_orientation,
+                aruco_orientation=aruco_orientation,
+            )
         else:
-            self.__distance = 0
+            return cls(
+                rvec=None,
+                tvec=None,
+                id=marker.tag_id,
+                size=_tag_size,
+                marker_type=MarkerType(marker.tag_family.decode('utf-8')),
+                pixel_corners=cast(PixelCorners, _pixel_corners),
+                pixel_centre=_pixel_centre,
+                aruco_orientation=aruco_orientation,
+            )
+
+    def has_pose(self) -> bool:
+        return (self.rvec is not None and self.tvec is not None)
 
     def __repr__(self) -> str:
         return (
-            f"<{self.__class__.__name__} id={self.id} size={self.size} "
-            f"type={self.marker_type.name} distance={self.distance}>")
-
-    @property  # noqa: A003
-    def id(self) -> int:  # noqa: A003
-        """The marker id number."""
-        return self._id
-
-    @property
-    def size(self) -> int:
-        """The size of the detected marker in millimeters."""
-        return self.__size
-
-    @property
-    def marker_type(self) -> MarkerType:
-        """The family of the detected marker, likely tag36h11."""
-        return self.__marker_type
-
-    @property
-    def pixel_corners(self) -> List[PixelCoordinates]:
-        """The pixels of the corners of the marker in the image."""
-        return [
-            PixelCoordinates(x, y)
-            for x, y in self._pixel_corners
-        ]
-
-    @property
-    def pixel_centre(self) -> PixelCoordinates:
-        """The pixel location of the center of the marker in the image."""
-        return self.__pixel_center
-
-    @property
-    def distance(self) -> int:
-        """The distance between the marker and camera, in millimeters."""
-        if self._tvec is not None and self._rvec is not None:
-            return self.__distance
-        return 0
-
-    @property
-    def orientation(self) -> Orientation:
-        """The marker's orientation."""
-        if self._rvec is not None:
-            return Orientation(self._rvec, aruco_orientation=self.__aruco_orientation)
-        raise RuntimeError("This marker was detected with an uncalibrated camera")
-
-    @property
-    def spherical(self) -> SphericalCoordinate:
-        """The spherical coordinates of the marker's location relative to the camera."""
-        if self._tvec is not None:
-            return SphericalCoordinate.from_tvec(*self._tvec.flatten().tolist())
-        raise RuntimeError("This marker was detected with an uncalibrated camera")
-
-    @property
-    def cartesian(self) -> CartesianCoordinates:
-        """The cartesian coordinates of the marker's location relative to the camera."""
-        if self._tvec is not None:
-            return CartesianCoordinates.from_tvec(*self._tvec.flatten().tolist())
-        raise RuntimeError("This marker was detected with an uncalibrated camera")
-
-    def as_dict(self) -> Dict[str, Any]:
-        """The marker data as a dict."""
-        marker_dict = {
-            "id": self._id,
-            "size": self.__size,
-            "pixel_corners": self._pixel_corners,
-        }
-        if self._tvec is not None and self._rvec is not None:
-            marker_dict.update(
-                {"rvec": self._rvec.tolist(), "tvec": self._tvec.tolist()},
-            )
-        return marker_dict
+            f"<{self.__class__.__name__} id={self.id} distance={self.distance:.0f}mm "
+            f"bearing={self.bearing:.0f}° size={self.size}mm type={self.marker_type.name}>"
+        )

@@ -66,11 +66,8 @@ def main(args: argparse.Namespace) -> None:
                 text_scale=3, text_colour=(100, 255, 0))
 
         if args.distance:
-            try:
-                for marker in markers:
-                    # Check we have pose data
-                    _ = marker.cartesian
-
+            for marker in markers:
+                if marker.has_pose():
                     text_scale = normalise_marker_text(marker)
 
                     loc = (
@@ -82,10 +79,6 @@ def main(args: argparse.Namespace) -> None:
                         text_scale=0.8 * text_scale,
                         text_colour=(255, 191, 0),  # deep sky blue
                     )
-            except RuntimeError:
-                # Catches RuntimeError from having no pose data
-                # Due to either, no calibration or no tag size
-                pass
 
         for marker in markers:
             output = "#{}, {}, ({}, {})".format(
@@ -94,16 +87,14 @@ def main(args: argparse.Namespace) -> None:
                 int(marker.pixel_centre.x),
                 int(marker.pixel_centre.y),
             )
-            # Check we have pose data
-            has_pose = True
-            try:
-                _ = marker.cartesian
-            except RuntimeError:
-                has_pose = False
 
-            if has_pose:
-                output += ", D={}, θ={}, φ={} | x={}, y={}, z={} | r={}, p={}, y={}".format(
-                    int(marker.distance),
+            if marker.has_pose():
+                output += (
+                    ", | b={} | r={}, θ={}, φ={} | "
+                    "x={}, y={}, z={} | r={}, p={}, y={}"
+                ).format(
+                    int(marker.bearing),
+                    int(marker.spherical.r),
                     int(degrees(marker.spherical.theta)),
                     int(degrees(marker.spherical.phi)),
                     int(marker.cartesian.x),
