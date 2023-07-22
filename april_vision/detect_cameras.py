@@ -63,7 +63,11 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
     # in the list get higher precedence
     for location in reversed(calibration_locations):
         for calibration_file in Path(location).glob('*.xml'):
-            storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
+            try:
+                storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
+            except SystemError:
+                LOGGER.debug(f"Unable to read potential calibration file: {calibration_file}")
+                continue
 
             node = storage.getNode('vidpid')
             if node.isSeq():
