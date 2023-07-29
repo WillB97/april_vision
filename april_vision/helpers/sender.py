@@ -55,7 +55,6 @@ class Base64Sender:
                 name="Image send",
                 target=self.encode_and_send,
                 args=(output_frame.colour_frame,),
-                daemon=True,
             )
             thread.start()
         else:
