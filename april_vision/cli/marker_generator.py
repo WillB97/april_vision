@@ -95,8 +95,8 @@ def generate_tag_tile(
     The marker is scaled to the correct size and is annotated with a border and text.
     """
     # Calculate the overall marker size
-    pixel_size = args.tag_size // tag_data.width_at_border
-    required_size = pixel_size * tag_data.total_width
+    pixel_size = args.tag_size / tag_data.width_at_border
+    required_size = int(pixel_size * tag_data.total_width)
 
     # Generate marker image and resize
     tag_array = generate_tag_array(tag_data, tag_id)
