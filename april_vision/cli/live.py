@@ -10,6 +10,7 @@ import logging
 import os
 from math import degrees
 from time import perf_counter
+from typing import List, Tuple
 
 import cv2
 
@@ -23,7 +24,7 @@ from ..vision import Processor
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_properties(args: argparse.Namespace) -> list[tuple[int, int]]:
+def parse_properties(args: argparse.Namespace) -> List[Tuple[int, int]]:
     props = []
 
     if args.set_fps is not None:

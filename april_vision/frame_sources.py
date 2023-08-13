@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 from sys import platform
-from typing import Any, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import cv2
 from numpy.typing import NDArray
@@ -90,7 +90,7 @@ class USBCamera(FrameSource):
         index: int,
         calibration_file: Union[str, Path, None],
         vidpid: str = "",
-        **kwargs: dict[str, Any],
+        camera_parameters: Optional[List[Tuple[int, int]]] = None,
     ) -> 'USBCamera':
         """Instantiate camera using calibration data from opencv XML calibration file."""
         if calibration_file is not None:
@@ -115,7 +115,7 @@ class USBCamera(FrameSource):
             ),
             calibration=(fx, fy, cx, cy),
             vidpid=vidpid,
-            **kwargs,
+            camera_parameters=camera_parameters,
         )
 
     def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002
