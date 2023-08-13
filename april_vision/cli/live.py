@@ -23,11 +23,26 @@ from ..vision import Processor
 LOGGER = logging.getLogger(__name__)
 
 
+def parse_properties(args: argparse.Namespace) -> list[tuple[int, int]]:
+    props = []
+
+    if args.set_fps is not None:
+        props.append((cv2.CAP_PROP_FPS, args.set_fps))
+
+    if args.set_codec is not None:
+        props.append((cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*args.set_codec)))
+
+    return props
+
+
 def main(args: argparse.Namespace) -> None:
     """Live camera demonstration."""
     avg_fps = RollingAverage(50)
     prev_frame_time: float = 0
     file_num = 1
+
+    camera_properties = parse_properties(args)
+
     if args.id is None:
         cameras = find_cameras(calibrations, include_uncalibrated=True)
         try:
@@ -36,9 +51,17 @@ def main(args: argparse.Namespace) -> None:
             LOGGER.fatal("No cameras found")
             return
         source = USBCamera.from_calibration_file(
-            camera.index, camera.calibration, camera.vidpid)
+            camera.index,
+            camera.calibration,
+            camera.vidpid,
+            camera_parameters=camera_properties,
+        )
     else:
-        source = USBCamera(args.id, (1280, 720))
+        source = USBCamera(
+            args.id,
+            (1280, 720),
+            camera_parameters=camera_properties,
+        )
     cam = Processor(
         source,
         tag_family=args.tag_family,
@@ -155,5 +178,18 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         '--distance', action='store_true',
         help="Annotate frames with the distance to the marker.")
+
+    parser.add_argument(
+        '--set_fps',
+        type=int,
+        default=None,
+        help="The FPS to set the camera to"
+    )
+    parser.add_argument(
+        '--set_codec',
+        type=str,
+        default=None,
+        help="4-character code of codec to set camera to (e.g. MJPG)"
+    )
 
     parser.set_defaults(func=main)
