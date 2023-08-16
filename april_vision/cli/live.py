@@ -38,8 +38,9 @@ def parse_properties(args: argparse.Namespace) -> List[Tuple[int, int]]:
 
 def main(args: argparse.Namespace) -> None:
     """Live camera demonstration."""
-    avg_fps = RollingAverage(50)
-    prev_frame_time: float = 0
+    cap_time_avg = RollingAverage(20)
+    proc_time_avg = RollingAverage(20)
+
     file_num = 1
 
     camera_properties = parse_properties(args)
@@ -74,20 +75,35 @@ def main(args: argparse.Namespace) -> None:
     LOGGER.info("Press S to save image, press Q to exit")
 
     while True:
+        start_time = perf_counter()
         frame = cam._capture()
+        cap_time = perf_counter()
         markers = cam._detect(frame)
+        proc_time = perf_counter()
+
+        cap_time_avg.new_data(1000 * (cap_time - start_time))
+        proc_time_avg.new_data(1000 * (proc_time - cap_time))
 
         if args.annotate:
             cam._annotate(frame, markers)
 
-        new_frame_time = perf_counter()
-        fps = 1 / (new_frame_time - prev_frame_time)
-        prev_frame_time = new_frame_time
-        avg_fps.new_data(fps)
-        if args.fps:
+        if args.perf:
             frame = annotate_text(
-                frame, f"{avg_fps.average():.0f}", (7, 70),
-                text_scale=3, text_colour=(100, 255, 0))
+                frame,
+                f"Capture: {cap_time_avg.average():.2f}ms",
+                (10, 30),
+                text_scale=0.75,
+                text_colour=(100, 255, 0),
+                thickness=1,
+            )
+            frame = annotate_text(
+                frame,
+                f"Detect: {proc_time_avg.average():.2f}ms",
+                (10, 60),
+                text_scale=0.75,
+                text_colour=(100, 255, 0),
+                thickness=1,
+            )
 
         if args.distance:
             for marker in markers:
@@ -163,8 +179,8 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--no_annotate", action='store_false', dest='annotate',
         help="Turn off marker annotation for detected markers.")
     parser.add_argument(
-        '--fps', action='store_true',
-        help="Display the frames per second that the preview is running at.")
+        '--perf', action='store_true',
+        help="Display the performance of the capture and detection in ms to do each operation.")
 
     parser.add_argument(
         '--tag_family', default=MarkerType.APRILTAG_36H11.value,
