@@ -180,7 +180,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         help="Turn off marker annotation for detected markers.")
     parser.add_argument(
         '--perf', action='store_true',
-        help="Display the performance of the capture and detection in ms to do each operation.")
+        help="Display the performance of the capture/detection in ms to do each operation.")
 
     parser.add_argument(
         '--tag_family', default=MarkerType.APRILTAG_36H11.value,
