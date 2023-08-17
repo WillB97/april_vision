@@ -44,6 +44,7 @@ def annotate_text(
     location: Tuple[int, int],
     text_scale: float = 0.5,
     text_colour: Tuple[int, int, int] = (255, 0, 0),
+    thickness: int = 2,
 ) -> Frame:
     """
     Add arbitrary text to a frame.
@@ -58,7 +59,7 @@ def annotate_text(
             cv2.FONT_HERSHEY_DUPLEX,
             text_scale,
             color=text_colour,  # in BGR
-            thickness=2,
+            thickness=thickness,
         )
     return frame
 

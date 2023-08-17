@@ -90,6 +90,7 @@ class USBCamera(FrameSource):
         index: int,
         calibration_file: Union[str, Path, None],
         vidpid: str = "",
+        camera_parameters: Optional[List[Tuple[int, int]]] = None,
     ) -> 'USBCamera':
         """Instantiate camera using calibration data from opencv XML calibration file."""
         if calibration_file is not None:
@@ -114,6 +115,7 @@ class USBCamera(FrameSource):
             ),
             calibration=(fx, fy, cx, cy),
             vidpid=vidpid,
+            camera_parameters=camera_parameters,
         )
 
     def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002

@@ -10,6 +10,7 @@ import logging
 import os
 from math import degrees
 from time import perf_counter
+from typing import List, Tuple
 
 import cv2
 
@@ -23,11 +24,27 @@ from ..vision import Processor
 LOGGER = logging.getLogger(__name__)
 
 
+def parse_properties(args: argparse.Namespace) -> List[Tuple[int, int]]:
+    props = []
+
+    if args.set_fps is not None:
+        props.append((cv2.CAP_PROP_FPS, args.set_fps))
+
+    if args.set_codec is not None:
+        props.append((cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*args.set_codec)))
+
+    return props
+
+
 def main(args: argparse.Namespace) -> None:
     """Live camera demonstration."""
-    avg_fps = RollingAverage(50)
-    prev_frame_time: float = 0
+    cap_time_avg = RollingAverage(20)
+    proc_time_avg = RollingAverage(20)
+
     file_num = 1
+
+    camera_properties = parse_properties(args)
+
     if args.id is None:
         cameras = find_cameras(calibrations, include_uncalibrated=True)
         try:
@@ -36,9 +53,17 @@ def main(args: argparse.Namespace) -> None:
             LOGGER.fatal("No cameras found")
             return
         source = USBCamera.from_calibration_file(
-            camera.index, camera.calibration, camera.vidpid)
+            camera.index,
+            camera.calibration,
+            camera.vidpid,
+            camera_parameters=camera_properties,
+        )
     else:
-        source = USBCamera(args.id, (1280, 720))
+        source = USBCamera(
+            args.id,
+            (1280, 720),
+            camera_parameters=camera_properties,
+        )
     cam = Processor(
         source,
         tag_family=args.tag_family,
@@ -50,20 +75,35 @@ def main(args: argparse.Namespace) -> None:
     LOGGER.info("Press S to save image, press Q to exit")
 
     while True:
+        start_time = perf_counter()
         frame = cam._capture()
+        cap_time = perf_counter()
         markers = cam._detect(frame)
+        proc_time = perf_counter()
+
+        cap_time_avg.new_data(1000 * (cap_time - start_time))
+        proc_time_avg.new_data(1000 * (proc_time - cap_time))
 
         if args.annotate:
             cam._annotate(frame, markers)
 
-        new_frame_time = perf_counter()
-        fps = 1 / (new_frame_time - prev_frame_time)
-        prev_frame_time = new_frame_time
-        avg_fps.new_data(fps)
-        if args.fps:
+        if args.perf:
             frame = annotate_text(
-                frame, f"{avg_fps.average():.0f}", (7, 70),
-                text_scale=3, text_colour=(100, 255, 0))
+                frame,
+                f"Capture: {cap_time_avg.average():.2f}ms",
+                (10, 30),
+                text_scale=0.75,
+                text_colour=(100, 255, 0),
+                thickness=1,
+            )
+            frame = annotate_text(
+                frame,
+                f"Detect: {proc_time_avg.average():.2f}ms",
+                (10, 60),
+                text_scale=0.75,
+                text_colour=(100, 255, 0),
+                thickness=1,
+            )
 
         if args.distance:
             for marker in markers:
@@ -139,8 +179,8 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--no_annotate", action='store_false', dest='annotate',
         help="Turn off marker annotation for detected markers.")
     parser.add_argument(
-        '--fps', action='store_true',
-        help="Display the frames per second that the preview is running at.")
+        '--perf', action='store_true',
+        help="Display the performance of the capture/detection in ms to do each operation.")
 
     parser.add_argument(
         '--tag_family', default=MarkerType.APRILTAG_36H11.value,
@@ -155,5 +195,18 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         '--distance', action='store_true',
         help="Annotate frames with the distance to the marker.")
+
+    parser.add_argument(
+        '--set_fps',
+        type=int,
+        default=None,
+        help="The FPS to set the camera to"
+    )
+    parser.add_argument(
+        '--set_codec',
+        type=str,
+        default=None,
+        help="4-character code of codec to set camera to (e.g. MJPG)"
+    )
 
     parser.set_defaults(func=main)
