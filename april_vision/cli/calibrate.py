@@ -78,13 +78,14 @@ def capture_camera(
 def main(args: argparse.Namespace) -> None:
     """Charuco calibration."""
     try:
-        import cv2.aruco  # type: ignore
+        import cv2.aruco
     except ImportError:
         LOGGER.critical("Calibration requires the opencv-contrib-python package")
         sys.exit(1)
 
-    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
-    board = cv2.aruco.CharucoBoard_create(8, 6, 0.03, 0.023, aruco_dict)
+    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+    board = cv2.aruco.CharucoBoard((8, 6), 0.03, 0.023, aruco_dict)
+    board.setLegacyPattern(True)
 
     dev_num = args.camera
     video_dev = cv2.VideoCapture(dev_num)
