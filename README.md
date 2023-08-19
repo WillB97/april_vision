@@ -17,13 +17,20 @@ To install the lightweight headless version OpenCV install the library with the 
 pip install april-vision[opencv]
 ```
 
-If you want to perform some of the more advanced features of the CLI (live view of the camera) you need the full version of OpenCV, which can be installed with the following command.
+If you want to perform some of the more advanced features of the CLI (live view of the camera) you need the full version of OpenCV.
+The CLI dependecies can be installed with the following command.
 
 ```bash
 pip install april-vision[cli]
 ```
 
-If you need to run the calibration feature in the CLI you will need to install the `opencv-contrib-python` module. All the versions of OpenCV clash so you should only have one installed.
+Then the full version of OpenCV can then be installed with the following command.
+
+```bash
+pip install opencv-python>=4.8
+```
+
+If you need to run the calibration feature in the CLI you will need to install the `opencv-contrib-python>=4.7` module. All the versions of OpenCV clash so you should only have one installed.
 
 ## Example
 

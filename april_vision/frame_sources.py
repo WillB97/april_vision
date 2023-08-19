@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 from sys import platform
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, cast
 
 import cv2
 from numpy.typing import NDArray
@@ -155,7 +155,7 @@ class USBCamera(FrameSource):
             return
 
         camera_parameters = [
-            (cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')),
+            (cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG')),
             (cv2.CAP_PROP_FPS, 30),
             (cv2.CAP_PROP_BUFFERSIZE, 2),
         ]
@@ -173,7 +173,7 @@ class USBCamera(FrameSource):
         ret, colour_frame = self._camera.read()
         if not ret:
             raise IOError("Failed to get frame from camera")
-        return colour_frame
+        return cast(NDArray, colour_frame)
 
     def read(self, fresh: bool = True) -> NDArray:
         """
@@ -214,7 +214,7 @@ class VideoSource(FrameSource):
         ret, colour_frame = self._video.read()
         if not ret:
             raise IOError("Failed to get frame from video")
-        return colour_frame
+        return cast(NDArray, colour_frame)
 
     def close(self) -> None:
         """Close the video file."""
@@ -230,7 +230,7 @@ class ImageSource(FrameSource):
 
         :param filepath: The path to the image to load.
         """
-        self._frame = cv2.imread(str(filepath))
+        self._frame = cast(NDArray, cv2.imread(str(filepath)))
 
     def read(self, fresh: bool = True) -> NDArray:
         """Return the stored frame."""

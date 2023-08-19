@@ -43,7 +43,7 @@ def main(args: argparse.Namespace) -> None:
         calibration=calibration,
     )
     output = cv2.VideoWriter(
-        args.output_file, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+        args.output_file, cv2.VideoWriter.fourcc(*'mp4v'), fps, (width, height))
     while True:
         try:
             frame = processer._capture()
