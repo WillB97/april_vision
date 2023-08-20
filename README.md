@@ -30,7 +30,7 @@ Then the full version of OpenCV can then be installed with the following command
 pip install opencv-python>=4.8
 ```
 
-If you need to run the calibration feature in the CLI you will need to install the `opencv-contrib-python>=4.7` module. All the versions of OpenCV clash so you should only have one installed.
+All the versions of OpenCV (standard, headless and contrib) clash so you should only have one installed.
 
 ## Example
 
