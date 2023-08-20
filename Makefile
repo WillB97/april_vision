@@ -12,7 +12,7 @@ type:
 	mypy $(PYMODULE)
 
 test:
-	pytest --cov=$(PYMODULE) $(TESTS)
+	pytest --cov=$(PYMODULE) --cov-report=term --cov-report=xml $(TESTS)
 
 isort-check:
 	python -m isort --check $(PYMODULE)
