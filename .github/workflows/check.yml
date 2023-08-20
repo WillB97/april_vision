@@ -25,6 +25,9 @@ jobs:
     - name: Typecheck
       run: |
         make type
+    - name: Test
+      run: |
+        make test
     - name: Build package
       run: |
         make build

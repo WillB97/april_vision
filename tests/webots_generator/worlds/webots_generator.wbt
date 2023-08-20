@@ -1,0 +1,81 @@
+#VRML_SIM R2023a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  position 0 0 0
+}
+TexturedBackgroundLight {
+}
+Transform {
+  children [
+    Robot {
+      translation 0 0 0
+      children [
+        # fx=1293.0912575063312, fy=1293.0912575063312, cx=400, cy=400
+        Camera {
+          rotation 0 1 0 0
+          fieldOfView 0.6
+          width 800
+          height 800
+        }
+        Shape {
+          geometry Box {
+            size 0.1 0.1 0.1
+          }
+        }
+      ]
+      name "Robot1"
+      model "Robot1"
+      controller "capture_robot"
+      supervisor TRUE
+    }
+    DEF marker_transform Transform {
+      translation 2 0 0
+      # roll rotation
+      rotation -1 0 0 0
+      children [
+        DEF pitch_transform Transform {
+          rotation 0 1 0 0
+          children [
+            DEF yaw_transform Transform {
+              rotation 0 0 -1 0
+              children [
+                Solid {
+                  children [
+                    Shape {
+                      appearance PBRAppearance {
+                        baseColorMap ImageTexture {
+                          url [
+                            "CI.png"
+                          ]
+                          repeatS FALSE
+                          repeatT FALSE
+                        }
+                        roughness 1
+                        metalness 0
+                      }
+                      geometry DEF MARKER_GEOMETRY Box {
+                        size 0.001 0.25 0.25
+                      }
+                    }
+                  ]
+                  name "14"
+                  model "14"
+                  boundingObject USE MARKER_GEOMETRY
+                  locked TRUE
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+PointLight {
+  location 0 0 0
+  attenuation 0 0 0.05
+}

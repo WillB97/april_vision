@@ -1,0 +1,37 @@
+Index,vertical,horizontal,distance,yaw,pitch,roll,theta,phi,r,name
+0,0.25,0.25,2,0,0,0,0.1257,1.4451,2.031,"top left, 2m"
+1,0.25,0,2,0,0,0,0,1.4451,2.0156,"top center, 2m"
+2,0.25,-0.25,2,0,0,0,-0.1257,1.4451,2.031,"top right, 2m"
+3,0,0.25,2,0,0,0,0.1257,1.5708,2.0156,"middle left, 2m"
+4,0,0,2,0,0,0,0,1.5708,2,"center, 2m"
+5,0,-0.25,2,0,0,0,-0.1257,1.5708,2.0156,"middle right, 2m"
+6,-0.25,0.25,2,0,0,0,0.1257,1.6965,2.031,"bottom left, 2m"
+7,-0.25,0,2,0,0,0,0,1.6965,2.0156,"bottom center, 2m"
+8,-0.25,-0.25,2,0,0,0,-0.1257,1.6965,2.031,"bottom right, 2m"
+9,0,0,1,0,0,0,0,1.5708,1,"center, 1m"
+10,0,0,1,0.7854,0,0,0,1.5708,1,positive yaw
+11,0,0,1,-0.7854,0,0,0,1.5708,1,negative yaw
+12,0,0,1,0,0.7854,0,0,1.5708,1,positive pitch
+13,0,0,1,0,-0.7854,0,0,1.5708,1,negative pitch
+14,0,0,1,0.7854,0.7854,0,0,1.5708,1,"positive yaw, positive pitch"
+15,0,0,1,0.7854,-0.7854,0,0,1.5708,1,"positive yaw, negative pitch"
+16,0,0,1,-0.7854,0.7854,0,0,1.5708,1,"negative yaw, positive pitch"
+17,0,0,1,-0.7854,-0.7854,0,0,1.5708,1,"negative yaw, negative pitch"
+18,0,0,1,0,0,0.7854,0,1.5708,1,positive roll
+19,0,0,1,0.7854,0,0.7854,0,1.5708,1,"positive yaw, positive roll"
+20,0,0,1,-0.7854,0,0.7854,0,1.5708,1,"negative yaw, positive roll"
+21,0,0,1,0,0.7854,0.7854,0,1.5708,1,"positive pitch, positive roll"
+22,0,0,1,0,-0.7854,0.7854,0,1.5708,1,"negative pitch, positive roll"
+23,0,0,1,0.7854,0.7854,0.7854,0,1.5708,1,"positive yaw, positive pitch, positive roll"
+24,0,0,1,0.7854,-0.7854,0.7854,0,1.5708,1,"positive yaw, negative pitch, positive roll"
+25,0,0,1,-0.7854,0.7854,0.7854,0,1.5708,1,"negative yaw, positive pitch, positive roll"
+26,0,0,1,-0.7854,-0.7854,0.7854,0,1.5708,1,"negative yaw, negative pitch, positive roll"
+27,0,0,1,0,0,-0.7854,0,1.5708,1,negative roll
+28,0,0,1,0.7854,0,-0.7854,0,1.5708,1,"positive yaw, negative roll"
+29,0,0,1,-0.7854,0,-0.7854,0,1.5708,1,"negative yaw, negative roll"
+30,0,0,1,0,0.7854,-0.7854,0,1.5708,1,"positive pitch, negative roll"
+31,0,0,1,0,-0.7854,-0.7854,0,1.5708,1,"negative pitch, negative roll"
+32,0,0,1,0.7854,0.7854,-0.7854,0,1.5708,1,"positive yaw, positive pitch, negative roll"
+33,0,0,1,0.7854,-0.7854,-0.7854,0,1.5708,1,"positive yaw, negative pitch, negative roll"
+34,0,0,1,-0.7854,0.7854,-0.7854,0,1.5708,1,"negative yaw, positive pitch, negative roll"
+35,0,0,1,-0.7854,-0.7854,-0.7854,0,1.5708,1,"negative yaw, negative pitch, negative roll"
