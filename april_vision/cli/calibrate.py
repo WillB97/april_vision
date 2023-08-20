@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CalBoard:
+    """Class used to represent a calibration board"""
     def __init__(
         self,
         rows: int,
@@ -35,6 +36,13 @@ class CalBoard:
         self.marker_details = get_tag_family(marker_type)
 
     def corners_from_id(self, marker_id: int) -> List[Tuple[float, float, float]]:
+        """
+        Takes an input of a marker ID and returns the coordinates of the corners of the marker.
+        The coordinates are 3D real world positions, top left of the board is 0,0,0.
+        The Z coordinate of the board is always zero.
+        The list of co-ords are in the order:
+        [bottom_left, bottom_right, top_right, top_left]
+        """
         marker_pixel_size = self.marker_size / self.marker_details.width_at_border
 
         row, column = divmod(marker_id, self.columns)
@@ -80,6 +88,11 @@ def parse_detections(
     board_detections: List[Marker],
     board_design: CalBoard,
 ) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float]]]:
+    """
+    Pairs up 2D pixel corners with 3D real world co-ords.
+    Takes the input of marker detections and the board design and outputs two lists
+    where board_obj_points[i] pairs with board_img_points[i].
+    """
     board_obj_points = []
     board_img_points = []
 
@@ -119,20 +132,23 @@ def main(args: argparse.Namespace) -> None:
     objectPoints = []
     imagePoints = []
 
-    processer = Processor(aruco_orientation=False)
+    processor = Processor(aruco_orientation=False)
 
     for frame in frames:
-        detections = processer._detect(frame)
+        detections = processor._detect(frame)
         LOGGER.info(f'Detected {len(detections)} markers in frame')
 
+        # only use the image if the number of detections were over the threshold
         if len(detections) >= min_required_detections:
             board_obj_points, board_img_points = parse_detections(detections, board)
+
+            # dtype has to be float32 for cv2 calibration function
             objectPoints.append(np.array(board_obj_points, dtype=np.float32))
             imagePoints.append(np.array(board_img_points, dtype=np.float32))
         else:
             LOGGER.error('Discarding image due to low marker detection rate')
 
-    # Get the actual captured frame dimentions
+    # Get the actual dimensions of the captured frames
     width, height = frames[0].grey_frame.shape[::-1]
 
     # Calculate the camera calibration
@@ -191,7 +207,7 @@ def write_cal_file(
     file.write("dist_coeffs", dist_coeff)
 
     if vidpid is not None:
-        # Wrap the str in quotes so it is outputed and loaded correctly
+        # Wrap the str in quotes so it is outputted and loaded correctly
         file.write("vidpid", f'"{vidpid}"')
 
     file.release()
@@ -235,7 +251,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "-n", "--frame_count",
         type=int,
         default=15,
-        help="Number of frames to use for calbration"
+        help="Number of frames to capture for calibration"
     )
     parser.add_argument(
         "--vidpid",
@@ -278,7 +294,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--filename",
         required=True,
         type=str,
-        help="Filename of output calibration file"
+        help="Filename of outputted calibration file"
     )
 
     parser.set_defaults(func=main)
