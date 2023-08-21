@@ -181,6 +181,7 @@ class MarkerTile:
         font: str,
         text_size: int,
         text_colour: str,
+        double_text: bool = False,
     ) -> None:
         marker_square_size = mm_to_pixels(self.pixel_size)
 
@@ -198,12 +199,24 @@ class MarkerTile:
 
         # Draw text outside the marker
         image_draw.text(
-            (marker_square_size, bordered_image.size[0] - (marker_square_size // 2)),
+            (marker_square_size, bordered_image.height - (marker_square_size // 2)),
             description_text,
             fill=text_colour,
             anchor="lm",
             font=ImageFont.truetype(font, text_size),
         )
+
+        if double_text:
+            image_draw.text(
+                (
+                    bordered_image.width - marker_square_size,
+                    bordered_image.height - (marker_square_size // 2)
+                ),
+                description_text,
+                fill=text_colour,
+                anchor="rm",
+                font=ImageFont.truetype(font, text_size),
+            )
 
         self.image = bordered_image
 

@@ -29,23 +29,23 @@ def main(args: argparse.Namespace) -> None:
             tag_data,
             marker_id,
             args.marker_size,
-            aruco_orientation=args.aruco_orientation
+            aruco_orientation=args.aruco_orientation,
         )
         image_tile.add_border_line(
             args.border_width,
-            DEFAULT_COLOUR
+            DEFAULT_COLOUR,
         )
         image_tile.add_centre_ticks(
             args.border_width,
             args.tick_length,
-            DEFAULT_COLOUR
+            DEFAULT_COLOUR,
         )
 
         if args.no_number is False:
             image_tile.add_id_number(
                 args.font,
                 args.number_size,
-                DEFAULT_COLOUR
+                DEFAULT_COLOUR,
             )
 
         image_tile.add_description_border(
@@ -53,9 +53,14 @@ def main(args: argparse.Namespace) -> None:
             args.font,
             args.description_size,
             DEFAULT_COLOUR,
+            double_text=args.split,
         )
 
-        output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
+        if args.split:
+            size = page_size.pixels[0] * 2, page_size.pixels[1]
+            output_img = Image.new("RGB", size, (255, 255, 255))
+        else:
+            output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
 
         if args.left_margin is not None:
             x_loc = mm_to_pixels(args.left_margin) - image_tile.top_left.x
@@ -81,18 +86,42 @@ def main(args: argparse.Namespace) -> None:
 
         output_img.paste(image_tile.image, (x_loc, y_loc))
 
+        if args.split:
+            img_left = output_img.crop((
+                0, 0,
+                page_size.pixels[0] - 1, page_size.pixels[1] - 1
+            ))
+            img_right = output_img.crop((
+                page_size.pixels[0], 0,
+                (2 * page_size.pixels[0]) - 1, page_size.pixels[1] - 1
+            ))
+            marker_pages.append(img_left)
+            marker_pages.append(img_right)
+        else:
+            marker_pages.append(output_img)
+
         if args.single_filename is not None:
             single_filename = args.single_filename.format(
                 id=marker_id,
                 marker_family=args.marker_family
             )
-            output_img.save(
-                single_filename,
-                quality=100,
-                dpi=(DPI, DPI),
-            )
-
-        marker_pages.append(output_img)
+            if args.split:
+                img_left.save(
+                    f'left_{single_filename}',
+                    quality=100,
+                    dpi=(DPI, DPI),
+                )
+                img_right.save(
+                    f'right_{single_filename}',
+                    quality=100,
+                    dpi=(DPI, DPI),
+                )
+            else:
+                output_img.save(
+                    single_filename,
+                    quality=100,
+                    dpi=(DPI, DPI),
+                )
 
     # Save combined PDF
     combined_filename = args.all_filename.format(
@@ -107,40 +136,3 @@ def main(args: argparse.Namespace) -> None:
         save_all=True,
         append_images=marker_pages,
     )
-
-    # try:
-    #     output_img.save(
-    #         output_dir / args.filename.format(id=marker_id),
-    #         quality=100,
-    #         dpi=(DPI, DPI),
-    #     )
-    # except ValueError as error:
-    #     LOGGER.error(f"Invalid output file format: '{args.filename}'")
-    #     LOGGER.error(error)
-    #     exit(1)
-
-    # # Output page size and location
-    # page_size = PageSize[args.page_size]
-
-    # output_dir = args.output_dir.resolve()
-    # output_dir.mkdir(exist_ok=True, parents=True)
-
-    # if args.merge_pdf is not None:
-    #     if args.filename.lower().endswith(".pdf"):
-    #         LOGGER.info("Starting to merge PDFs")
-    #         merger = PdfMerger()
-    #         for pdf in generated_files:
-    #             merger.append(pdf)
-
-    #         if args.merge_pdf.lower().endswith(".pdf"):
-    #             merger.write(output_dir / args.merge_pdf)
-    #         else:
-    #             merger.write(output_dir / (args.merge_pdf + '.pdf'))
-
-    #         merger.close()
-    #         LOGGER.info("Merge PDF complete")
-    #     else:
-    #         LOGGER.error((
-    #             "PDF merge was enabled but no PDFs were generated, "
-    #             f"output format '{args.filename}'"
-    #         ))
