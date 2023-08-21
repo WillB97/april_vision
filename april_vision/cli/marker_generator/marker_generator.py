@@ -200,7 +200,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
 
     tile_subparser.add_argument(
-        "--num_column",
+        "--num_columns",
         help="Number of columns of markers to place",
         default=1,
         type=int,

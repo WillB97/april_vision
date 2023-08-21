@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 from april_vision.cli.utils import ApriltagFamily, get_tag_family
 from april_vision.marker import MarkerType
 
-from .utils import mm_to_pixels, coord
+from .utils import coord, mm_to_pixels
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
@@ -72,6 +72,9 @@ class MarkerTile:
         )
 
         self.image = resized_image
+
+        self.marker_width = self.image.width
+        self.marker_height = self.image.height
 
         # Update the coords of where the marker is in the tile
         self.top_left = coord(0, 0)

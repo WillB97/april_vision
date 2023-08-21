@@ -14,7 +14,6 @@ LOGGER = logging.getLogger(__name__)
 
 def main(args: argparse.Namespace) -> None:
     tag_data = get_tag_family(args.marker_family)
-    print(type(args.marker_family))
     LOGGER.info(tag_data)
 
     marker_ids = parse_marker_ranges(tag_data, args.range)
@@ -97,7 +96,6 @@ def main(args: argparse.Namespace) -> None:
 
     # Save combined PDF
     combined_filename = args.all_filename.format(
-        id=marker_id,
         marker_family=args.marker_family
     )
 
@@ -109,3 +107,40 @@ def main(args: argparse.Namespace) -> None:
         save_all=True,
         append_images=marker_pages,
     )
+
+    # try:
+    #     output_img.save(
+    #         output_dir / args.filename.format(id=marker_id),
+    #         quality=100,
+    #         dpi=(DPI, DPI),
+    #     )
+    # except ValueError as error:
+    #     LOGGER.error(f"Invalid output file format: '{args.filename}'")
+    #     LOGGER.error(error)
+    #     exit(1)
+
+    # # Output page size and location
+    # page_size = PageSize[args.page_size]
+
+    # output_dir = args.output_dir.resolve()
+    # output_dir.mkdir(exist_ok=True, parents=True)
+
+    # if args.merge_pdf is not None:
+    #     if args.filename.lower().endswith(".pdf"):
+    #         LOGGER.info("Starting to merge PDFs")
+    #         merger = PdfMerger()
+    #         for pdf in generated_files:
+    #             merger.append(pdf)
+
+    #         if args.merge_pdf.lower().endswith(".pdf"):
+    #             merger.write(output_dir / args.merge_pdf)
+    #         else:
+    #             merger.write(output_dir / (args.merge_pdf + '.pdf'))
+
+    #         merger.close()
+    #         LOGGER.info("Merge PDF complete")
+    #     else:
+    #         LOGGER.error((
+    #             "PDF merge was enabled but no PDFs were generated, "
+    #             f"output format '{args.filename}'"
+    #         ))
