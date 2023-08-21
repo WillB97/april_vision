@@ -1,6 +1,6 @@
 import argparse
 
-from .marker_modes import mode_single, mode_tile, mode_cal
+from .marker_modes import mode_cal, mode_single, mode_tile
 
 
 def main(args: argparse.Namespace) -> None:
