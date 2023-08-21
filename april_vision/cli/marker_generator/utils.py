@@ -44,7 +44,9 @@ def mm_to_pixels(mm: float) -> int:
 
 class PageSize(Enum):
     A3 = (297, 420)
+    A3L = (420, 297)
     A4 = (210, 297)
+    A4L = (297, 210)
 
     @property
     def pixels(self) -> Tuple[int, int]:
