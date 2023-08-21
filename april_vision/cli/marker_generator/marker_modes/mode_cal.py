@@ -2,12 +2,12 @@ import argparse
 import logging
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from april_vision.cli.utils import get_tag_family
 
 from ..marker_tile import generate_tag_array, mm_to_pixels
-from ..utils import DPI, PageSize
+from ..utils import DEFAULT_COLOUR, DPI, PageSize
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,8 @@ def main(args: argparse.Namespace) -> None:
 
     for index, marker_array in enumerate(marker_arrays):
         row, col = divmod(index, args.num_columns)
+        row = args.num_rows - (row + 1)
+
         x = row * marker_offset
         y = col * marker_offset
         board_array[x:x + marker_array.shape[0], y:y + marker_array.shape[1]] = marker_array
@@ -51,18 +53,15 @@ def main(args: argparse.Namespace) -> None:
 
     pixel_size = args.marker_size / tag_data.width_at_border
 
-    total_board_pixel_width = (tag_data.total_width - 1) * args.num_columns + 1
-    required_width = int(pixel_size * total_board_pixel_width)
-
-    total_board_pixel_height = (tag_data.total_width - 1) * args.num_rows + 1
-    required_height = int(pixel_size * total_board_pixel_height)
+    required_width = int(pixel_size * dim_width)
+    required_height = int(pixel_size * dim_height)
 
     resized_image = marker_image.resize(
         (mm_to_pixels(required_width), mm_to_pixels(required_height)),
         resample=0
     )
 
-    # Paste board onto page and save
+    # Paste board onto page
     page_size = PageSize[args.page_size]
     output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
 
@@ -71,6 +70,24 @@ def main(args: argparse.Namespace) -> None:
 
     output_img.paste(resized_image, (x_loc, y_loc))
 
+    # Overlay info about the board
+    text_overlay = "Family: {} Rows: {} Columns: {} marker_size: {}".format(
+        args.marker_family,
+        args.num_rows,
+        args.num_columns,
+        args.marker_size,
+    )
+
+    image_draw = ImageDraw.Draw(output_img)
+    image_draw.text(
+        (mm_to_pixels(5), output_img.height - mm_to_pixels(5)),
+        text_overlay,
+        fill=DEFAULT_COLOUR,
+        anchor="lm",
+        font=ImageFont.truetype(args.font, args.description_size),
+    )
+
+    # Save file
     filename = "cal_board_{}_{}_{}_{}.pdf".format(
         args.marker_family,
         args.num_rows,
