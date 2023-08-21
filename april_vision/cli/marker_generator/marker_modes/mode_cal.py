@@ -5,9 +5,10 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from april_vision.cli.utils import get_tag_family
+from april_vision.marker import MarkerType
 
 from ..marker_tile import generate_tag_array, mm_to_pixels
-from ..utils import DEFAULT_COLOUR, DPI, PageSize
+from ..utils import DPI, PageSize
 
 LOGGER = logging.getLogger(__name__)
 
@@ -80,10 +81,10 @@ def main(args: argparse.Namespace) -> None:
 
     image_draw = ImageDraw.Draw(output_img)
     image_draw.text(
-        (mm_to_pixels(5), output_img.height - mm_to_pixels(5)),
+        (x_loc, y_loc + resized_image.height),
         text_overlay,
-        fill=DEFAULT_COLOUR,
-        anchor="lm",
+        fill="black",
+        anchor="lt",
         font=ImageFont.truetype(args.font, args.description_size),
     )
 
@@ -100,3 +101,59 @@ def main(args: argparse.Namespace) -> None:
         quality=100,
         dpi=(DPI, DPI),
     )
+
+
+def create_subparser(subparsers: argparse._SubParsersAction) -> None:
+    parser = subparsers.add_parser("CAL_BOARD")
+
+    parser.add_argument(
+        "--page_size",
+        type=str,
+        help="Page size. (default: %(default)s)",
+        choices=sorted([size.name for size in PageSize]),
+        default="A4L",
+    )
+
+    parser.add_argument(
+        '--marker_family',
+        default=MarkerType.APRILTAG_36H11.value,
+        choices=[
+            MarkerType.APRILTAG_16H5.value,
+            MarkerType.APRILTAG_25H9.value,
+            MarkerType.APRILTAG_36H11.value,
+        ],
+        help="Set the marker family used in the calibration board, defaults to '%(default)s'",
+    )
+
+    parser.add_argument(
+        "--marker_size",
+        help="The size of markers in millimeters (default: %(default)s)",
+        default=40,
+        type=int,
+    )
+    parser.add_argument(
+        "--num_columns",
+        help="Number of columns of markers to place",
+        default=6,
+        type=int,
+    )
+    parser.add_argument(
+        "--num_rows",
+        help="Number of rows of markers to place",
+        default=4,
+        type=int,
+    )
+    parser.add_argument(
+        "--font",
+        help="Set the text font (default: %(default)s)",
+        default="calibri.ttf",
+        type=str,
+    )
+    parser.add_argument(
+        "--description_size",
+        help="Set the text size of the description text on the marker",
+        default=12,
+        type=int,
+    )
+
+    parser.set_defaults(func=main)
