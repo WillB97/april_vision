@@ -232,10 +232,10 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         type=int,
     )
 
-    # NON page sub parser, doesnt use page dimention and provides image cropped to marker
-    crop_subparser = subparsers.add_parser("NON_PAGE")
+    # Image sub parser, doesnt use page dimention and provides image cropped to marker
+    image_subparser = subparsers.add_parser("IMAGE")
 
-    crop_subparser.add_argument(
+    image_subparser.add_argument(
         "--border_size",
         help="Size of white border to add to the outside of the marker",
         default=0,

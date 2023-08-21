@@ -1,6 +1,6 @@
 import argparse
 
-from .marker_modes import mode_cal, mode_single, mode_tile
+from .marker_modes import mode_cal, mode_image, mode_single, mode_tile
 
 
 def main(args: argparse.Namespace) -> None:
@@ -10,3 +10,5 @@ def main(args: argparse.Namespace) -> None:
         mode_tile.main(args)
     elif args.mode == "CAL_BOARD":
         mode_cal.main(args)
+    elif args.mode == "IMAGE":
+        mode_image.main(args)
