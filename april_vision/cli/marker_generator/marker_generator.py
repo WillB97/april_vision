@@ -243,7 +243,20 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
 
     # Calibration board generator
-    # cal_subparser = subparsers.add_parser("CAL_BOARD")
+    cal_subparser = subparsers.add_parser("CAL_BOARD")
+
+    cal_subparser.add_argument(
+        "--num_columns",
+        help="Number of columns of markers to place",
+        default=1,
+        type=int,
+    )
+    cal_subparser.add_argument(
+        "--num_rows",
+        help="Number of rows of markers to place",
+        default=1,
+        type=int,
+    )
 
     # Custom monolithic help
     # subparsers_actions = [
