@@ -14,6 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
+    """Generate a marker image"""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 
@@ -42,12 +43,13 @@ def main(args: argparse.Namespace) -> None:
 
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
+    """Marker_generator subparser IMAGE used to generate an image of a marker."""
     parser = subparsers.add_parser("IMAGE")
 
     parser.add_argument(
         "--marker_family", default=MarkerType.APRILTAG_36H11.value,
         choices=[marker.value for marker in MarkerType],
-        help="Set the marker family to detect, defaults to 'tag36h11'",
+        help="Set the marker family to generate (default: %(default)s)",
     )
     parser.add_argument(
         "--range",
@@ -56,7 +58,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
     parser.add_argument(
         "--image_size",
-        help="The size of the output marker in pixels (default: %(default)s)",
+        help="The size of the output marker image in pixels (default: %(default)s)",
         default=1000,
         type=int,
     )
@@ -64,8 +66,8 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--filename",
         type=str,
         help=(
-            "Output filename of split files. `id` available for string format replacement "
-            "(default: %(default)s)"
+            "Filename of output files. `id` and `marker_family` available for string "
+            "format replacement (default: %(default)s)"
         ),
         default="{id}.png",
     )

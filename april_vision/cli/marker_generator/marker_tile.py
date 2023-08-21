@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -5,7 +7,12 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 from april_vision.cli.utils import ApriltagFamily, get_tag_family
 from april_vision.marker import MarkerType
 
-from .utils import coord, mm_to_pixels
+from .utils import mm_to_pixels
+
+
+class coord(NamedTuple):
+    x: int
+    y: int
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
@@ -44,6 +51,10 @@ def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
 
 
 class MarkerTile:
+    """
+    Used to generate an image tile which can be customised.
+    These image tiles can be arranged on a page in the different modes
+    """
     def __init__(
         self,
         tag_data: ApriltagFamily,
@@ -51,6 +62,10 @@ class MarkerTile:
         marker_size: int,
         aruco_orientation: bool = False,
     ):
+        """
+        Generate a basic marker, no overlays, scaled to the correct size.
+        The marker PIL.Image can be accessed via MarkerTile.image
+        """
         self.tag_data = tag_data
         self.tag_id = tag_id
 
@@ -85,6 +100,10 @@ class MarkerTile:
         border_width: int,
         border_colour: str,
     ) -> None:
+        """
+        Add a line arround the board of the marker,
+        changes the current marker design in place.
+        """
         bordered_image = ImageOps.expand(
             self.image,
             border=border_width,
@@ -109,6 +128,10 @@ class MarkerTile:
         tick_length: int,
         tick_colour: str,
     ) -> None:
+        """
+        Add tick lines half way along the border of the marker,
+        changes the current marker design in place.
+        """
         img_size = self.image.size[0]
         image_draw = ImageDraw.Draw(self.image)
 
@@ -148,6 +171,10 @@ class MarkerTile:
         text_size: int,
         text_colour: str,
     ) -> None:
+        """
+        Add the ID number in the top left square of the white border,
+        changes the current marker design in place.
+        """
         # Add text to the image
         marker_square_size = mm_to_pixels(self.pixel_size)
 
@@ -183,6 +210,10 @@ class MarkerTile:
         text_colour: str,
         double_text: bool = False,
     ) -> None:
+        """
+        Expand the marker by one marker square and add description text to this area,
+        changes the current marker design in place.
+        """
         marker_square_size = mm_to_pixels(self.pixel_size)
 
         # Expand the tile to add a white border with a width of 1 marker square

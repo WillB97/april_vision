@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import List, NamedTuple, Tuple
+from typing import List, Tuple
 
 from april_vision.cli.utils import ApriltagFamily, parse_ranges
 
@@ -10,13 +10,11 @@ DEFAULT_COLOUR = "lightgrey"
 DPI = 72
 
 
-class coord(NamedTuple):
-    x: int
-    y: int
-
-
 def parse_marker_ranges(marker_family: ApriltagFamily, range_str: str) -> List[int]:
-    # Get list of markers we want to make
+    """
+    Utility function to parse the provided range of markers.
+    Also checks bounds against the marker family.
+    """
     if range_str == "ALL":
         marker_ids = [num for num in range(marker_family.ncodes)]
     else:
@@ -43,6 +41,9 @@ def mm_to_pixels(mm: float) -> int:
 
 
 class PageSize(Enum):
+    """
+    Enum to define the dimentions of different page sizes
+    """
     A3 = (297, 420)
     A3L = (420, 297)
     A4 = (210, 297)

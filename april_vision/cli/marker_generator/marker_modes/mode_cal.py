@@ -14,6 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
+    """Generate a calibration board"""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 
@@ -26,6 +27,8 @@ def main(args: argparse.Namespace) -> None:
         ))
 
     # Generate numpy arrays of all required markers
+    LOGGER.info("Generating markers for calibration board")
+
     marker_arrays = []
     for marker_id in range(required_markers):
         tag_array = generate_tag_array(tag_data, marker_id)
@@ -89,7 +92,8 @@ def main(args: argparse.Namespace) -> None:
     )
 
     # Save file
-    filename = "cal_board_{}_{}_{}_{}.pdf".format(
+    filename = "cal_board_{}_{}_{}_{}_{}.pdf".format(
+        args.page_size,
         args.marker_family,
         args.num_rows,
         args.num_columns,
@@ -102,8 +106,11 @@ def main(args: argparse.Namespace) -> None:
         dpi=(DPI, DPI),
     )
 
+    LOGGER.info(f"Calibration board saved as '{filename}'")
+
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
+    """Marker_generator subparser CAL_BOARD used to generate a calibration board."""
     parser = subparsers.add_parser("CAL_BOARD")
 
     parser.add_argument(
@@ -122,7 +129,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
             MarkerType.APRILTAG_25H9.value,
             MarkerType.APRILTAG_36H11.value,
         ],
-        help="Set the marker family used in the calibration board, defaults to '%(default)s'",
+        help="Set the marker family used in the calibration board (default: %(default)s)",
     )
 
     parser.add_argument(
@@ -133,13 +140,13 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
     parser.add_argument(
         "--num_columns",
-        help="Number of columns of markers to place",
+        help="Number of columns on calibration board (default: %(default)s)",
         default=6,
         type=int,
     )
     parser.add_argument(
         "--num_rows",
-        help="Number of rows of markers to place",
+        help="Number of rows on calibration board (default: %(default)s)",
         default=4,
         type=int,
     )
@@ -151,7 +158,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
     parser.add_argument(
         "--description_size",
-        help="Set the text size of the description text on the marker",
+        help="Set the text size (default: %(default)s)",
         default=12,
         type=int,
     )

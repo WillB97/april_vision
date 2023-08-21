@@ -14,6 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
+    """Generate a page of multiple markers with the provided arguments"""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 
@@ -30,26 +31,26 @@ def main(args: argparse.Namespace) -> None:
         )
         image_tile.add_border_line(
             args.border_width,
-            DEFAULT_COLOUR
+            args.border_colour,
         )
         image_tile.add_centre_ticks(
             args.border_width,
             args.tick_length,
-            DEFAULT_COLOUR
+            args.border_colour,
         )
 
         if args.no_number is False:
             image_tile.add_id_number(
                 args.font,
                 args.number_size,
-                DEFAULT_COLOUR
+                args.border_colour,
             )
 
         image_tile.add_description_border(
             args.description_format,
             args.font,
             args.description_size,
-            DEFAULT_COLOUR,
+            "black",
         )
 
         for i in range(args.repeat):
@@ -144,14 +145,18 @@ def main(args: argparse.Namespace) -> None:
 
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
+    """
+    Marker_generator subparser TILE.
+    Used to generate a PDF with multiple markers per page.
+    """
     parser = subparsers.add_parser("TILE")
 
     parser.add_argument(
         "--all_filename",
         type=str,
         help=(
-            "Output filename of combined file. `id` available for string format replacement "
-            "(default: %(default)s)"
+            "Output filename of combined file. `id` and `marker_family` available for "
+            "string format replacement (default: %(default)s)"
         ),
         default="combined_{marker_family}.pdf",
     )
@@ -159,28 +164,23 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--single_filename",
         type=str,
         help=(
-            "Output filename of split files. `id` available for string format replacement "
-            "(default: %(default)s)"
+            "Output filename of individual files. `id` and `marker_family` available for "
+            "string format replacement"
         ),
         default=None,
     )
     parser.add_argument(
         "--page_size",
         type=str,
-        help="Page size. (default: %(default)s)",
+        help="Page size of output files (default: %(default)s)",
         choices=sorted([size.name for size in PageSize]),
         default="A4",
-    )
-    parser.add_argument(
-        "--split",
-        help="Split the marker image across two pages",
-        action="store_true",
     )
 
     parser.add_argument(
         "--marker_family", default=MarkerType.APRILTAG_36H11.value,
         choices=[marker.value for marker in MarkerType],
-        help="Set the marker family to detect, defaults to 'tag36h11'",
+        help="Set the marker family to generate (default: %(default)s)",
     )
     parser.add_argument(
         "--marker_size",
@@ -201,7 +201,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
 
     parser.add_argument(
         "--no_number",
-        help="Do not place marker id number on the marker",
+        help="Do not place id number on the marker",
         action="store_true",
     )
     parser.add_argument(
@@ -238,6 +238,12 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         help="Size of the border in pixels (default: %(default)s)",
         default=1,
         type=int,
+    )
+    parser.add_argument(
+        "--border_colour",
+        help="Colour of border elements (default: %(default)s)",
+        default=DEFAULT_COLOUR,
+        type=str,
     )
     parser.add_argument(
         "--tick_length",
@@ -282,7 +288,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
     parser.add_argument(
         "--column_padding",
-        help="Inner horizontal spacing between markers",
+        help="Inner horizontal spacing between markers in mm",
         default=0,
         type=int,
     )
@@ -295,14 +301,14 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     )
     parser.add_argument(
         "--row_padding",
-        help="Inner vertical spacing between markers",
+        help="Inner vertical spacing between markers in mm",
         default=0,
         type=int,
     )
 
     parser.add_argument(
         "--repeat",
-        help="Number of duplicates of each marker id number",
+        help="Number of duplicates of each marker id to create",
         default=1,
         type=int,
     )
