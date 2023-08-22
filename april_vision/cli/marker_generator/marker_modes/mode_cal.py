@@ -8,7 +8,7 @@ from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
 from ..marker_tile import generate_tag_array, mm_to_pixels
-from ..utils import DPI, PageSize
+from ..utils import DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI, PageSize
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def main(args: argparse.Namespace) -> None:
     output_img.paste(resized_image, (x_loc, y_loc))
 
     # Overlay info about the board
-    text_overlay = "Family: {} Rows: {} Columns: {} marker_size: {}".format(
+    text_overlay = "Family: {}  Rows: {}  Columns: {}  Marker size: {}".format(
         args.marker_family,
         args.num_rows,
         args.num_columns,
@@ -88,7 +88,7 @@ def main(args: argparse.Namespace) -> None:
         text_overlay,
         fill="black",
         anchor="lt",
-        font=ImageFont.truetype(args.font, args.description_size),
+        font=ImageFont.truetype(DEFAULT_FONT, args.description_size),
     )
 
     # Save file
@@ -151,15 +151,9 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         type=int,
     )
     parser.add_argument(
-        "--font",
-        help="Set the text font (default: %(default)s)",
-        default="calibri.ttf",
-        type=str,
-    )
-    parser.add_argument(
         "--description_size",
         help="Set the text size (default: %(default)s)",
-        default=12,
+        default=DEFAULT_FONT_SIZE,
         type=int,
     )
 

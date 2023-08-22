@@ -7,8 +7,8 @@ from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
 from ..marker_tile import MarkerTile
-from ..utils import (DEFAULT_COLOUR, DPI, PageSize, mm_to_pixels,
-                     parse_marker_ranges)
+from ..utils import (DEFAULT_COLOUR, DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI,
+                     PageSize, mm_to_pixels, parse_marker_ranges)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,14 +41,14 @@ def main(args: argparse.Namespace) -> None:
 
         if args.no_number is False:
             image_tile.add_id_number(
-                args.font,
+                DEFAULT_FONT,
                 args.number_size,
                 args.border_colour,
             )
 
         image_tile.add_description_border(
             args.description_format,
-            args.font,
+            DEFAULT_FONT,
             args.description_size,
             "black",
         )
@@ -207,7 +207,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--number_size",
         help="Set the text size of the id number on the marker",
-        default=12,
+        default=DEFAULT_FONT_SIZE,
         type=int,
     )
     parser.add_argument(
@@ -223,14 +223,8 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--description_size",
         help="Set the text size of the description text on the marker",
-        default=12,
+        default=DEFAULT_FONT_SIZE,
         type=int,
-    )
-    parser.add_argument(
-        "--font",
-        help="Set the text font (default: %(default)s)",
-        default="calibri.ttf",
-        type=str,
     )
 
     parser.add_argument(

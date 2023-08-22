@@ -2,12 +2,16 @@ import logging
 from enum import Enum
 from typing import List, Tuple
 
+from font_roboto import Roboto  # type: ignore[import]
+
 from april_vision.cli.utils import ApriltagFamily, parse_ranges
 
 LOGGER = logging.getLogger(__name__)
 
+DEFAULT_FONT = Roboto
+DEFAULT_FONT_SIZE = 50
 DEFAULT_COLOUR = "lightgrey"
-DPI = 72
+DPI = 300
 
 
 def parse_marker_ranges(marker_family: ApriltagFamily, range_str: str) -> List[int]:
