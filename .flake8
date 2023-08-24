@@ -11,4 +11,3 @@ extend-ignore =
     T000,
 per-file-ignores =
     april_vision/__init__.py:E402
-    april_vision/cli/marker_generator/__init__.py:F401
