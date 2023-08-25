@@ -107,6 +107,18 @@ class USBCamera(FrameSource):
         camera_matrix = storage.getNode("cameraMatrix").mat()
         fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
         cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
+
+        # Overlay camera props from cal file and function args
+        # function args take priority over calibration xml
+        camera_props = {}
+        cal_file_props = storage.getNode("cameraProperties").mat()
+        if cal_file_props is not None:
+            for property, value in cal_file_props:
+                camera_props[property] = value
+
+        for property, value in camera_parameters:
+            camera_props[property] = value
+
         return cls(
             index,
             resolution=(
@@ -115,7 +127,7 @@ class USBCamera(FrameSource):
             ),
             calibration=(fx, fy, cx, cy),
             vidpid=vidpid,
-            camera_parameters=camera_parameters,
+            camera_parameters=list(camera_props.items()),
         )
 
     def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002
