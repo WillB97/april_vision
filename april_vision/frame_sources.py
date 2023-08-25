@@ -71,11 +71,6 @@ class USBCamera(FrameSource):
             except AssertionError as e:
                 LOGGER.warning(f"Failed to set property: {e}")
 
-        # Maximise the framerate on Linux
-        # NOTE optimisation is disabled currently due to
-        # 'Corrupt JPEG data: 5 extraneous bytes' seen on raspberry pi 4's
-        # self._optimise_camera(vidpid)
-
         self._buffer_length = int(self._camera.get(cv2.CAP_PROP_BUFFERSIZE))
 
         # Take and discard a camera capture
@@ -154,31 +149,6 @@ class USBCamera(FrameSource):
             int(self._camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
-
-    def _optimise_camera(self, vidpid: str) -> None:
-        """Tweak the camera's image type and framerate to achieve the minimum frame time."""
-        verified_vidpid = {'046d:0825', '046d:0807'}
-        if not platform.startswith("linux"):
-            # All current optimisations are for linux
-            return
-
-        # These may not improve frame time on all cameras
-        if vidpid not in verified_vidpid:
-            return
-
-        camera_parameters = [
-            (cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG')),
-            (cv2.CAP_PROP_FPS, 30),
-            (cv2.CAP_PROP_BUFFERSIZE, 2),
-        ]
-
-        LOGGER.debug("Optimising camera")
-
-        for parameter, value in camera_parameters:
-            try:
-                self._set_camera_property(parameter, value)
-            except AssertionError as e:
-                LOGGER.warning(f"Failed to set property: {e}")
 
     def _capture_single_frame(self) -> NDArray:
         """Read a single frame from the camera's buffer."""
