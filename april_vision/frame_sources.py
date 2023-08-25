@@ -1,7 +1,6 @@
 """The available frame sources for the Processor class."""
 import logging
 from pathlib import Path
-from sys import platform
 from typing import List, Optional, Tuple, Union, cast
 
 import cv2
@@ -111,8 +110,9 @@ class USBCamera(FrameSource):
             for property, value in cal_file_props:
                 camera_props[property] = value
 
-        for property, value in camera_parameters:
-            camera_props[property] = value
+        if camera_parameters is not None:
+            for property, value in camera_parameters:
+                camera_props[property] = value
 
         return cls(
             index,
