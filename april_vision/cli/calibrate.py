@@ -152,7 +152,7 @@ def main(args: argparse.Namespace) -> None:
     width, height = frames[0].grey_frame.shape[::-1]
 
     # Calculate the camera calibration
-    ret_val, camera_matrix, dist_coeff, rvec, tvec = cv2.calibrateCamera(
+    reproj_error, camera_matrix, dist_coeff, rvec, tvec = cv2.calibrateCamera(
         objectPoints,
         imagePoints,
         (width, height),
@@ -161,7 +161,7 @@ def main(args: argparse.Namespace) -> None:
     )
 
     # Output calibration results
-    LOGGER.info(f"> Ret val\n{ret_val}")
+    LOGGER.info(f"> Avg reprojection error\n{reproj_error}")
     LOGGER.info(f"> Resolution\n{width}x{height}")
     LOGGER.info(f"> Camera matrix\n{camera_matrix}")
     LOGGER.info(f"> Distortion coefficients\n{dist_coeff}")
@@ -173,6 +173,7 @@ def main(args: argparse.Namespace) -> None:
         height,
         camera_matrix,
         dist_coeff,
+        reproj_error,
         args.vidpid,
     )
 
@@ -184,6 +185,7 @@ def write_cal_file(
     frame_height: int,
     camera_matrix: NDArray,
     dist_coeff: NDArray,
+    avg_reprojection_error: float,
     vidpid: Optional[str] = None,
 ) -> None:
     LOGGER.info("Generating calibration XML file")
@@ -205,6 +207,8 @@ def write_cal_file(
 
     file.write("cameraMatrix", camera_matrix)
     file.write("dist_coeffs", dist_coeff)
+
+    file.write("avg_reprojection_error", avg_reprojection_error)
 
     if vidpid is not None:
         # Wrap the str in quotes so it is outputted and loaded correctly
