@@ -31,7 +31,7 @@ class Processor:
         tag_family: str = 'tag36h11',
         threads: int = 4,
         quad_decimate: float = 2,
-        aruco_orientation: bool = True,
+        aruco_orientation: bool = False,
         name: str = "Camera",
         vidpid: str = "",
         mask_unknown_size_tags: bool = False,

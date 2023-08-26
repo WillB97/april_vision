@@ -160,7 +160,7 @@ class Orientation(NamedTuple):
     def from_rvec_matrix(
         cls,
         rotation_matrix: NDArray,
-        aruco_orientation: bool = True
+        aruco_orientation: bool = False,
     ) -> 'Orientation':
         """
         Calculate yaw, pitch, roll given the rotation matrix in the camera's coordinate system.
@@ -177,7 +177,7 @@ class Orientation(NamedTuple):
     def from_quaternion(
         cls,
         quaternion: Quaternion,
-        aruco_orientation: bool = True
+        aruco_orientation: bool = False,
     ) -> 'Orientation':
         """
         Calculate yaw, pitch, roll given the quaternion in the camera's coordinate system.
@@ -272,14 +272,14 @@ class Marker(NamedTuple):
     spherical: SphericalCoordinate = SphericalCoordinate(0, 0, 0)
     orientation: Orientation = Orientation(0, 0, 0)
 
-    aruco_orientation: bool = True
+    aruco_orientation: bool = False
 
     @classmethod
     def from_detection(
         cls,
         marker: Detection,
         *,
-        aruco_orientation: bool = True,
+        aruco_orientation: bool = False,
     ) -> 'Marker':
         _tag_size = int((marker.tag_size or 0) * 1000)
 
