@@ -53,10 +53,10 @@ def setup_logger(debug: bool = False) -> None:
         root_logger.setLevel(logging.DEBUG)
 
 
-def main(args: Sequence[str] | None = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """CLI entry-point."""
     parser = build_argparser()
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
     setup_logger(debug=args.debug)
 
     if "func" in args:
