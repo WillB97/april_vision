@@ -70,6 +70,7 @@ def main(args: argparse.Namespace) -> None:
         quad_decimate=args.quad_decimate,
         tag_sizes=float(args.tag_size) / 1000,
         calibration=source.calibration,
+        aruco_orientation=args.aruco_orientation,
     )
 
     LOGGER.info("Press S to save image, press Q to exit")
@@ -186,6 +187,8 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         '--tag_family', default=MarkerType.APRILTAG_36H11.value,
         choices=[marker.value for marker in MarkerType],
         help="Set the marker family to detect, defaults to 'tag36h11'")
+    parser.add_argument(
+        '--aruco_orientation', action='store_true', help="Use ArUco marker orientation.")
     parser.add_argument(
         '--quad_decimate', type=float, default=2,
         help="Set the level of decimation used in the detection stage")

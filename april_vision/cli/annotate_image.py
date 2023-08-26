@@ -99,6 +99,6 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         '--tag_size', type=int, default=0, help="The size of markers in millimeters")
     parser.add_argument(
-        '--aruco-orientation', action='store_true', help="Use ArUco marker orientation.")
+        '--aruco_orientation', action='store_true', help="Use ArUco marker orientation.")
 
     parser.set_defaults(func=main)
