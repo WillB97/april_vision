@@ -17,7 +17,7 @@ CALIBRATION = [
 
 @pytest.fixture
 def processor():
-    yield Processor(calibration=CALIBRATION, tag_sizes=0.2, aruco_orientation=False)
+    yield Processor(calibration=CALIBRATION, tag_sizes=0.2)
 
 
 class MarkerValues(NamedTuple):

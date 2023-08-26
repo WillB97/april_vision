@@ -35,6 +35,7 @@ def main(args: argparse.Namespace) -> None:
         quad_decimate=args.quad_decimate,
         tag_sizes=float(args.tag_size) / 1000,
         calibration=calibration,
+        aruco_orientation=args.aruco_orientation,
     )
 
     frame = processer._capture()
@@ -97,5 +98,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         '--calibration', type=Path, default=None, help="Calbration XML file to use.")
     parser.add_argument(
         '--tag_size', type=int, default=0, help="The size of markers in millimeters")
+    parser.add_argument(
+        '--aruco_orientation', action='store_true', help="Use ArUco marker orientation.")
 
     parser.set_defaults(func=main)

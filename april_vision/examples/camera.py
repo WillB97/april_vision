@@ -22,17 +22,25 @@ class AprilCamera:
     """
 
     name: str = "AprilTag Camera Board"
+    use_aruco_orientation: bool = False
 
     @classmethod
     def discover(cls) -> Dict[str, 'AprilCamera']:
         """Discover boards that this backend can control."""
         return {
             (serial := f"{camera_data.name} - {camera_data.index}"):
-            cls(camera_data.index, camera_data=camera_data, serial_num=serial)
+            cls(camera_data.index, camera_data=camera_data,
+                serial_num=serial, aruco_orientation=cls.use_aruco_orientation)
             for camera_data in find_cameras(calibrations)
         }
 
-    def __init__(self, camera_id: int, camera_data: CalibratedCamera, serial_num: str) -> None:
+    def __init__(
+        self,
+        camera_id: int,
+        camera_data: CalibratedCamera,
+        serial_num: str,
+        aruco_orientation: bool = False,
+    ) -> None:
         """Generate a backend from the camera index and calibration data."""
         camera_source = USBCamera.from_calibration_file(
             camera_id,
@@ -45,6 +53,7 @@ class AprilCamera:
             name=camera_data.name,
             vidpid=camera_data.vidpid,
             mask_unknown_size_tags=True,
+            aruco_orientation=aruco_orientation,
         )
         self._serial = serial_num
 
@@ -111,6 +120,7 @@ class AprilCamera:
 def setup_cameras(
     tag_sizes: Dict[Iterable[int], int],
     publish_func: Optional[Callable[[str, bytes], None]] = None,
+    aruco_orientation: bool = False,
 ) -> Dict[str, AprilCamera]:
     """
     Find all connected cameras with calibration and configure tag sizes.
@@ -123,6 +133,8 @@ def setup_cameras(
     if publish_func:
         frame_sender = Base64Sender(publish_func)
 
+    # Set the aruco orientation flag so discovery can use it
+    AprilCamera.use_aruco_orientation = aruco_orientation
     cameras = AprilCamera.discover()
 
     for camera in cameras.values():

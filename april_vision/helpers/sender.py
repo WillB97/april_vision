@@ -27,7 +27,7 @@ class Base64Sender:
         *,
         annotated: bool = True,
         threaded: bool = True,
-        aruco_orientation: bool = True,
+        aruco_orientation: bool = False,
     ):
         self._publish_callback = publish_callback
         self.use_threads = threaded
