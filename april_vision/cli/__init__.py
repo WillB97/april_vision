@@ -1,7 +1,11 @@
 """The april_vision CLI."""
+from __future__ import annotations
+
 import argparse
 import importlib
 import logging
+import warnings
+from typing import Sequence
 
 from april_vision._version import version
 
@@ -24,8 +28,13 @@ def build_argparser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(required=True)
     for command in subcommands:
-        mod_name = f"{__package__}.{command}"
-        importlib.import_module(mod_name).create_subparser(subparsers)
+        try:
+            mod_name = f"{__package__}.{command}"
+            importlib.import_module(mod_name).create_subparser(subparsers)
+        except ImportError:
+            warnings.warn(
+                f"Failed to import dependencies of {mod_name} subcommand, skipping it. "
+                f"Install the cli dependencies to enable it.")
 
     parser.add_argument(
         '--version', action='version', version=version, help="Print package version")
@@ -50,10 +59,10 @@ def setup_logger(debug: bool = False) -> None:
         root_logger.setLevel(logging.DEBUG)
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """CLI entry-point."""
     parser = build_argparser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     setup_logger(debug=args.debug)
 
     if "func" in args:
