@@ -28,7 +28,7 @@ def test_processor(tmp_path: Path, tag_num: int, tag_size: int):
 
     assert marker.id == tag_num, f"Marker ID should be {tag_num}"
 
-    # TODO: figure out size of marker in pixels
+    # figure out size of marker in pixels
     next_corners = cycle(marker.pixel_corners)
     _ = next(next_corners)
     corner_dists_px = [    # distance between corners
