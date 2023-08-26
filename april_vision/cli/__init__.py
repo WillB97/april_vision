@@ -1,7 +1,10 @@
 """The april_vision CLI."""
+from __future__ import annotations
+
 import argparse
 import importlib
 import logging
+from typing import Sequence
 
 from april_vision._version import version
 
@@ -50,10 +53,10 @@ def setup_logger(debug: bool = False) -> None:
         root_logger.setLevel(logging.DEBUG)
 
 
-def main() -> None:
+def main(args: Sequence[str] | None = None) -> None:
     """CLI entry-point."""
     parser = build_argparser()
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     setup_logger(debug=args.debug)
 
     if "func" in args:
