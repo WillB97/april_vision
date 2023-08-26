@@ -1,7 +1,6 @@
 """The available frame sources for the Processor class."""
 import logging
 from pathlib import Path
-from sys import platform
 from typing import List, Optional, Tuple, Union, cast
 
 import cv2
@@ -71,11 +70,6 @@ class USBCamera(FrameSource):
             except AssertionError as e:
                 LOGGER.warning(f"Failed to set property: {e}")
 
-        # Maximise the framerate on Linux
-        # NOTE optimisation is disabled currently due to
-        # 'Corrupt JPEG data: 5 extraneous bytes' seen on raspberry pi 4's
-        # self._optimise_camera(vidpid)
-
         self._buffer_length = int(self._camera.get(cv2.CAP_PROP_BUFFERSIZE))
 
         # Take and discard a camera capture
@@ -107,6 +101,19 @@ class USBCamera(FrameSource):
         camera_matrix = storage.getNode("cameraMatrix").mat()
         fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
         cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
+
+        # Overlay camera props from cal file and function args
+        # function args take priority over calibration xml
+        camera_props = {}
+        cal_file_props = storage.getNode("cameraProperties").mat()
+        if cal_file_props is not None:
+            for property, value in cal_file_props:
+                camera_props[property] = value
+
+        if camera_parameters is not None:
+            for property, value in camera_parameters:
+                camera_props[property] = value
+
         return cls(
             index,
             resolution=(
@@ -115,7 +122,7 @@ class USBCamera(FrameSource):
             ),
             calibration=(fx, fy, cx, cy),
             vidpid=vidpid,
-            camera_parameters=camera_parameters,
+            camera_parameters=list(camera_props.items()),
         )
 
     def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002
@@ -142,31 +149,6 @@ class USBCamera(FrameSource):
             int(self._camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
-
-    def _optimise_camera(self, vidpid: str) -> None:
-        """Tweak the camera's image type and framerate to achieve the minimum frame time."""
-        verified_vidpid = {'046d:0825', '046d:0807'}
-        if not platform.startswith("linux"):
-            # All current optimisations are for linux
-            return
-
-        # These may not improve frame time on all cameras
-        if vidpid not in verified_vidpid:
-            return
-
-        camera_parameters = [
-            (cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG')),
-            (cv2.CAP_PROP_FPS, 30),
-            (cv2.CAP_PROP_BUFFERSIZE, 2),
-        ]
-
-        LOGGER.debug("Optimising camera")
-
-        for parameter, value in camera_parameters:
-            try:
-                self._set_camera_property(parameter, value)
-            except AssertionError as e:
-                LOGGER.warning(f"Failed to set property: {e}")
 
     def _capture_single_frame(self) -> NDArray:
         """Read a single frame from the camera's buffer."""
