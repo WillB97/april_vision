@@ -19,9 +19,6 @@ jobs:
     - name: Lint
       run: |
         make lint
-    - name: Isort
-      run: |
-        make isort-check
     - name: Typecheck
       run: |
         make type
