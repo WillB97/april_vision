@@ -52,6 +52,9 @@ Repository = "https://github.com/WillB97/april_vision"
 [tool.setuptools.packages]
 find = {}
 
+[tool.setuptools.exclude-package-data]
+"tests.test_data" = ["*"]
+
 [build-system]
 requires = ["setuptools>=60", "wheel", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
