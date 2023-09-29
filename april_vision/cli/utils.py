@@ -1,9 +1,12 @@
+"""Utility functions for the CLI."""
 from typing import List, NamedTuple, Tuple
 
 import pyapriltags
 
 
 class ApriltagFamily(NamedTuple):
+    """Class used to represent the inforamtion about a tag family."""
+
     ncodes: int
     codes: List[int]
     width_at_border: int
@@ -29,6 +32,7 @@ class ApriltagFamily(NamedTuple):
 def get_tag_family(family: str) -> ApriltagFamily:
     """
     Use the C-types in pyapriltags to get the tag family object.
+
     This object contains the required data to draw all the tags for a given family.
     """
     d = pyapriltags.Detector(families=family)
@@ -53,8 +57,9 @@ def get_tag_family(family: str) -> ApriltagFamily:
 
 def parse_ranges(ranges: str) -> List[int]:
     """
-    Parse a comma seprated list of numbers which may include ranges
-    specified as hyphen-separated numbers.
+    Parse a comma separated list of numbers which may include ranges.
+
+    Ranges specified as hyphen-separated numbers.
     From https://stackoverflow.com/questions/6405208
     """
     result: List[int] = []

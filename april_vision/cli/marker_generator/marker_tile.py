@@ -1,3 +1,8 @@
+"""
+Used to generate an image tile which can be customised.
+
+These image tiles can be arranged on a page in the different modes.
+"""
 from typing import NamedTuple
 
 import numpy as np
@@ -11,12 +16,16 @@ from .utils import mm_to_pixels
 
 
 class coord(NamedTuple):
+    """Simple class to store coordinates."""
+
     x: int
     y: int
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
     """
+    Generate a marker array for a given tag family and tag ID.
+
     Uses the tag family object to generate a marker, returns this data as a 2d numpy array
     where each of the cells is 1 pixel of the marker.
     """
@@ -53,8 +62,10 @@ def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
 class MarkerTile:
     """
     Used to generate an image tile which can be customised.
-    These image tiles can be arranged on a page in the different modes
+
+    These image tiles can be arranged on a page in the different modes.
     """
+
     def __init__(
         self,
         tag_data: ApriltagFamily,
@@ -64,7 +75,8 @@ class MarkerTile:
     ):
         """
         Generate a basic marker, no overlays, scaled to the correct size.
-        The marker PIL.Image can be accessed via MarkerTile.image
+
+        The marker PIL.Image can be accessed via MarkerTile.image.
         """
         self.tag_data = tag_data
         self.tag_id = tag_id
@@ -101,8 +113,9 @@ class MarkerTile:
         border_colour: str,
     ) -> None:
         """
-        Add a line arround the board of the marker,
-        changes the current marker design in place.
+        Add a line around the border of the marker.
+
+        This changes the current marker design in place.
         """
         bordered_image = ImageOps.expand(
             self.image,
@@ -129,8 +142,9 @@ class MarkerTile:
         tick_colour: str,
     ) -> None:
         """
-        Add tick lines half way along the border of the marker,
-        changes the current marker design in place.
+        Add tick lines half way along the border of the marker.
+
+        This changes the current marker design in place.
         """
         img_size = self.image.size[0]
         image_draw = ImageDraw.Draw(self.image)
@@ -172,8 +186,9 @@ class MarkerTile:
         text_colour: str,
     ) -> None:
         """
-        Add the ID number in the top left square of the white border,
-        changes the current marker design in place.
+        Add the ID number in the top left square of the white border.
+
+        This changes the current marker design in place.
         """
         # Add text to the image
         marker_square_size = mm_to_pixels(self.pixel_size)
@@ -211,8 +226,9 @@ class MarkerTile:
         double_text: bool = False,
     ) -> None:
         """
-        Expand the marker by one marker square and add description text to this area,
-        changes the current marker design in place.
+        Expand the marker by one marker square and add description text to this area.
+
+        This changes the current marker design in place.
         """
         marker_square_size = mm_to_pixels(self.pixel_size)
 

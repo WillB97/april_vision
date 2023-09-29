@@ -1,3 +1,4 @@
+"""Marker_generator subparser IMAGE used to generate an image of a marker."""
 import argparse
 import logging
 
@@ -14,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
-    """Generate a marker image"""
+    """Generate a marker image."""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 

@@ -1,3 +1,4 @@
+"""List out the available cameras connected to the system."""
 import argparse
 
 from tabulate import tabulate
@@ -7,6 +8,7 @@ from april_vision.detect_cameras import find_cameras
 
 
 def main(args: argparse.Namespace) -> None:
+    """List out the available cameras connected to the system."""
     cameras = find_cameras(calibrations, include_uncalibrated=True)
     print(tabulate(cameras, headers="keys"))
 

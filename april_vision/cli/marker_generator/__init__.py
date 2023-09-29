@@ -17,9 +17,9 @@ generation_modes = [
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """
     Marker_generator command parser.
+
     Add multiple subparsers to deal with different modes of page generation.
     """
-
     parser = subparsers.add_parser(
         "marker_generator",
         description="Generate markers",

@@ -1,6 +1,4 @@
-"""
-Classes for marker detections and various axis representations.
-"""
+"""Classes for marker detections and various axis representations."""
 from enum import Enum
 from math import acos, atan2, cos, degrees, sin
 from typing import NamedTuple, Optional, Tuple, cast
@@ -210,7 +208,8 @@ class Orientation(NamedTuple):
 
         Conversion calculation: https://w.wiki/6gbp
 
-        Returns:
+        Returns
+        -------
             A 3x3 rotation matrix as a tuple of tuples.
         """
         psi, theta, phi = self.yaw, self.pitch, self.roll
@@ -235,7 +234,8 @@ class Orientation(NamedTuple):
 
         Conversion calculation: https://w.wiki/6gbq
 
-        Returns:
+        Returns
+        -------
             A 4-tuple hamiltonian quaternion.
         """
         psi_2, theta_2, phi_2 = self.yaw / 2, self.pitch / 2, self.roll / 2
@@ -251,9 +251,7 @@ PixelCorners = Tuple[PixelCoordinates, PixelCoordinates, PixelCoordinates, Pixel
 
 
 class Marker(NamedTuple):
-    """
-    Wrapper of a marker detection with axis and rotation calculated.
-    """
+    """Wrapper of a marker detection with axis and rotation calculated."""
 
     rvec: Optional[NDArray]
     tvec: Optional[NDArray]
@@ -281,6 +279,12 @@ class Marker(NamedTuple):
         *,
         aruco_orientation: bool = False,
     ) -> 'Marker':
+        """
+        Create a Marker object from a pyapriltags Detection object.
+
+        :param marker: The marker detection object.
+        :param aruco_orientation: Rotate marker 180 for aruco orientation.
+        """
         _tag_size = int((marker.tag_size or 0) * 1000)
 
         _pixel_corners = tuple(
@@ -334,6 +338,7 @@ class Marker(NamedTuple):
             )
 
     def has_pose(self) -> bool:
+        """Return True if the marker has pose estimation data."""
         return (self.rvec is not None and self.tvec is not None)
 
     def __repr__(self) -> str:
