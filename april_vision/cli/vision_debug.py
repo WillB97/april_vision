@@ -81,12 +81,12 @@ def create_collage(files: List[str], out: str) -> None:
     img = Image.open(files[-1])
     width, height = img.size
 
-    target_img = Image.new("RGB", (width*4, height*2))
+    target_img = Image.new("RGB", (width * 4, height * 2))
     for k, png in enumerate(files):
         col, row = divmod(k, 4)
         img = Image.open(png)
         img.thumbnail((width, height))
-        target_img.paste(img, (width*row, height*col))
+        target_img.paste(img, (width * row, height * col))
 
     target_img.save(out)
     LOGGER.info("Generated debug collage.")

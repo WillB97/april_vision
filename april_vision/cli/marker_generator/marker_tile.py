@@ -44,7 +44,7 @@ def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
         left_border_edge = border_edge
         right_border_edge = border_edge + tag_data.width_at_border - 1
 
-    for i in range(left_border_edge, right_border_edge+1):
+    for i in range(left_border_edge, right_border_edge + 1):
         tag[left_border_edge][i] = 0
         tag[i][left_border_edge] = 0
         tag[right_border_edge][i] = 0
@@ -54,7 +54,7 @@ def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
     max_index = tag_data.nbits - 1
     for i, (x, y) in enumerate(tag_data.bits):
         binary = bool(tag_data.codes[tag_id] & (1 << (max_index - i)))
-        tag[y+border_edge][x+border_edge] = 255 if binary else 0
+        tag[y + border_edge][x + border_edge] = 255 if binary else 0
 
     return tag
 
