@@ -31,15 +31,6 @@ class Coordinates(NamedTuple):
     z: float
 
 
-class Quaternion(NamedTuple):
-    """A Hamiltonian quaternion."""
-
-    w: float
-    x: float
-    y: float
-    z: float
-
-
 class Orientation(NamedTuple):
     """
     Orientation of a marker in space.
@@ -67,7 +58,7 @@ class Orientation(NamedTuple):
     @classmethod
     def from_webots_axis_angle(cls, orientation) -> 'Orientation':
         """Calculate orientation using the data from Webots' orientation data."""
-        # Generate a quaternion from the axis angle
+        # Unpack the axis angle to allow for remapping and normalisation
         _x, _y, _z, angle = orientation
         # Normalise the axis
         axis_mag = hypot(_x, _y, _z)
@@ -94,6 +85,7 @@ class Orientation(NamedTuple):
             pitch=pitch,
             roll=roll,
         )
+
 
 class Position(NamedTuple):
     """
