@@ -59,3 +59,19 @@ class PageSize(Enum):
             mm_to_pixels(self.value[0]),
             mm_to_pixels(self.value[1]),
         )
+
+
+class CustomPageSize:
+    """
+    Class to define a custom page size
+    """
+    def __init__(self, width: int, height: int) -> None:
+        self.width = width
+        self.height = height
+
+    @property
+    def pixels(self) -> Tuple[int, int]:
+        return (
+            mm_to_pixels(self.width),
+            mm_to_pixels(self.height),
+        )

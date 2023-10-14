@@ -8,7 +8,7 @@ from april_vision.marker import MarkerType
 
 from ..marker_tile import MarkerTile
 from ..utils import (DEFAULT_COLOUR, DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI,
-                     PageSize, mm_to_pixels, parse_marker_ranges)
+                     CustomPageSize, PageSize, mm_to_pixels, parse_marker_ranges)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,12 @@ def main(args: argparse.Namespace) -> None:
 
     marker_ids = parse_marker_ranges(tag_data, args.range)
 
-    page_size = PageSize[args.page_size]
+    if args.page_size == 'CROPPED':
+        # Allow for an additional marker pixel border
+        required_width = args.marker_size * (12 / 8)
+        page_size = CustomPageSize(required_width, required_width)
+    else:
+        page_size = PageSize[args.page_size]
 
     marker_pages = []
 
@@ -166,7 +171,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--page_size",
         type=str,
         help="Page size of output files (default: %(default)s)",
-        choices=sorted([size.name for size in PageSize]),
+        choices=sorted([size.name for size in PageSize] + ["CROPPED"]),
         default="A4",
     )
     parser.add_argument(
