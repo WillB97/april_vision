@@ -230,7 +230,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--border_width",
         help="Size of the border in pixels (default: %(default)s)",
-        default=1,
+        default=4,
         type=int,
     )
     parser.add_argument(
@@ -242,7 +242,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--tick_length",
         help="Length of center tick lines in pixels (default: %(default)s)",
-        default=10,
+        default=40,
         type=int,
     )
 
