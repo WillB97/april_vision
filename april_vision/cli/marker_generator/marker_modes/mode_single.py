@@ -142,7 +142,7 @@ def main(args: argparse.Namespace) -> None:
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Marker_generator subparser SINGLE used to generate a PDF of a marker."""
-    parser = subparsers.add_parser("SINGLE")
+    parser = subparsers.add_parser("SINGLE", help="Generate a single marker per page")
 
     parser.add_argument(
         "--all_filename",

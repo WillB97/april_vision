@@ -44,7 +44,7 @@ def main(args: argparse.Namespace) -> None:
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Marker_generator subparser IMAGE used to generate an image of a marker."""
-    parser = subparsers.add_parser("IMAGE")
+    parser = subparsers.add_parser("IMAGE", help="Generate a bare marker as an image")
 
     parser.add_argument(
         "--marker_family", default=MarkerType.APRILTAG_36H11.value,

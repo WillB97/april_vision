@@ -149,7 +149,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     Marker_generator subparser TILE.
     Used to generate a PDF with multiple markers per page.
     """
-    parser = subparsers.add_parser("TILE")
+    parser = subparsers.add_parser("TILE", help="Generate multiple markers per page")
 
     parser.add_argument(
         "--all_filename",
