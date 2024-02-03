@@ -48,8 +48,8 @@ cameras = setup_cameras(tag_sizes)
 if len(cameras) == 0:
     print("No cameras found")
 
-for name, cam in cameras.items():
-    print(name)
+for cam in cameras.values():
+    print(cam.serial_num, cam.name)
     print(cam.see())
 ```
 
