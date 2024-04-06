@@ -1,3 +1,4 @@
+"""Utility functions for the marker generator."""
 import logging
 from enum import Enum
 from typing import List, Tuple
@@ -17,6 +18,7 @@ DPI = 300
 def parse_marker_ranges(marker_family: ApriltagFamily, range_str: str) -> List[int]:
     """
     Utility function to parse the provided range of markers.
+
     Also checks bounds against the marker family.
     """
     if range_str == "ALL":
@@ -37,17 +39,14 @@ def parse_marker_ranges(marker_family: ApriltagFamily, range_str: str) -> List[i
 
 
 def mm_to_pixels(mm: float) -> int:
-    """
-    Convert millimeters to pixels
-    """
+    """Convert millimeters to pixels."""
     inches = mm / 25.4
     return int(inches * DPI)
 
 
 class PageSize(Enum):
-    """
-    Enum to define the dimentions of different page sizes
-    """
+    """Enum to define the dimentions of different page sizes."""
+
     A3 = (297, 420)
     A3L = (420, 297)
     A4 = (210, 297)
@@ -55,6 +54,7 @@ class PageSize(Enum):
 
     @property
     def pixels(self) -> Tuple[int, int]:
+        """Return the page size in pixels."""
         return (
             mm_to_pixels(self.value[0]),
             mm_to_pixels(self.value[1]),

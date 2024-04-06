@@ -1,3 +1,4 @@
+"""Marker_generator subparser CAL_BOARD used to generate a calibration board."""
 import argparse
 import logging
 
@@ -14,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
-    """Generate a calibration board"""
+    """Generate a calibration board."""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 

@@ -1,12 +1,22 @@
+"""An example implementation for using april_vision as a library."""
+
 import logging
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
 from numpy.typing import NDArray
 
-from april_vision import (CalibratedCamera, Frame, Marker, Processor,
-                          USBCamera, __version__, calibrations, find_cameras,
-                          generate_marker_size_mapping)
+from april_vision import (
+    CalibratedCamera,
+    Frame,
+    Marker,
+    Processor,
+    USBCamera,
+    __version__,
+    calibrations,
+    find_cameras,
+    generate_marker_size_mapping,
+)
 from april_vision.helpers import Base64Sender
 
 LOGGER = logging.getLogger(__name__)
@@ -111,9 +121,7 @@ class AprilCamera:
         self._cam.set_marker_sizes(tag_sizes)
 
     def set_detection_hook(self, callback: Callable[[Frame, List[Marker]], None]) -> None:
-        """
-        Setup a callback to be run after each dectection.
-        """
+        """Setup a callback to be run after each dectection."""
         self._cam.detection_hook = callback
 
 

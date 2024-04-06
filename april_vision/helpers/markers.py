@@ -7,6 +7,7 @@ def generate_marker_size_mapping(
 ) -> Dict[int, float]:
     """
     Unroll a dict of iterables into a dict of floats.
+
     To be used in pose estimation.
     """
     tag_sizes: Dict[int, float] = {}

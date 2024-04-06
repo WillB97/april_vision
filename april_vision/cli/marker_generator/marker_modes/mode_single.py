@@ -1,3 +1,4 @@
+"""Marker_generator subparser SINGLE used to generate a PDF of a marker."""
 import argparse
 import logging
 from typing import Union
@@ -8,15 +9,22 @@ from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
 from ..marker_tile import MarkerTile
-from ..utils import (DEFAULT_COLOUR, DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI,
-                     CustomPageSize, PageSize, mm_to_pixels,
-                     parse_marker_ranges)
+from ..utils import (
+    DEFAULT_COLOUR,
+    DEFAULT_FONT,
+    DEFAULT_FONT_SIZE,
+    DPI,
+    CustomPageSize,
+    PageSize,
+    mm_to_pixels,
+    parse_marker_ranges,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
-    """Generate a single marker on a page with the provided arguments"""
+    """Generate a single marker on a page with the provided arguments."""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 

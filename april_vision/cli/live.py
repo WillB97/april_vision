@@ -25,6 +25,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def parse_properties(args: argparse.Namespace) -> List[Tuple[int, int]]:
+    """Parse the camera properties supplied on the command line."""
     props = []
 
     if args.set_fps is not None:
