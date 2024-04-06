@@ -211,6 +211,7 @@ class Orientation(NamedTuple):
         Returns
         -------
             A 3x3 rotation matrix as a tuple of tuples.
+
         """
         psi, theta, phi = self.yaw, self.pitch, self.roll
 
@@ -237,6 +238,7 @@ class Orientation(NamedTuple):
         Returns
         -------
             A 4-tuple hamiltonian quaternion.
+
         """
         psi_2, theta_2, phi_2 = self.yaw / 2, self.pitch / 2, self.roll / 2
         w = cos(phi_2) * cos(theta_2) * cos(psi_2) + sin(phi_2) * sin(theta_2) * sin(psi_2)

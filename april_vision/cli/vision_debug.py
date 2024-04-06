@@ -107,7 +107,7 @@ def main(args: argparse.Namespace) -> None:
     # change directory around the debug process
     with pushd(args.output_dir):
         results = detector.detect(frame)
-        LOGGER.info(f"Found {len(results)} {'marker' if len(results)==1 else 'markers'}")
+        LOGGER.info(f"Found {len(results)} {'marker' if len(results) == 1 else 'markers'}")
 
         process_debug(
             preserve=not args.cleanup,

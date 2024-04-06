@@ -20,7 +20,6 @@ from .utils import Frame
 from .vision import Processor
 
 __all__ = [
-    '__version__',
     'CalibratedCamera',
     'CartesianCoordinates',
     'Frame',
@@ -31,6 +30,7 @@ __all__ = [
     'Processor',
     'SphericalCoordinate',
     'USBCamera',
+    '__version__',
     'calibrations',
     'find_cameras',
     'generate_marker_size_mapping',
