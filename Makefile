@@ -6,7 +6,7 @@ TESTS:=tests
 all: lint isort-check type test
 
 lint:
-	flake8 $(PYMODULE)
+	ruff check $(PYMODULE)
 
 type:
 	mypy $(PYMODULE)
@@ -14,11 +14,8 @@ type:
 test:
 	pytest --cov=$(PYMODULE) --cov-report=term --cov-report=xml $(TESTS)
 
-isort-check:
-	python -m isort --check $(PYMODULE)
-
-isort:
-	python -m isort $(PYMODULE)
+fix:
+	ruff check --fix-only $(PYMODULE)
 
 build:
 	python -m build
