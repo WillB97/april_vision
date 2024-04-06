@@ -111,7 +111,7 @@ def main(args: argparse.Namespace) -> None:
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Marker_generator subparser CAL_BOARD used to generate a calibration board."""
-    parser = subparsers.add_parser("CAL_BOARD")
+    parser = subparsers.add_parser("CAL_BOARD", help="Generate a calibration board")
 
     parser.add_argument(
         "--page_size",

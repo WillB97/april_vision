@@ -1,5 +1,6 @@
 import argparse
 import logging
+from typing import Union
 
 from PIL import Image
 
@@ -8,7 +9,8 @@ from april_vision.marker import MarkerType
 
 from ..marker_tile import MarkerTile
 from ..utils import (DEFAULT_COLOUR, DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI,
-                     PageSize, mm_to_pixels, parse_marker_ranges)
+                     CustomPageSize, PageSize, mm_to_pixels,
+                     parse_marker_ranges)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +22,15 @@ def main(args: argparse.Namespace) -> None:
 
     marker_ids = parse_marker_ranges(tag_data, args.range)
 
-    page_size = PageSize[args.page_size]
+    page_size: Union[PageSize, CustomPageSize]
+    if args.page_size == 'CROPPED':
+        # Allow for an additional marker pixel border
+        required_width = args.marker_size * (
+            (tag_data.total_width + 2) / tag_data.width_at_border
+        )
+        page_size = CustomPageSize(required_width, required_width)
+    else:
+        page_size = PageSize[args.page_size]
 
     marker_pages = []
 
@@ -142,7 +152,7 @@ def main(args: argparse.Namespace) -> None:
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Marker_generator subparser SINGLE used to generate a PDF of a marker."""
-    parser = subparsers.add_parser("SINGLE")
+    parser = subparsers.add_parser("SINGLE", help="Generate a single marker per page")
 
     parser.add_argument(
         "--all_filename",
@@ -166,7 +176,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--page_size",
         type=str,
         help="Page size of output files (default: %(default)s)",
-        choices=sorted([size.name for size in PageSize]),
+        choices=sorted([size.name for size in PageSize] + ["CROPPED"]),
         default="A4",
     )
     parser.add_argument(
@@ -229,7 +239,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--border_width",
         help="Size of the border in pixels (default: %(default)s)",
-        default=1,
+        default=4,
         type=int,
     )
     parser.add_argument(
@@ -241,7 +251,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--tick_length",
         help="Length of center tick lines in pixels (default: %(default)s)",
-        default=10,
+        default=40,
         type=int,
     )
 
