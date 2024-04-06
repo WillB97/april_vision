@@ -65,14 +65,6 @@ version_file = "april_vision/_version.py"
 
 # ### Linting Rules ###
 [tool.ruff]
-ignore = [
-    "D104",  # Ignoe missing docstring in public package
-    "D105",  # Ignore missing docstring in magic method
-    "D107",  # Ignore missing docstring in __init__
-    "D401",  # Ignore first line of docstring should be in imperative mood
-    "D203",  # Ignore 1 blank line required before class docstring
-    "D212",  # Ignore Multi-line docstring summary should start at the first line
-]
 line-length = 95
 select = [
     "D",  # pydocstyle
@@ -80,6 +72,22 @@ select = [
     "F",  # pyflakes
     "I",  # isort
     "W",  # pycodestyle warning
+    "RUF",  # ruff-specific
+    "B006",  # mutable default argument
+    "B021",  # f-string docstring
+    "COM818",  # warn about implicitly creating a tuple
+    # "SLF001",  # warn about accessing private members, these can be noqa'd when necessary
+]
+preview = true  # Enable preview to get the rest of pycodestyle errors
+ignore = [
+    "D104",  # Ignoe missing docstring in public package
+    "D105",  # Ignore missing docstring in magic method
+    "D107",  # Ignore missing docstring in __init__
+    "D401",  # Ignore first line of docstring should be in imperative mood
+    "D203",  # Ignore 1 blank line required before class docstring
+    "D212",  # Ignore Multi-line docstring summary should start at the first line
+    "RUF005",  # Allow alternate iterable unpacking
+    "RUF015",  # Allow + concatenation
 ]
 
 # ### Formatting Rules ###
