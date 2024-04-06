@@ -25,7 +25,9 @@ def main(args: argparse.Namespace) -> None:
     page_size: Union[PageSize, CustomPageSize]
     if args.page_size == 'CROPPED':
         # Allow for an additional marker pixel border
-        required_width = args.marker_size * (12 / 8)
+        required_width = args.marker_size * (
+            (tag_data.total_width + 2) / tag_data.width_at_border
+        )
         page_size = CustomPageSize(required_width, required_width)
     else:
         page_size = PageSize[args.page_size]
