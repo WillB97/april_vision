@@ -8,7 +8,8 @@ from april_vision.marker import MarkerType
 
 from ..marker_tile import MarkerTile
 from ..utils import (DEFAULT_COLOUR, DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI,
-                     CustomPageSize, PageSize, mm_to_pixels, parse_marker_ranges)
+                     CustomPageSize, PageSize, mm_to_pixels,
+                     parse_marker_ranges)
 
 LOGGER = logging.getLogger(__name__)
 
