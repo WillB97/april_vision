@@ -1,5 +1,9 @@
 # april_vision
 
+[![Lint & build](https://github.com/WillB97/april_vision/actions/workflows/check.yml/badge.svg)](https://github.com/WillB97/april_vision/actions/workflows/check.yml)
+[![PyPI version](https://badge.fury.io/py/april-vision.svg)](https://badge.fury.io/py/april-vision)
+[![MIT license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://opensource.org/licenses/MIT)
+
 A fiducial marker system used by Student Robotics.
 Uses [april tag](https://april.eecs.umich.edu/software/apriltag) markers to provide detection, pose and distance estimation for these markers.
 
