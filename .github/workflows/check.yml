@@ -20,16 +20,16 @@ jobs:
         python -m pip install 'opencv-python-headless>=4.8,<4.9'
     - name: Lint
       run: |
-        make lint
+        poe lint
     - name: Typecheck
       run: |
-        make type
+        poe type
     - name: Test
       run: |
-        make test
+        poe test
     - name: Build package
       run: |
-        make build
+        poe build
     - name: Save built package
       uses: actions/upload-artifact@v3
       with:
