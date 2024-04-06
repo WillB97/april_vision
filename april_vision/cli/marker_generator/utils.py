@@ -2,7 +2,7 @@ import logging
 from enum import Enum
 from typing import List, Tuple
 
-from font_roboto import Roboto  # type: ignore[import]
+from font_roboto import Roboto  # type: ignore[import,unused-ignore]
 
 from april_vision.cli.utils import ApriltagFamily, parse_ranges
 

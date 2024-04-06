@@ -1,5 +1,6 @@
 import argparse
 import logging
+from typing import Union
 
 from PIL import Image
 
@@ -21,6 +22,7 @@ def main(args: argparse.Namespace) -> None:
 
     marker_ids = parse_marker_ranges(tag_data, args.range)
 
+    page_size: Union[PageSize, CustomPageSize]
     if args.page_size == 'CROPPED':
         # Allow for an additional marker pixel border
         required_width = args.marker_size * (12 / 8)
