@@ -9,6 +9,8 @@ from typing import Dict, List, NamedTuple, Optional
 
 import cv2
 
+from .helpers.v4l2 import read_media_device_info
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -18,6 +20,7 @@ class CameraIdentifier(NamedTuple):
     index: int  # type: ignore[assignment]
     name: str
     vidpid: str
+    serial_num: Optional[str] = None
 
 
 class CalibratedCamera(NamedTuple):
@@ -26,6 +29,7 @@ class CalibratedCamera(NamedTuple):
     index: int  # type: ignore[assignment]
     name: str
     vidpid: str
+    serial_num: Optional[str] = None
     calibration: Optional[Path] = None
 
 
@@ -100,6 +104,7 @@ def match_calibrations(
                 index=camera.index,
                 name=camera.name,
                 vidpid=camera.vidpid,
+                serial_num=camera.serial_num,
                 calibration=calibration_map[camera.vidpid],
             ))
             LOGGER.debug(
@@ -111,6 +116,7 @@ def match_calibrations(
                     index=camera.index,
                     name=camera.name,
                     vidpid=camera.vidpid,
+                    serial_num=camera.serial_num
                 ))
 
     return calibrated_cameras + uncalibrated_cameras
@@ -140,11 +146,11 @@ def linux_discovery() -> List[CameraIdentifier]:
     # Match pid:vid to the path
     cameras = []
     for index in valid_cameras:
-        name = Path(
-                f'/sys/class/video4linux/video{index}/name',
-            ).read_text().strip()
+        device_dir = Path(f'/sys/class/video4linux/video{index}')
 
-        uevent_file = Path(f'/sys/class/video4linux/video{index}/device/uevent').read_text()
+        name = (device_dir / "name").read_text().strip()
+
+        uevent_file = (device_dir / "device/uevent").read_text()
         m = re.search(r'PRODUCT=([0-9a-f]{1,4})\/([0-9a-f]{1,4})', uevent_file)
 
         if m is None:
@@ -152,14 +158,22 @@ def linux_discovery() -> List[CameraIdentifier]:
 
         vid = int(m.groups()[0], 16)
         pid = int(m.groups()[1], 16)
-
         vidpid = f'{vid:04x}:{pid:04x}'
 
-        LOGGER.debug(f"Found camera at index {index}: {name}")
+        try:
+            media_device_name = next(device_dir.glob("device/media*")).name
+        except StopIteration:
+            continue
+
+        media_info = read_media_device_info(f"/dev/{media_device_name}")
+        serial_num = media_info.serial.decode()
+
+        LOGGER.debug(f"Found camera at index {index}: {name} ({serial_num})")
         cameras.append(CameraIdentifier(
             index=index,
             name=name,
             vidpid=vidpid,
+            serial_num=serial_num
         ))
 
     return cameras
