@@ -2,7 +2,7 @@
 from collections import deque
 from math import hypot
 from pathlib import Path
-from typing import Deque, NamedTuple, Tuple, Union
+from typing import Deque, Optional, NamedTuple, Tuple, Union
 
 import cv2
 import numpy as np
@@ -21,9 +21,14 @@ class Frame(NamedTuple):
     colour_frame: NDArray
 
     @classmethod
-    def from_colour_frame(cls, colour_frame: NDArray) -> 'Frame':
+    def from_colour_frame(
+        cls,
+        colour_frame: NDArray,
+        colourspace: Optional[int] = cv2.COLOR_BGR2GRAY,
+    ) -> 'Frame':
         """Load frame from a colour image in a numpy array."""
-        grey_frame = cv2.cvtColor(colour_frame, cv2.COLOR_BGR2GRAY)
+        if colourspace is not None:
+            grey_frame = cv2.cvtColor(colour_frame, colourspace)
 
         return cls(
             grey_frame=grey_frame,
