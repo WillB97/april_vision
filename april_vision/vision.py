@@ -67,7 +67,10 @@ class Processor:
         # hook to allow modification of the captured frame
         colour_frame = self.capture_filter(colour_frame)
 
-        return Frame.from_colour_frame(colour_frame, colourspace=self._frame_source.COLOURSPACE)
+        return Frame.from_colour_frame(
+            colour_frame,
+            colourspace=self._frame_source.COLOURSPACE,
+        )
 
     def _detect(self, frame: Frame) -> List[Marker]:
         """Locate fiducial markers in frame using pyapriltags."""

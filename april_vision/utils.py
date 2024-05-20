@@ -2,7 +2,7 @@
 from collections import deque
 from math import hypot
 from pathlib import Path
-from typing import Deque, Optional, NamedTuple, Tuple, Union
+from typing import Deque, NamedTuple, Optional, Tuple, Union
 
 import cv2
 import numpy as np
