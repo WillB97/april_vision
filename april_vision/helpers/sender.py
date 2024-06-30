@@ -20,6 +20,8 @@ class Base64Sender:
                       before sending. This will copy the frame prior to annotation.
     :param threaded: Controls whether encoding and sending the image is processed
                      in a thread or blocks.
+    :param aruco_orientation: Controls whether to use the origin that the ArUco library uses.
+    :param quality: The JPEG quality to use when encoding the image.
     """
     def __init__(
         self,
@@ -28,11 +30,13 @@ class Base64Sender:
         annotated: bool = True,
         threaded: bool = True,
         aruco_orientation: bool = False,
+        quality: int = 80,
     ):
         self._publish_callback = publish_callback
         self.use_threads = threaded
         self.send_annotated = annotated
         self._processor = Processor(aruco_orientation=aruco_orientation)
+        self._quality = quality
 
     def annotated_frame_hook(self, frame: Frame, markers: List[Marker]) -> None:
         """
@@ -87,7 +91,11 @@ class Base64Sender:
 
     def base64_encode_frame(self, frame: NDArray[np.uint8]) -> Optional[bytes]:
         """Convert image frame to base64 bytestring."""
-        ret, image = cv2.imencode('.jpg', frame)
+        ret, image = cv2.imencode(
+            '.jpg',
+            frame,
+            [cv2.IMWRITE_JPEG_OPTIMIZE, 1, cv2.IMWRITE_JPEG_QUALITY, self._quality],
+        )
         if not ret:
             return None
         image_bytes = image.tobytes()
