@@ -67,7 +67,10 @@ class Processor:
         # hook to allow modification of the captured frame
         colour_frame = self.capture_filter(colour_frame)
 
-        return Frame.from_colour_frame(colour_frame)
+        return Frame.from_colour_frame(
+            colour_frame,
+            colourspace=self._frame_source.COLOURSPACE,
+        )
 
     def _detect(self, frame: Frame) -> List[Marker]:
         """Locate fiducial markers in frame using pyapriltags."""
@@ -193,7 +196,7 @@ class Processor:
         if frame is None:
             frames = self._capture()
         else:
-            frames = Frame.from_colour_frame(frame)
+            frames = Frame.from_colour_frame(frame, colourspace=self._frame_source.COLOURSPACE)
         return self._detect(frames)
 
     def see_ids(self, *, frame: Optional[NDArray] = None) -> List[int]:
@@ -201,7 +204,7 @@ class Processor:
         if frame is None:
             frames = self._capture()
         else:
-            frames = Frame.from_colour_frame(frame)
+            frames = Frame.from_colour_frame(frame, colourspace=self._frame_source.COLOURSPACE)
         markers = self._detect(frames)
         return [marker.id for marker in markers]
 
@@ -215,7 +218,7 @@ class Processor:
         if frame is None:
             frames = self._capture()
         else:
-            frames = Frame.from_colour_frame(frame)
+            frames = Frame.from_colour_frame(frame, colourspace=self._frame_source.COLOURSPACE)
         markers = self._detect(frames)
         frames = self._annotate(
             frames,

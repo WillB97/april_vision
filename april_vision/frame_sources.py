@@ -16,6 +16,9 @@ class FrameSource:
     Allows april_vision.Processor to be created prior to frames being available.
     """
 
+    # The conversion to apply to the frame to get it to grayscale
+    COLOURSPACE = cv2.COLOR_BGR2GRAY
+
     def read(self, fresh: bool = True) -> NDArray:
         """
         The method for getting a new frame.
