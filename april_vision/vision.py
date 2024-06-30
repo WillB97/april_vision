@@ -213,17 +213,21 @@ class Processor:
         name: Union[str, Path],
         *,
         frame: Optional[NDArray] = None,
+        detections: Optional[List[Marker]] = None,
+        annotated: bool = True,
     ) -> None:
         """Save an annotated image to a file."""
         if frame is None:
             frames = self._capture()
         else:
             frames = Frame.from_colour_frame(frame, colourspace=self._frame_source.COLOURSPACE)
-        markers = self._detect(frames)
-        frames = self._annotate(
-            frames,
-            markers,
-        )
+        if annotated:
+            if detections is None:
+                detections = self._detect(frames)
+            frames = self._annotate(
+                frames,
+                detections,
+            )
         self._save(frames, name)
 
     def close(self) -> None:
