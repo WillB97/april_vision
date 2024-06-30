@@ -1,6 +1,4 @@
-"""
-Camera calibration script.
-"""
+"""Camera calibration script."""
 import argparse
 import logging
 from datetime import datetime
@@ -19,7 +17,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CalBoard:
-    """Class used to represent a calibration board"""
+    """Class used to represent a calibration board."""
+
     def __init__(
         self,
         rows: int,
@@ -38,10 +37,11 @@ class CalBoard:
     def corners_from_id(self, marker_id: int) -> List[Tuple[float, float, float]]:
         """
         Takes an input of a marker ID and returns the coordinates of the corners of the marker.
+
         The coordinates are 3D real world positions, top left of the board is 0,0,0.
         The Z coordinate of the board is always zero.
         The list of co-ords are in the order:
-        [bottom_left, bottom_right, top_right, top_left]
+        bottom_left, bottom_right, top_right, top_left
         """
         marker_pixel_size = self.marker_size / self.marker_details.width_at_border
 
@@ -68,7 +68,7 @@ def frame_capture(
     LOGGER.info("Press space to capture frame.")
 
     while True:
-        ret, frame = cap.read()
+        _ret, frame = cap.read()
 
         cv2.imshow("Frame", frame)
 
@@ -90,6 +90,7 @@ def parse_detections(
 ) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float]]]:
     """
     Pairs up 2D pixel corners with 3D real world co-ords.
+
     Takes the input of marker detections and the board design and outputs two lists
     where board_obj_points[i] pairs with board_img_points[i].
     """
@@ -108,6 +109,7 @@ def parse_detections(
 
 
 def main(args: argparse.Namespace) -> None:
+    """Main function for calibrate command."""
     # Setup the camera
     video_dev = cv2.VideoCapture(args.index)
 
@@ -152,7 +154,7 @@ def main(args: argparse.Namespace) -> None:
     width, height = frames[0].grey_frame.shape[::-1]
 
     # Calculate the camera calibration
-    reproj_error, camera_matrix, dist_coeff, rvec, tvec = cv2.calibrateCamera(
+    reproj_error, camera_matrix, dist_coeff, _rvec, _tvec = cv2.calibrateCamera(
         objectPoints,
         imagePoints,
         (width, height),
@@ -188,6 +190,12 @@ def write_cal_file(
     avg_reprojection_error: float,
     vidpid: Optional[str] = None,
 ) -> None:
+    """
+    Write the calibration data to an XML file.
+
+    This file can be loaded by the detect_cameras module.
+    The file is also compatible with the OpenCV calibration module.
+    """
     LOGGER.info("Generating calibration XML file")
     output_filename = cal_filename
     if not output_filename.lower().endswith(".xml"):

@@ -1,3 +1,4 @@
+"""Marker generator mode to generate a PDF with multiple markers per page."""
 import argparse
 import logging
 
@@ -7,14 +8,21 @@ from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
 from ..marker_tile import MarkerTile
-from ..utils import (DEFAULT_COLOUR, DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI,
-                     PageSize, mm_to_pixels, parse_marker_ranges)
+from ..utils import (
+    DEFAULT_COLOUR,
+    DEFAULT_FONT,
+    DEFAULT_FONT_SIZE,
+    DPI,
+    PageSize,
+    mm_to_pixels,
+    parse_marker_ranges,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
-    """Generate a page of multiple markers with the provided arguments"""
+    """Generate a page of multiple markers with the provided arguments."""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
 
@@ -147,6 +155,7 @@ def main(args: argparse.Namespace) -> None:
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     """
     Marker_generator subparser TILE.
+
     Used to generate a PDF with multiple markers per page.
     """
     parser = subparsers.add_parser("TILE", help="Generate multiple markers per page")

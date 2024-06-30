@@ -1,3 +1,4 @@
+"""Helper classes for sending image data."""
 import base64
 from threading import Thread
 from typing import Callable, List, Optional
@@ -23,6 +24,7 @@ class Base64Sender:
     :param aruco_orientation: Controls whether to use the origin that the ArUco library uses.
     :param quality: The JPEG quality to use when encoding the image.
     """
+
     def __init__(
         self,
         publish_callback: Callable[[str, bytes], None],
@@ -66,8 +68,7 @@ class Base64Sender:
 
     def encode_and_send(self, frame: NDArray[np.uint8]) -> None:
         """
-        Handle converting a frame to a base64 bytestring and sending it using
-        the publish callback.
+        Convert a frame to a base64 bytestring and send it using the publish callback.
 
         Can be run as a thread target.
         """

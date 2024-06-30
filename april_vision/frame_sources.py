@@ -128,7 +128,7 @@ class USBCamera(FrameSource):
             camera_parameters=list(camera_props.items()),
         )
 
-    def _set_camera_property(self, property: int, value: int) -> None:  # noqa: A002
+    def _set_camera_property(self, property: int, value: int) -> None:
         """Set an opencv property to a value and assert that it changed."""
         self._camera.set(property, value)
         actual = self._camera.get(property)

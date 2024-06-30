@@ -1,3 +1,8 @@
+"""
+Provide the details about a marker family.
+
+The values are extracted from the AprilTag binary.
+"""
 import argparse
 import logging
 
@@ -9,6 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
+    """Provide the details about a marker family."""
     tag_data = get_tag_family(args.tag_family)
     print(tag_data)
 

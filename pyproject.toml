@@ -1,3 +1,96 @@
+[project]
+name = "april_vision"
+description = "An AprilTags wrapper with camera discovery and axis conversion."
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Will Barber"}, {name = "Joshua Perriman"}]
+
+classifiers = [
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Typing :: Typed",
+    "License :: OSI Approved :: MIT License",
+]
+
+dynamic = ["version"]
+requires-python = ">=3.8"
+dependencies = [
+    "pyapriltags >=3.3.0.2,<4",
+    "numpy >= 1.21,<2",
+    "pyquaternion >=0.9.9,<1",
+    # winrt only supports upto python 3.10
+    # winrt >=1.0.21033.1, <2; platform_system=='Windows'
+    "winsdk >=1.0.0b7,<2; platform_system=='Windows'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "poethepoet >=0.0.1,<1",
+    "ruff >=0.3.0,<0.4",
+    "mypy==1.9.0",
+    "build",
+    "types-Pillow",
+    "types-tabulate",
+    "pytest",
+    "pytest-cov",
+]
+cli = [
+    "Pillow >=9.4.0,<10",
+    "tabulate >=0.9.0,<1",
+    "font-roboto >=0.0.1",
+]
+opencv = ["opencv-python-headless >=4,<4.9"]
+
+[project.scripts]
+april_vision = "april_vision.cli:main"
+
+[project.urls]
+Repository = "https://github.com/WillB97/april_vision"
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.setuptools.exclude-package-data]
+"tests.test_data" = ["*"]
+
+[build-system]
+requires = ["setuptools>=60", "wheel", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "april_vision/_version.py"
+
+# ### Linting Rules ###
+[tool.ruff]
+line-length = 95
+lint.select = [
+    "D",  # pydocstyle
+    "E",  # pycodestyle error
+    "F",  # pyflakes
+    "I",  # isort
+    "W",  # pycodestyle warning
+    "RUF",  # ruff-specific
+    "B006",  # mutable default argument
+    "B021",  # f-string docstring
+    "COM818",  # warn about implicitly creating a tuple
+    # "SLF001",  # warn about accessing private members, these can be noqa'd when necessary
+]
+preview = true  # Enable preview to get the rest of pycodestyle errors
+lint.ignore = [
+    "D104",  # Ignoe missing docstring in public package
+    "D105",  # Ignore missing docstring in magic method
+    "D107",  # Ignore missing docstring in __init__
+    "D401",  # Ignore first line of docstring should be in imperative mood
+    "D203",  # Ignore 1 blank line required before class docstring
+    "D212",  # Ignore Multi-line docstring summary should start at the first line
+    "RUF005",  # Allow alternate iterable unpacking
+    "RUF015",  # Allow + concatenation
+]
+
+# ### Formatting Rules ###
 [tool.mypy]
 mypy_path = "stubs"
 
@@ -19,9 +112,45 @@ disallow_untyped_decorators = true
 
 check_untyped_defs = true
 
-[build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
-build-backend = "setuptools.build_meta"
+# ### Tasks ###
+[tool.poe.env]
+PYMODULE = "april_vision"
 
-[tool.setuptools_scm]
-write_to = "april_vision/_version.py"
+[tool.poe.tasks]
+_upload = "python -m twine upload dist/*"
+
+[tool.poe.tasks.lint]
+help = "Run ruff against the project to check for linting errors."
+cmd = "ruff check $PYMODULE"
+
+[tool.poe.tasks.type]
+help = "Run mypy against the project to check for type errors."
+cmd = "python -m mypy $PYMODULE"
+
+[tool.poe.tasks.test]
+help = "Run pytest against the project to check for test errors."
+cmd = "python -m pytest --cov=$PYMODULE --cov-report=term --cov-report=xml tests"
+
+[tool.poe.tasks.check]
+help = "Check the project for linting, type and test errors."
+sequence = ["lint", "type", "test"]
+
+[tool.poe.tasks.fix]
+help = "Use ruff to fix any auto-fixable linting errors."
+cmd = "ruff check --fix-only $PYMODULE"
+
+[tool.poe.tasks.build]
+help = "Build the wheel and source distributions."
+cmd = "python -m build"
+
+[tool.poe.tasks.upload]
+help = "Build and upload the wheel and source distributions to PyPI."
+sequence = ["build", "_upload"]
+
+[tool.poe.tasks.clean]
+help = "Clean the project of any build artifacts."
+sequence = [
+    "shutil:rmtree('dist', ignore_errors=1)",
+    "shutil:rmtree('build', ignore_errors=1)",
+]
+default_item_type = "script"
