@@ -3,8 +3,6 @@ Used to generate an image tile which can be customised.
 
 These image tiles can be arranged on a page in the different modes.
 """
-from typing import NamedTuple
-
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -12,14 +10,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 from april_vision.cli.utils import ApriltagFamily, get_tag_family
 from april_vision.marker import MarkerType
 
-from .utils import mm_to_pixels
-
-
-class coord(NamedTuple):
-    """Simple class to store coordinates."""
-
-    x: int
-    y: int
+from .utils import Coord, mm_to_pixels
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
@@ -104,8 +95,8 @@ class MarkerTile:
         self.marker_height = self.image.height
 
         # Update the coords of where the marker is in the tile
-        self.top_left = coord(0, 0)
-        self.bottom_right = coord(self.image.width, self.image.height)
+        self.top_left = Coord(0, 0)
+        self.bottom_right = Coord(self.image.width, self.image.height)
 
     def add_border_line(
         self,
@@ -126,11 +117,11 @@ class MarkerTile:
         self.image = bordered_image
 
         # Update the coords of where the marker is in the tile
-        self.top_left = coord(
+        self.top_left = Coord(
             self.top_left.x + border_width,
             self.top_left.y + border_width,
         )
-        self.bottom_right = coord(
+        self.bottom_right = Coord(
             self.bottom_right.x + border_width,
             self.bottom_right.y + border_width,
         )
@@ -268,11 +259,11 @@ class MarkerTile:
         self.image = bordered_image
 
         # Update the coords of where the marker is in the tile
-        self.top_left = coord(
+        self.top_left = Coord(
             self.top_left.x + marker_square_size,
             self.top_left.y + marker_square_size,
         )
-        self.bottom_right = coord(
+        self.bottom_right = Coord(
             self.bottom_right.x + marker_square_size,
             self.bottom_right.y + marker_square_size,
         )
