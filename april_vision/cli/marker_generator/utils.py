@@ -4,6 +4,7 @@ from enum import Enum
 from typing import List, NamedTuple
 
 from font_roboto import Roboto  # type: ignore[import,unused-ignore]
+from reportlab.lib import colors as rl_colors
 
 from april_vision.cli.utils import ApriltagFamily, parse_ranges
 
@@ -51,6 +52,17 @@ class Coord(NamedTuple):
     y: int
 
 
+class VecCoord(NamedTuple):
+    """
+    Simple class to store coordinates.
+
+    Floats are used to support defining vectors with subpixel accuracy.
+    """
+
+    x: float
+    y: float
+
+
 class PageSize(Enum):
     """Enum to define the dimentions of different page sizes."""
 
@@ -82,3 +94,12 @@ class CustomPageSize:
             mm_to_pixels(self.width),
             mm_to_pixels(self.height),
         )
+
+
+def get_reportlab_colour(col: str) -> rl_colors.Color:
+    """Convert a string colour to a reportlab colour."""
+    named_colours = rl_colors.getAllNamedColors()
+    if col in named_colours:
+        return named_colours[col]
+    else:
+        return rl_colors.HexColor(col)
