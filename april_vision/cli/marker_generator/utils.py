@@ -11,8 +11,11 @@ from april_vision.cli.utils import ApriltagFamily, parse_ranges
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FONT = Roboto
+DEFAULT_VEC_FONT = 'Times-Roman'
 DEFAULT_FONT_SIZE = 50
+DEFAULT_VEC_FONT_SIZE = 55
 DEFAULT_COLOUR = "lightgrey"
+VEC_DPI = 72
 DPI = 300
 
 
@@ -43,6 +46,12 @@ def mm_to_pixels(mm: float) -> int:
     """Convert millimeters to pixels."""
     inches = mm / 25.4
     return int(inches * DPI)
+
+
+def mm_to_vec_pixels(mm: float) -> float:
+    """Convert millimeters to pixels."""
+    inches = mm / 25.4
+    return inches * VEC_DPI
 
 
 class Coord(NamedTuple):
@@ -79,6 +88,14 @@ class PageSize(Enum):
             mm_to_pixels(self.value[1]),
         )
 
+    @property
+    def vec_pixels(self) -> VecCoord:
+        """Return the page size in pixels."""
+        return VecCoord(
+            mm_to_vec_pixels(self.value[0]),
+            mm_to_vec_pixels(self.value[1]),
+        )
+
 
 class CustomPageSize:
     """Class to define a custom page size."""
@@ -93,6 +110,14 @@ class CustomPageSize:
         return Coord(
             mm_to_pixels(self.width),
             mm_to_pixels(self.height),
+        )
+
+    @property
+    def vec_pixels(self) -> VecCoord:
+        """Return the page size in pixels."""
+        return VecCoord(
+            mm_to_vec_pixels(self.width),
+            mm_to_vec_pixels(self.height),
         )
 
 
