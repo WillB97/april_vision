@@ -35,6 +35,7 @@ dev = [
     "types-reportlab==4.2.5.20241002",
     "pytest",
     "pytest-cov",
+    "PyMuPDF==1.24.14"
 ]
 cli = [
     "Pillow >=9.4.0,<11",
