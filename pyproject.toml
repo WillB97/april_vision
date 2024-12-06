@@ -21,9 +21,7 @@ dependencies = [
     "pyapriltags >=3.3.0.2,<4",
     "numpy >= 1.21,<2",
     "pyquaternion >=0.9.9,<1",
-    # winrt only supports upto python 3.10
-    # winrt >=1.0.21033.1, <2; platform_system=='Windows'
-    "winsdk >=1.0.0b7,<2; platform_system=='Windows'",
+    "winrt-Windows.Devices.Enumeration >=2.3.0,<3; platform_system=='Windows'",
 ]
 
 [project.optional-dependencies]
