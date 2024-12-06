@@ -53,7 +53,7 @@ def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
     # Fill in pixels, black if bit index is zero
     max_index = tag_data.nbits - 1
     for i, (x, y) in enumerate(tag_data.bits):
-        binary = bool(tag_data.codes[tag_id] & (1 << (max_index - i)))
+        binary = bool(int(tag_data.codes[tag_id]) & (1 << (max_index - i)))
         tag[y + border_edge][x + border_edge] = 255 if binary else 0
 
     return tag
