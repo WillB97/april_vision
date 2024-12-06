@@ -75,6 +75,7 @@ lint.select = [
     "B021",  # f-string docstring
     "COM818",  # warn about implicitly creating a tuple
     # "SLF001",  # warn about accessing private members, these can be noqa'd when necessary
+    "NPY201",  # warn about numpy 2.0 compatibility
 ]
 preview = true  # Enable preview to get the rest of pycodestyle errors
 lint.ignore = [
