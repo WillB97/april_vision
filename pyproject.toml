@@ -40,7 +40,7 @@ cli = [
     "tabulate >=0.9.0,<1",
     "font-roboto >=0.0.1",
 ]
-opencv = ["opencv-python-headless >=4,<4.9"]
+opencv = ["opencv-python-headless >=4.10,<5"]
 
 [project.scripts]
 april_vision = "april_vision.cli:main"
