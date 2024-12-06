@@ -2,16 +2,18 @@
 import argparse
 import logging
 
-from PIL import Image
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
+from reportlab.pdfgen import canvas
 
 from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
-from ..marker_tile import MarkerTile
+from ..marker_tile import MarkerTileVector
 from ..utils import (
     DEFAULT_COLOUR,
-    DEFAULT_FONT,
-    DEFAULT_FONT_SIZE,
+    DEFAULT_VEC_FONT,
+    DEFAULT_VEC_FONT_SIZE,
     DPI,
     PageSize,
     mm_to_pixels,
@@ -28,10 +30,10 @@ def main(args: argparse.Namespace) -> None:
 
     marker_ids = parse_marker_ranges(tag_data, args.range)
 
-    marker_tiles = []
+    marker_tiles: list[MarkerTileVector] = []
 
     for marker_id in marker_ids:
-        image_tile = MarkerTile(
+        image_tile = MarkerTileVector(
             tag_data,
             marker_id,
             args.marker_size,
@@ -49,20 +51,20 @@ def main(args: argparse.Namespace) -> None:
 
         if args.no_number is False:
             image_tile.add_id_number(
-                DEFAULT_FONT,
+                DEFAULT_VEC_FONT,
                 args.number_size,
                 args.border_colour,
             )
 
         image_tile.add_description_border(
             args.description_format,
-            DEFAULT_FONT,
+            DEFAULT_VEC_FONT,
             args.description_size,
             "black",
         )
 
-        for i in range(args.repeat):
-            marker_tiles.append(image_tile)
+        for _ in range(args.repeat):
+            marker_tiles.append(image_tile.copy())
 
     page_size = PageSize[args.page_size]
 
@@ -73,83 +75,83 @@ def main(args: argparse.Namespace) -> None:
         for n in range(0, len(marker_tiles), markers_per_page)
     ]
 
-    marker_pages = []
+    combined_filename = args.all_filename.format(
+        marker_family=args.marker_family
+    )
+    combined_pdf = canvas.Canvas(combined_filename, pagesize=page_size.vec_pixels)
+
     for markers in marker_tiles_for_page:
-        output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
+        output_img = Drawing(page_size.vec_pixels.x, page_size.vec_pixels.y)
 
         for index, marker in enumerate(markers):
             row, col = divmod(index, args.num_columns)
 
+            column_spacing = mm_to_pixels(args.column_padding) + marker.marker_width
+            row_spacing = mm_to_pixels(args.row_padding) + marker.marker_width
+            outer_marker_centre_width = (
+                (args.num_columns - 1) * column_spacing
+            )
+            outer_marker_centre_height = (
+                (args.num_rows - 1) * row_spacing
+            )
+
             if args.left_margin is not None:
-                top_left_x = mm_to_pixels(args.left_margin)
+                x_offset = mm_to_pixels(args.left_margin) + marker.marker_width / 2
             elif args.right_margin is not None:
-                top_left_x = (output_img.width
-                              - mm_to_pixels(args.right_margin)
-                              - (args.num_columns * marker.marker_width)
-                              - ((args.num_columns - 1) * mm_to_pixels(args.column_padding))
-                              )
+                x_offset = (
+                    page_size.pixels.x
+                    - mm_to_pixels(args.right_margin)
+                    - marker.marker_width / 2
+                    - outer_marker_centre_width
+                )
             else:
                 # Centered
-                top_left_x = (output_img.width
-                              - (args.num_columns * marker.marker_width)
-                              - ((args.num_columns - 1) * mm_to_pixels(args.column_padding))
-                              ) // 2
+                x_offset = (
+                    page_size.pixels.x
+                    - outer_marker_centre_width
+                ) / 2
 
-            x_loc = (top_left_x
-                     + (col * marker.marker_width)
-                     + (col * mm_to_pixels(args.column_padding))
-                     - marker.top_left.x
-                     )
+            x_loc = x_offset + (col * column_spacing)
 
             if args.top_margin is not None:
-                top_left_y = mm_to_pixels(args.top_margin)
+                y_offset = (
+                    page_size.pixels.y
+                    - mm_to_pixels(args.top_margin)
+                    - marker.marker_width / 2
+                )
             elif args.bottom_margin is not None:
-                top_left_y = (output_img.height
-                              - mm_to_pixels(args.bottom_margin)
-                              - (args.num_rows * marker.marker_height)
-                              - ((args.num_rows - 1) * mm_to_pixels(args.row_padding))
-                              )
+                y_offset = (
+                    mm_to_pixels(args.bottom_margin)
+                    + marker.marker_width / 2
+                    + outer_marker_centre_height
+                )
             else:
                 # Centered
-                top_left_y = (output_img.height
-                              - (args.num_rows * marker.marker_height)
-                              - ((args.num_rows - 1) * mm_to_pixels(args.row_padding))
-                              ) // 2
+                y_offset = page_size.pixels.y - (
+                    page_size.pixels.y
+                    - outer_marker_centre_height
+                ) / 2
 
-            y_loc = (top_left_y
-                     + (row * marker.marker_height)
-                     + (row * mm_to_pixels(args.row_padding))
-                     - marker.top_left.y
-                     )
+            y_loc = y_offset - (row * row_spacing)
 
-            output_img.paste(marker.image, (x_loc, y_loc))
+            marker.set_marker_centre(x_loc, y_loc)
+            output_img.add(marker.vectors)
+
+        # canvas DPI is 72
+        output_img.scale(72 / DPI, 72 / DPI)
+        output_img.drawOn(combined_pdf, 0, 0)
+        # Complete page
+        combined_pdf.showPage()
 
         if args.single_filename is not None:
             single_filename = args.single_filename.format(
                 id=marker_id,
                 marker_family=args.marker_family
             )
-            output_img.save(
-                single_filename,
-                quality=100,
-                dpi=(DPI, DPI),
-            )
-
-        marker_pages.append(output_img)
+            renderPDF.drawToFile(output_img, single_filename)
 
     # Save combined PDF
-    combined_filename = args.all_filename.format(
-        marker_family=args.marker_family
-    )
-
-    first_page = marker_pages.pop(0)
-    first_page.save(
-        combined_filename,
-        quality=100,
-        dpi=(DPI, DPI),
-        save_all=True,
-        append_images=marker_pages,
-    )
+    combined_pdf.save()
 
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
@@ -216,7 +218,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--number_size",
         help="Set the text size of the id number on the marker",
-        default=DEFAULT_FONT_SIZE,
+        default=DEFAULT_VEC_FONT_SIZE,
         type=int,
     )
     parser.add_argument(
@@ -232,7 +234,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--description_size",
         help="Set the text size of the description text on the marker",
-        default=DEFAULT_FONT_SIZE,
+        default=DEFAULT_VEC_FONT_SIZE,
         type=int,
     )
 

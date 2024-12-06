@@ -3,6 +3,8 @@ Used to generate an image tile which can be customised.
 
 These image tiles can be arranged on a page in the different modes.
 """
+from copy import deepcopy
+
 import numpy as np
 import reportlab.graphics.shapes as rl_shapes
 from numpy.typing import NDArray
@@ -559,6 +561,10 @@ class MarkerTileVector:
                 textAnchor='end',
                 fillColor=get_reportlab_colour(text_colour)
             ))
+
+    def copy(self) -> "MarkerTileVector":
+        """Return a copy of the current marker tile."""
+        return deepcopy(self)
 
 
 if __name__ == '__main__':
