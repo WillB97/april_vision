@@ -81,6 +81,16 @@ class PageSize(Enum):
     A4L = (297, 210)
 
     @property
+    def width(self) -> int:
+        """Return the width of the page."""
+        return self.value[0]
+
+    @property
+    def height(self) -> int:
+        """Return the height of the page."""
+        return self.value[1]
+
+    @property
     def pixels(self) -> Coord:
         """Return the page size in pixels."""
         return Coord(

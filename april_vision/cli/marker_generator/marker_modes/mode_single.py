@@ -47,9 +47,11 @@ def main(args: argparse.Namespace) -> None:
     )
     combined_pdf = canvas.Canvas(combined_filename, pagesize=page_size.vec_pixels)
 
+    if args.split:
+        page_size = CustomPageSize(page_size.width * 2, page_size.height)
+
     for marker_id in marker_ids:
         LOGGER.info(f"Creating marker: {marker_id}")
-        assert args.split is False, "Splitting markers is not yet implemented"
 
         image_tile = MarkerTileVector(
             tag_data,
@@ -82,10 +84,7 @@ def main(args: argparse.Namespace) -> None:
             double_text=args.split,
         )
 
-        if args.split:
-            output_img = Drawing(page_size.vec_pixels.x * 2, page_size.vec_pixels.y)
-        else:
-            output_img = Drawing(page_size.vec_pixels.x, page_size.vec_pixels.y)
+        output_img = Drawing(page_size.vec_pixels.x, page_size.vec_pixels.y)
 
         # Default to center of the page
         x_loc, y_loc = page_size.pixels.x / 2, page_size.pixels.y / 2
@@ -112,14 +111,25 @@ def main(args: argparse.Namespace) -> None:
         image_tile.set_marker_centre(x_loc, y_loc)
 
         if args.split:
-            img_left = output_img.crop((
-                0, 0,
-                page_size.pixels[0] - 1, page_size.pixels[1] - 1
-            ))
-            img_right = output_img.crop((
-                page_size.pixels[0], 0,
-                (2 * page_size.pixels[0]) - 1, page_size.pixels[1] - 1
-            ))
+            img_left = Drawing(page_size.vec_pixels.x / 2, page_size.vec_pixels.y)
+            img_right = Drawing(page_size.vec_pixels.x / 2, page_size.vec_pixels.y)
+
+            img_left.add(image_tile.vectors)
+            # Translate to the right half of the page
+            right_vectors = image_tile.vectors.copy()
+            right_vectors.translate(-page_size.pixels.x / 2, 0)
+            img_right.add(right_vectors)
+            # canvas DPI is 72
+            img_left.scale(72 / DPI, 72 / DPI)
+            img_right.scale(72 / DPI, 72 / DPI)
+
+            img_left.drawOn(combined_pdf, 0, 0)
+            # Complete page
+            combined_pdf.showPage()
+
+            img_right.drawOn(combined_pdf, 0, 0)
+            # Complete page
+            combined_pdf.showPage()
         else:
             output_img.add(image_tile.vectors)
             # canvas DPI is 72
@@ -134,16 +144,8 @@ def main(args: argparse.Namespace) -> None:
                 marker_family=args.marker_family
             )
             if args.split:
-                img_left.save(
-                    f'left_{single_filename}',
-                    quality=100,
-                    dpi=(DPI, DPI),
-                )
-                img_right.save(
-                    f'right_{single_filename}',
-                    quality=100,
-                    dpi=(DPI, DPI),
-                )
+                renderPDF.drawToFile(img_left, f'left_{single_filename}')
+                renderPDF.drawToFile(img_right, f'right_{single_filename}')
             else:
                 renderPDF.drawToFile(output_img, single_filename)
 
