@@ -122,7 +122,8 @@ class Processor:
             for frame_type in frame:
                 cv2.polylines(
                     frame_type,
-                    [integer_corners],
+                    # mypy doesn't understand that Mat is a numpy array until numpy 2.1
+                    [integer_corners],  # type: ignore[list-item,unused-ignore]
                     isClosed=True,
                     color=(0, 255, 0),  # Green (BGR)
                     thickness=line_thickness,
@@ -148,7 +149,8 @@ class Processor:
 
                 cv2.polylines(
                     frame_type,
-                    [origin_square],
+                    # mypy doesn't understand that Mat is a numpy array until numpy 2.1
+                    [origin_square],  # type: ignore[list-item,unused-ignore]
                     isClosed=True,
                     color=(0, 0, 255),  # red
                     thickness=line_thickness,
@@ -157,9 +159,10 @@ class Processor:
                 marker_text_scale = text_scale * normalise_marker_text(marker)
 
                 # Approximately center the text
-                text_origin = np.array(marker.pixel_centre, dtype=np.int32)
-                text_origin += np.array(
-                    [-40 * marker_text_scale, 10 * marker_text_scale], dtype=np.int32)
+                text_origin = (
+                    int(marker.pixel_centre.x - 40 * marker_text_scale),
+                    int(marker.pixel_centre.y + 10 * marker_text_scale),
+                )
 
                 cv2.putText(
                     frame_type,
