@@ -7,6 +7,7 @@ from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing
 from reportlab.pdfgen import canvas
 
+from april_vision._version import __version__
 from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
@@ -46,6 +47,7 @@ def main(args: argparse.Namespace) -> None:
         marker_family=args.marker_family
     )
     combined_pdf = canvas.Canvas(combined_filename, pagesize=page_size.vec_pixels)
+    combined_pdf.setAuthor(f"april_vision {__version__}")
 
     if args.split:
         page_size = CustomPageSize(page_size.width * 2, page_size.height)
