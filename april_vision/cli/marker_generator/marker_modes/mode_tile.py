@@ -1,6 +1,7 @@
 """Marker generator mode to generate a PDF with multiple markers per page."""
 import argparse
 import logging
+from typing import Optional
 
 from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing
@@ -24,7 +25,7 @@ from ..utils import (
 LOGGER = logging.getLogger(__name__)
 
 
-def main(args: argparse.Namespace) -> None:
+def main(args: argparse.Namespace, initial_canvas: Optional[canvas.Canvas] = None) -> None:
     """Generate a page of multiple markers with the provided arguments."""
     tag_data = get_tag_family(args.marker_family)
     LOGGER.info(tag_data)
@@ -82,11 +83,15 @@ def main(args: argparse.Namespace) -> None:
         for n in range(0, len(marker_tiles), markers_per_page)
     ]
 
-    combined_filename = args.all_filename.format(
-        marker_family=args.marker_family
-    )
-    combined_pdf = canvas.Canvas(combined_filename, pagesize=page_size.vec_pixels)
-    combined_pdf.setAuthor(f"april_vision {__version__}")
+    if initial_canvas is None:
+        combined_filename = args.all_filename.format(
+            marker_family=args.marker_family
+        )
+        combined_pdf = canvas.Canvas(combined_filename, pagesize=page_size.vec_pixels)
+        combined_pdf.setAuthor(f"april_vision {__version__}")
+    else:
+        combined_pdf = initial_canvas
+        combined_pdf.setPageSize(page_size.vec_pixels)
 
     for markers in marker_tiles_for_page:
         LOGGER.info(f"Generating page {combined_pdf.getPageNumber()}")  # type: ignore[no-untyped-call]
@@ -160,8 +165,9 @@ def main(args: argparse.Namespace) -> None:
             )
             renderPDF.drawToFile(output_img, single_filename)
 
-    # Save combined PDF
-    combined_pdf.save()
+    if initial_canvas is None:
+        # Save combined PDF
+        combined_pdf.save()
 
 
 def create_subparser(subparsers: argparse._SubParsersAction) -> None:
