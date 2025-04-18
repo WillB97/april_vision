@@ -18,7 +18,7 @@ classifiers = [
 dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
-    "pyapriltags >=3.3.0.2,<4",
+    "pyapriltags >=3.3.0.2,<3.3.1",
     "numpy >= 1.21,<2",
     "pyquaternion >=0.9.9,<1",
     # winrt only supports upto python 3.10
