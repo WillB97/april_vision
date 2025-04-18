@@ -154,7 +154,8 @@ def main(args: argparse.Namespace) -> None:
     width, height = frames[0].grey_frame.shape[::-1]
 
     # Calculate the camera calibration
-    reproj_error, camera_matrix, dist_coeff, _rvec, _tvec = cv2.calibrateCamera(
+    # typehints are incorrect for this function, so we ignore them
+    reproj_error, camera_matrix, dist_coeff, _rvec, _tvec = cv2.calibrateCamera(  # type: ignore[call-overload,unused-ignore]
         objectPoints,
         imagePoints,
         (width, height),

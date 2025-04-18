@@ -289,8 +289,8 @@ class Marker(NamedTuple):
         """
         _tag_size = int((marker.tag_size or 0) * 1000)
 
-        _pixel_corners = tuple(
-            PixelCoordinates(x, y)
+        _pixel_corners = tuple(  # type: ignore[misc,unused-ignore]
+            PixelCoordinates(x, y)  # type: ignore[has-type,unused-ignore]
             for x, y in marker.corners.tolist()
         )
         _pixel_centre = PixelCoordinates(*marker.center.tolist())
@@ -299,12 +299,12 @@ class Marker(NamedTuple):
             _distance = int(hypotenuse(marker.pose_t) * 1000)
 
             _cartesian = CartesianCoordinates.from_tvec(
-                *marker.pose_t.flatten().tolist()
+                *marker.pose_t.flatten().tolist()  # type: ignore[arg-type,unused-ignore]
             )
             _bearing = degrees(atan2(-_cartesian.y, _cartesian.x))
 
             _spherical = SphericalCoordinate.from_tvec(
-                *marker.pose_t.flatten().tolist()
+                *marker.pose_t.flatten().tolist()  # type: ignore[arg-type,unused-ignore]
             )
 
             _orientation = Orientation.from_rvec_matrix(

@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Deque, NamedTuple, Optional, Tuple, Union
 
 import cv2
-import numpy as np
 from numpy.typing import NDArray
 
 from .marker import Marker, PixelCoordinates
@@ -30,7 +29,8 @@ class Frame(NamedTuple):
         if colourspace is not None:
             grey_frame = cv2.cvtColor(colour_frame, colourspace)
         else:
-            grey_frame = colour_frame.copy()
+            # mypy doesn't understand that Mat is a numpy array until numpy 2.1
+            grey_frame = colour_frame.copy()  # type: ignore[assignment,unused-ignore]
 
         return cls(
             grey_frame=grey_frame,
@@ -62,7 +62,7 @@ def annotate_text(
         cv2.putText(
             frame_type,
             text,
-            np.array(location, dtype=np.int32),
+            location,
             cv2.FONT_HERSHEY_DUPLEX,
             text_scale,
             color=text_colour,  # in BGR

@@ -110,7 +110,7 @@ class USBCamera(FrameSource):
         camera_props = {}
         cal_file_props = storage.getNode("cameraProperties").mat()
         if cal_file_props is not None:
-            for property, value in cal_file_props:
+            for property, value in cal_file_props:  # type: ignore[misc,unused-ignore]
                 camera_props[property] = value
 
         if camera_parameters is not None:
