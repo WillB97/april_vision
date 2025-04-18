@@ -21,9 +21,7 @@ dependencies = [
     "pyapriltags >=3.3.0.2,<3.3.1",
     "numpy >= 1.21,<2",
     "pyquaternion >=0.9.9,<1",
-    # winrt only supports upto python 3.10
-    # winrt >=1.0.21033.1, <2; platform_system=='Windows'
-    "winsdk >=1.0.0b7,<2; platform_system=='Windows'",
+    "winrt-Windows.Devices.Enumeration >=2.3.0,<3; platform_system=='Windows'",
 ]
 
 [project.optional-dependencies]
@@ -38,7 +36,7 @@ dev = [
     "pytest-cov",
 ]
 cli = [
-    "Pillow >=9.4.0,<10",
+    "Pillow >=9.4.0,<11",
     "tabulate >=0.9.0,<1",
     "font-roboto >=0.0.1",
 ]
@@ -77,6 +75,7 @@ lint.select = [
     "B021",  # f-string docstring
     "COM818",  # warn about implicitly creating a tuple
     # "SLF001",  # warn about accessing private members, these can be noqa'd when necessary
+    "NPY201",  # warn about numpy 2.0 compatibility
 ]
 preview = true  # Enable preview to get the rest of pycodestyle errors
 lint.ignore = [

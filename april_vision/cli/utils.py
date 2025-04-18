@@ -1,6 +1,7 @@
 """Utility functions for the CLI."""
 from typing import List, NamedTuple, Tuple
 
+import numpy as np
 import pyapriltags
 
 
@@ -8,7 +9,7 @@ class ApriltagFamily(NamedTuple):
     """Class used to represent the inforamtion about a tag family."""
 
     ncodes: int
-    codes: List[int]
+    codes: np.ndarray
     width_at_border: int
     total_width: int
     reversed_border: bool
@@ -40,7 +41,7 @@ def get_tag_family(family: str) -> ApriltagFamily:
 
     tag_data = ApriltagFamily(
         ncodes=raw_tag_data.ncodes,
-        codes=[raw_tag_data.codes[i] for i in range(raw_tag_data.ncodes)],
+        codes=np.ctypeslib.as_array(raw_tag_data.codes, shape=(raw_tag_data.ncodes,)),
         width_at_border=raw_tag_data.width_at_border,
         total_width=raw_tag_data.total_width,
         reversed_border=raw_tag_data.reversed_border,

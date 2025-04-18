@@ -214,7 +214,7 @@ def windows_discovery() -> List[CameraIdentifier]:
 
     assert sys.platform == 'win32', "This method is only for Windows"
 
-    import winsdk.windows.devices.enumeration as windows_devices  # type: ignore[import-not-found,unused-ignore]
+    import winrt.windows.devices.enumeration as windows_devices  # type: ignore[import-not-found,unused-ignore]
 
     async def get_camera_info():  # type: ignore
         device_class = windows_devices.DeviceClass.VIDEO_CAPTURE

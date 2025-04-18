@@ -1,7 +1,7 @@
 """Utility functions for the marker generator."""
 import logging
 from enum import Enum
-from typing import List, Tuple
+from typing import List, NamedTuple
 
 from font_roboto import Roboto  # type: ignore[import,unused-ignore]
 
@@ -44,6 +44,13 @@ def mm_to_pixels(mm: float) -> int:
     return int(inches * DPI)
 
 
+class Coord(NamedTuple):
+    """Simple class to store coordinates."""
+
+    x: int
+    y: int
+
+
 class PageSize(Enum):
     """Enum to define the dimentions of different page sizes."""
 
@@ -53,9 +60,9 @@ class PageSize(Enum):
     A4L = (297, 210)
 
     @property
-    def pixels(self) -> Tuple[int, int]:
+    def pixels(self) -> Coord:
         """Return the page size in pixels."""
-        return (
+        return Coord(
             mm_to_pixels(self.value[0]),
             mm_to_pixels(self.value[1]),
         )
@@ -69,9 +76,9 @@ class CustomPageSize:
         self.height = height
 
     @property
-    def pixels(self) -> Tuple[int, int]:
+    def pixels(self) -> Coord:
         """Return the custom page size in pixels."""
-        return (
+        return Coord(
             mm_to_pixels(self.width),
             mm_to_pixels(self.height),
         )
