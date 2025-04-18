@@ -18,7 +18,7 @@ classifiers = [
 dynamic = ["version"]
 requires-python = ">=3.8"
 dependencies = [
-    "pyapriltags >=3.3.0.2,<3.3.1",
+    "pyapriltags >=3.4.2,<3.4.3",
     "numpy >= 2,<3",
     "pyquaternion >=0.9.9,<1",
     "winrt-Windows.Devices.Enumeration >=2.3.0,<3; platform_system=='Windows'",
