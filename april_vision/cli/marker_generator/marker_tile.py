@@ -14,7 +14,7 @@ from reportlab.lib import colors as rl_colors
 from april_vision.cli.utils import ApriltagFamily, get_tag_family
 from april_vision.marker import MarkerType
 
-from .utils import Coord, VecCoord, get_reportlab_colour, mm_to_pixels
+from .utils import DEFAULT_COLOUR, Coord, VecCoord, get_reportlab_colour, mm_to_pixels
 
 
 def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
@@ -432,6 +432,28 @@ class MarkerTileVector:
         )
         self.vectors.add(border_rect)
 
+    def add_cutline(
+        self,
+        offset_mm: int,
+        cutline_colour: str = DEFAULT_COLOUR,
+        cutline_width: int = 4,
+    ) -> None:
+        """
+        Add a line around the border of the marker.
+
+        This changes the current marker design in place.
+        """
+        offset_px = mm_to_pixels(offset_mm)
+        border_rect = rl_shapes.Rect(
+            -offset_px, -offset_px,
+            self.marker_width + 2 * offset_px, self.marker_width + 2 * offset_px,
+            strokeWidth=cutline_width,  # type: ignore[arg-type]
+            strokeColor=get_reportlab_colour(cutline_colour),  # type: ignore[arg-type]
+            strokeDashArray=(25, 50),  # type: ignore[arg-type]
+            fillOpacity=0,  # type: ignore[arg-type]
+        )
+        self.vectors.add(border_rect)
+
     def add_centre_ticks(
         self,
         tick_width: int,
@@ -592,6 +614,7 @@ if __name__ == '__main__':
     tag0_tile.add_centre_ticks(3, 40, 'lightgrey')
     tag0_tile.add_id_number('Times-Roman', 55, 'lightgrey')
     tag0_tile.add_description_border('{marker_type} {marker_id}', 'Times-Roman', 55, 'black')
+    tag0_tile.add_cutline(10, 'black')
 
     # Center the marker on the page
     tag0_tile.set_marker_centre(page.x / 2, page.y / 2)

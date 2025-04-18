@@ -64,6 +64,12 @@ def main(args: argparse.Namespace) -> None:
             "black",
         )
 
+        if args.cutline is not None:
+            image_tile.add_cutline(
+                args.cutline,
+                cutline_width=args.border_width,
+            )
+
         for _ in range(args.repeat):
             marker_tiles.append(image_tile.copy())
 
@@ -259,6 +265,13 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         help="Length of center tick lines in pixels (default: %(default)s)",
         default=40,
         type=int,
+    )
+
+    parser.add_argument(
+        "--cutline",
+        help="Add a cutline X millimeters outside the marker border",
+        default=None,
+        type=float,
     )
 
     lr_margin_group = parser.add_mutually_exclusive_group()
