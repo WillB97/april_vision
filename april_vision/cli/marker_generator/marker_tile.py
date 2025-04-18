@@ -57,7 +57,7 @@ def generate_tag_array(tag_data: ApriltagFamily, tag_id: int) -> NDArray:
 def generate_tag_vectors(
     tag_data: ApriltagFamily,
     tag_id: int,
-    marker_size: int,
+    marker_size: float,
 ) -> rl_shapes.Group:
     """
     Generate a reportlab graphic group for a given tag family and tag ID.
@@ -71,7 +71,7 @@ def generate_tag_vectors(
     """
     # Create a group to store the marker
     marker_group = rl_shapes.Group()
-    cell_size = int(marker_size / tag_data.width_at_border)
+    cell_size = marker_size / tag_data.width_at_border
 
     cell_rect = rl_shapes.Rect(
         0, 0,
@@ -159,7 +159,7 @@ class MarkerTile:
 
         marker_image = Image.fromarray(tag_array)
         resized_image = marker_image.resize(
-            (mm_to_pixels(required_size), mm_to_pixels(required_size)),
+            (int(mm_to_pixels(required_size)), int(mm_to_pixels(required_size))),
             resample=0
         )
 
@@ -295,7 +295,7 @@ class MarkerTile:
 
         This changes the current marker design in place.
         """
-        marker_square_size = mm_to_pixels(self.pixel_size)
+        marker_square_size = int(mm_to_pixels(self.pixel_size))
 
         # Expand the tile to add a white border with a width of 1 marker square
         bordered_image = ImageOps.expand(

@@ -42,10 +42,10 @@ def parse_marker_ranges(marker_family: ApriltagFamily, range_str: str) -> List[i
     return marker_ids
 
 
-def mm_to_pixels(mm: float) -> int:
+def mm_to_pixels(mm: float) -> float:
     """Convert millimeters to pixels."""
     inches = mm / 25.4
-    return int(inches * DPI)
+    return inches * DPI
 
 
 def mm_to_vec_pixels(mm: float) -> float:
@@ -94,8 +94,8 @@ class PageSize(Enum):
     def pixels(self) -> Coord:
         """Return the page size in pixels."""
         return Coord(
-            mm_to_pixels(self.value[0]),
-            mm_to_pixels(self.value[1]),
+            int(mm_to_pixels(self.value[0])),
+            int(mm_to_pixels(self.value[1])),
         )
 
     @property
@@ -118,8 +118,8 @@ class CustomPageSize:
     def pixels(self) -> Coord:
         """Return the custom page size in pixels."""
         return Coord(
-            mm_to_pixels(self.width),
-            mm_to_pixels(self.height),
+            int(mm_to_pixels(self.width)),
+            int(mm_to_pixels(self.height)),
         )
 
     @property
