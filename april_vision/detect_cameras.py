@@ -144,11 +144,10 @@ def linux_discovery() -> List[CameraIdentifier]:
     # Match pid:vid to the path
     cameras = []
     for index in valid_cameras:
-        name = Path(
-                f'/sys/class/video4linux/video{index}/name',
-            ).read_text().strip()
+        cam_path = Path(f'/sys/class/video4linux/video{index}')
+        name = (cam_path / 'name').read_text().strip()
 
-        uevent_file = Path(f'/sys/class/video4linux/video{index}/device/uevent').read_text()
+        uevent_file = (cam_path / 'device/uevent').read_text()
         m = re.search(r'PRODUCT=([0-9a-f]{1,4})\/([0-9a-f]{1,4})', uevent_file)
 
         if m is None:
@@ -159,11 +158,21 @@ def linux_discovery() -> List[CameraIdentifier]:
 
         vidpid = f'{vid:04x}:{pid:04x}'
 
-        LOGGER.debug(f"Found camera at index {index}: {name}")
+        serial_num = None
+        # This path is not what it first appears, due ot symbolic links.
+        # The up traversal follows the symbolic link across into the USB tree
+        # at the location of this device, which allows us to inspect the USB
+        # descriptor for the serial number.
+        serial_file = cam_path / 'device/../serial'
+        if serial_file.exists():
+            serial_num = serial_file.read_text().strip()
+
+        LOGGER.debug(f"Found camera at index {index}: {name} (serial: {serial_num})")
         cameras.append(CameraIdentifier(
             index=index,
             name=name,
             vidpid=vidpid,
+            serial_num=serial_num,
         ))
 
     return cameras
