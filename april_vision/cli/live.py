@@ -60,11 +60,17 @@ def main(args: argparse.Namespace) -> None:
             camera_parameters=camera_properties,
         )
     else:
+        if args.set_resolution is not None:
+            resolution_raw = args.set_resolution.split('x')
+            resolution = (int(resolution_raw[0]), int(resolution_raw[1]))
+        else:
+            resolution = (1280, 720)
         source = USBCamera(
             args.id,
-            (1280, 720),
+            resolution,
             camera_parameters=camera_properties,
         )
+        print(f"Resolution set to {source._get_resolution()}")
     cam = Processor(
         source,
         tag_family=args.tag_family,
@@ -211,6 +217,12 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         type=str,
         default=None,
         help="4-character code of codec to set camera to (e.g. MJPG)"
+    )
+    parser.add_argument(
+        '--set_resolution',
+        type=str,
+        default=None,
+        help="The resolution to use for a manually specified camera (e.g. 1280x720)"
     )
 
     parser.set_defaults(func=main)
