@@ -20,6 +20,10 @@ Transform {
           fieldOfView 0.6
           width 800
           height 800
+          recognition Recognition {
+            frameThickness 2
+            maxRange 6
+          }
         }
         Shape {
           geometry Box {
@@ -66,6 +70,9 @@ Transform {
                   model "14"
                   boundingObject USE MARKER_GEOMETRY
                   locked TRUE
+                  recognitionColors [
+                    1 1 1
+                  ]
                 }
               ]
             }

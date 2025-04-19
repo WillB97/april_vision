@@ -1,9 +1,11 @@
 import csv
-from math import tan
+from math import degrees, hypot, pi, radians, tan
 from pathlib import Path
 from typing import NamedTuple
 
 from controller import Supervisor
+from pytest import approx
+from webots_vision import Marker
 
 SAVE_PATH = Path(__file__).parents[3] / "test_data"
 
@@ -69,6 +71,7 @@ def main():
     camera = robot.getDevice('camera')
 
     camera.enable(32)
+    camera.recognitionEnable(32)
     print(
         f"fx={(camera.getWidth() / 2) / tan(camera.getFov() / 2)}, "
         f"fy={(camera.getWidth() / 2) / tan(camera.getFov() / 2)}, "
@@ -86,6 +89,40 @@ def main():
             marker_test.vertical,
         ])
         set_orientation(robot, marker_test.yaw, marker_test.pitch, marker_test.roll)
+
+        hypot_dist = int(hypot(
+            marker_test.horizontal,
+            marker_test.vertical,
+            marker_test.distance,
+        ) * 1000)
+        horz_angle = -marker_test.theta
+        vert_angle = pi / 2 - marker_test.phi
+
+        robot.step(50)
+        recognitions = camera.getRecognitionObjects()
+        assert len(recognitions) == 1, f"Found {len(recognitions)} markers"
+        marker = Marker.from_webots_recognition(recognitions[0])
+        print(marker, marker.orientation)
+        print(f"Errors: yaw: {abs(marker.orientation.yaw - marker_test.yaw):.2e}, "
+              f"pitch: {abs(marker.orientation.pitch - marker_test.pitch):.2e}, "
+              f"roll: {abs(marker.orientation.roll - marker_test.roll):.2e}, "
+              f"distance: {abs(marker.position.distance - hypot_dist):.2e}, "
+              f"horizontal: {abs(degrees(marker.position.horizontal_angle - horz_angle)):.3f}, "
+              f"vertical: {abs(degrees(marker.position.vertical_angle - vert_angle)):.3f}")
+
+        assert marker.orientation.yaw == approx(marker_test.yaw), \
+            f"Yaw: {marker.orientation.yaw} != {marker_test.yaw}"
+        assert marker.orientation.pitch == approx(marker_test.pitch), \
+            f"Pitch: {marker.orientation.pitch} != {marker_test.pitch}"
+        assert marker.orientation.roll == approx(marker_test.roll), \
+            f"Roll: {marker.orientation.roll} != {marker_test.roll}"
+        assert marker.position.distance == approx(hypot_dist, abs=3), \
+            f"Distance: {marker.position.distance} != {hypot_dist}"
+        assert marker.position.horizontal_angle == approx(horz_angle, abs=radians(0.1)), \
+            f"Horizontal angle: {marker.position.horizontal_angle} != {horz_angle}"
+        assert marker.position.vertical_angle == approx(vert_angle, abs=radians(0.1)), \
+            f"Vertical angle: {marker.position.vertical_angle} != {vert_angle}"
+
         save(robot, camera, marker_test.index)
 
 

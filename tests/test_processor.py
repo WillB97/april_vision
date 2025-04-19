@@ -85,22 +85,22 @@ def test_processor(processor: Processor, test_values: MarkerValues):
         f"Vertical position of {test_values.name} is incorrect. "
         f"{marker.cartesian.z} != {test_values.vertical * 1000}")
 
-    assert marker.spherical.theta == pytest.approx(test_values.theta, abs=radians(5)), (
+    assert marker.spherical.theta == pytest.approx(test_values.theta, abs=radians(0.1)), (
         f"Theta of {test_values.name} is incorrect. "
         f"{marker.spherical.theta} != {test_values.theta}")
-    assert marker.spherical.phi == pytest.approx(test_values.phi, abs=radians(5)), (
+    assert marker.spherical.phi == pytest.approx(test_values.phi, abs=radians(0.2)), (
         f"Phi of {test_values.name} is incorrect. "
         f"{marker.spherical.phi} != {test_values.phi}")
     assert marker.spherical.r == pytest.approx(test_values.r * 1000, rel=1e-2, abs=5), (
         f"Hypotenuse distance of {test_values.name} is incorrect. "
         f"{marker.spherical.r} != {test_values.r * 1000}")
 
-    assert marker.orientation.yaw == pytest.approx(test_values.yaw, abs=radians(5)), (
+    assert marker.orientation.yaw == pytest.approx(test_values.yaw, abs=radians(2.5)), (
         f"Yaw of {test_values.name} is incorrect. "
         f"{marker.orientation.yaw} != {test_values.yaw}")
-    assert marker.orientation.pitch == pytest.approx(test_values.pitch, abs=radians(5)), (
+    assert marker.orientation.pitch == pytest.approx(test_values.pitch, abs=radians(2.5)), (
         f"Pitch of {test_values.name} is incorrect. "
         f"{marker.orientation.pitch} != {test_values.pitch}")
-    assert marker.orientation.roll == pytest.approx(test_values.roll, abs=radians(5)), (
+    assert marker.orientation.roll == pytest.approx(test_values.roll, abs=radians(0.2)), (
         f"Roll of {test_values.name} is incorrect. "
         f"{marker.orientation.roll} != {test_values.roll}")
