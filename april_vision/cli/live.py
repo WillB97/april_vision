@@ -48,9 +48,12 @@ def main(args: argparse.Namespace) -> None:
 
     cameras = find_cameras(calibrations, include_uncalibrated=True)
     if args.serial is not None:
-        cameras_dict = {camera.serial_num: camera for camera in cameras if camera.serial_num}
+        cameras_serial_dict = {
+            camera.serial_num: camera
+            for camera in cameras if camera.serial_num
+        }
         try:
-            camera = cameras_dict[args.serial]
+            camera = cameras_serial_dict[args.serial]
         except KeyError:
             LOGGER.fatal(f"Camera with serial {args.serial} not found")
             return
