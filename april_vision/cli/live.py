@@ -46,31 +46,55 @@ def main(args: argparse.Namespace) -> None:
 
     camera_properties = parse_properties(args)
 
-    if args.id is None:
-        cameras = find_cameras(calibrations, include_uncalibrated=True)
+    cameras = find_cameras(calibrations, include_uncalibrated=True)
+    if args.serial is not None:
+        cameras_dict = {camera.serial_num: camera for camera in cameras if camera.serial_num}
+        try:
+            camera = cameras_dict[args.serial]
+        except KeyError:
+            LOGGER.fatal(f"Camera with serial {args.serial} not found")
+            return
+    elif args.id is not None:
+        cameras_dict = {camera.index: camera for camera in cameras}
+        try:
+            camera = cameras_dict[args.id]
+        except KeyError:
+            LOGGER.fatal(f"Camera with index {args.id} not found")
+            return
+    else:
         try:
             camera = cameras[0]
         except IndexError:
             LOGGER.fatal("No cameras found")
             return
-        source = USBCamera.from_calibration_file(
-            camera.index,
-            camera.calibration,
-            camera.vidpid,
-            camera_parameters=camera_properties,
-        )
-    else:
+
+    # Allow the user to override the camera index.
+    # This is useful on MacOS where the camera index is not always
+    # correct
+    index = args.id if args.id is not None else camera.index
+
+    if camera.calibration is None:
         if args.set_resolution is not None:
             resolution_raw = args.set_resolution.split('x')
             resolution = (int(resolution_raw[0]), int(resolution_raw[1]))
         else:
             resolution = (1280, 720)
+
         source = USBCamera(
-            args.id,
+            index,
             resolution,
             camera_parameters=camera_properties,
         )
-        print(f"Resolution set to {source._get_resolution()}")
+    else:
+        source = USBCamera.from_calibration_file(
+            index,
+            camera.calibration,
+            camera.vidpid,
+            camera_parameters=camera_properties,
+        )
+    LOGGER.info(f"Camera {camera.name} ({camera.serial_num}) opened, index {index}")
+    LOGGER.info(f"Resolution set to {source._get_resolution()}")
+
     cam = Processor(
         source,
         tag_family=args.tag_family,
@@ -181,6 +205,9 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         help="Live camera demonstration with marker annotation.",
     )
 
+    parser.add_argument(
+        "--serial", type=str, default=None,
+        help="Select the camera by serial number.")
     parser.add_argument(
         "--id", type=int, default=None, help="Override the camera index to use.")
     parser.add_argument(
