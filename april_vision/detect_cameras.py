@@ -317,8 +317,8 @@ def windows_discovery() -> List[CameraIdentifier]:
     assert sys.platform == 'win32', "This method is only for Windows"
 
     import winrt.windows.devices.enumeration as windows_devices  # type: ignore[import-not-found,unused-ignore]
-    from winrt.windows.foundation import (
-        IPropertyValue,  # type: ignore[import-not-found,unused-ignore]
+    from winrt.windows.foundation import (  # type: ignore[import-not-found,unused-ignore]
+        IPropertyValue,
     )
 
     async def get_parent_id(device_container):  # type: ignore
