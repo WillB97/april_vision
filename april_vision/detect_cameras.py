@@ -189,6 +189,10 @@ def mac_discovery() -> List[CameraIdentifier]:
         subprocess.check_output(['system_profiler', '-json', 'SPCameraDataType']),
     )
     camera_list = camera_info["SPCameraDataType"]
+    # Preserve devices ordering on the system
+    # see AVCaptureDevice::uniqueID property documentation for more info
+    # From https://github.com/opencv/opencv/blob/4.11.0/modules/videoio/src/cap_avfoundation_mac.mm#L377
+    camera_list.sort(key=lambda x: x["spcamera_unique-id"])
     cameras = []
 
     for index, camera in enumerate(camera_list):
