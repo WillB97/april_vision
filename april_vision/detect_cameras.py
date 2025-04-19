@@ -317,6 +317,23 @@ def windows_discovery() -> List[CameraIdentifier]:
     assert sys.platform == 'win32', "This method is only for Windows"
 
     import winrt.windows.devices.enumeration as windows_devices  # type: ignore[import-not-found,unused-ignore]
+    from winrt.windows.foundation import (
+        IPropertyValue,  # type: ignore[import-not-found,unused-ignore]
+    )
+
+    async def get_parent_id(device_container):  # type: ignore
+        device_id = device_container.properties['System.Devices.DeviceInstanceId']
+        device_id = IPropertyValue._from(device_id).get_string()
+
+        device = await windows_devices.DeviceInformation.create_from_id_async(
+            device_id,
+            ['System.Devices.Parent'],
+            windows_devices.DeviceInformationKind.DEVICE,
+        )
+
+        assert device is not None, "Unable to get parent device ID"
+        assert device.properties is not None, "Unable to get parent device properties"
+        return IPropertyValue._from(device.properties['System.Devices.Parent']).get_string()
 
     async def get_camera_info():  # type: ignore
         device_class = windows_devices.DeviceClass.VIDEO_CAPTURE
@@ -337,10 +354,18 @@ def windows_discovery() -> List[CameraIdentifier]:
 
         LOGGER.debug(f"Found camera at index {index}: {device.name}")
 
+        # Get USB serial number from the parent device ID
+        parent_id = asyncio.run(get_parent_id(device))  # type: ignore
+        serial_num = None
+        parent_id_parts = parent_id.split('\\')
+        if len(parent_id_parts) == 3 and parent_id_parts[0] == 'USB':
+            serial_num = parent_id_parts[2]
+
         cameras.append(CameraIdentifier(
             index=index,
             name=device.name,
             vidpid=vidpid,
+            serial_num=serial_num,
         ))
 
     return cameras
