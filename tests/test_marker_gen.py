@@ -3,22 +3,32 @@ from math import hypot
 from itertools import cycle
 
 import pytest
+import pymupdf
 
 from april_vision import cli, Processor
 from april_vision.frame_sources import ImageSource
-from april_vision.cli.marker_generator.utils import DPI
+from april_vision.cli.marker_generator.utils import VEC_DPI
 
 
-mm_per_pixel = 25.4 / DPI
+mm_per_pixel = 25.4 / VEC_DPI
 
 
 @pytest.mark.parametrize("tag_num,tag_size", zip(range(0, 250, 50), range(100, 200, 20)))
 def test_processor(tmp_path: Path, tag_num: int, tag_size: int):
+    filename_pdf = tmp_path / f"test_img_{tag_num}.pdf"
     filename = tmp_path / f"test_img_{tag_num}.png"
     cli.main([
-        'marker_generator', 'SINGLE',  '--marker_size', str(tag_size),
-        '--range', str(tag_num), '--all_filename', str(filename),
+        'marker_generator', 'SINGLE', '--marker_size', str(tag_size),
+        '--range', str(tag_num), '--all_filename', str(filename_pdf),
     ])
+
+    # convert pdf to png
+    doc = pymupdf.open(str(filename_pdf))
+    assert len(doc) == 1, "Should have exactly one page"
+    page = doc[0]
+    pix = page.get_pixmap()
+    pix.save(str(filename))
+    print(f"Saved to {filename}")
 
     image = ImageSource(filename).read()
 

@@ -11,6 +11,7 @@ generation_modes = [
     "mode_tile",
     "mode_image",
     "mode_cal",
+    "mode_batch",
 ]
 
 
