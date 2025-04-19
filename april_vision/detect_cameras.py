@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import cv2
 
@@ -186,6 +186,8 @@ def mac_discovery() -> List[CameraIdentifier]:
         try:
             name = camera["_name"]
             camera_data = camera['spcamera_model-id']
+            # Use caution, this identifier follows the port not the camera
+            unique_id = camera['spcamera_unique-id']
 
             m = re.search(r'VendorID_([0-9]{1,5}) ProductID_([0-9]{1,5})', camera_data)
 
@@ -199,9 +201,96 @@ def mac_discovery() -> List[CameraIdentifier]:
                 vidpid = f'{vid:04x}:{pid:04x}'
 
             LOGGER.debug(f"Found camera at index {index}: {name}")
-            cameras.append(CameraIdentifier(index=index, name=name, vidpid=vidpid))
+            cameras.append(CameraIdentifier(
+                index=index,
+                name=name,
+                vidpid=vidpid,
+                serial_num=unique_id,
+            ))
         except KeyError:
             LOGGER.warning(f"Camera {index} had missing fields: {camera}")
+
+    # Attempt to get the USB serial numbers for the cameras
+    return mac_insert_usb_serials(cameras)
+
+
+def mac_insert_usb_serials(cameras: List[CameraIdentifier]) -> List[CameraIdentifier]:
+    """
+    Insert the USB serial numbers into the camera list.
+
+    system_profiler reports only the USB path and vidpid.
+    We use the USB path to get the serial number reported in the USB descriptor.
+    """
+
+    class USBDevice(NamedTuple):
+        """A tuple to store information of a USB device."""
+
+        location_id: str
+        vendor_id: str
+        product_id: str
+        serial_num: str
+
+    def process_usb_hub(usb_hub: List[Any]) -> Dict[str, USBDevice]:
+        """Recursively process USB hubs to find serial numbers."""
+        usb_serials = {}
+        for device in usb_hub:
+            if '_items' in device.keys():
+                usb_serials.update(process_usb_hub(device['_items']))
+            try:
+                serial_num = device['serial_num']
+                usb_path = device['location_id'].split(' ')[0][2:].lstrip('0')
+                usb_vid = device['vendor_id'].split(' ')[0][2:]
+                usb_pid = device['product_id'][2:]
+            except KeyError:
+                continue
+
+            usb_serials[usb_path] = USBDevice(
+                location_id=usb_path,
+                vendor_id=usb_vid,
+                product_id=usb_pid,
+                serial_num=serial_num,
+            )
+            LOGGER.debug(f"Found USB device: {usb_vid}:{usb_pid} {serial_num} 0x{usb_path}")
+
+        return usb_serials
+
+    # Grab USB tree and process it into a dictionary
+    usb_tree = subprocess.check_output(['system_profiler', '-json', 'SPUSBDataType'])
+    try:
+        usb_data = json.loads(usb_tree)['SPUSBDataType']
+    except (json.JSONDecodeError, KeyError):
+        LOGGER.warning("Unable to decode USB tree")
+        return cameras
+
+    # Create a dictionary of USB paths to serial numbers
+    usb_serials = process_usb_hub(usb_data)
+
+    # iterate over cameras updating the serial numbers
+    for index, camera in enumerate(cameras):
+        # skip non-USB cameras
+        if not camera.serial_num or not camera.serial_num.startswith('0x'):
+            continue
+
+        # split unique id to extract just usb path
+        usb_path = camera.serial_num[2:-8]
+        # strip any leading zeros
+        usb_path = usb_path.lstrip('0')
+
+        device_info = usb_serials.get(usb_path)
+        if device_info is None:
+            LOGGER.warning(f"Unable to find USB device for camera {camera.name}")
+            continue
+
+        # Check this path matches the device we are expecting
+        vidpid = f'{device_info.vendor_id}:{device_info.product_id}'
+        if camera.vidpid != vidpid:
+            LOGGER.warning(
+                f"Camera {camera.name} has mismatched USB path: {vidpid} != {camera.vidpid}"
+            )
+            continue
+
+        # Update the camera with the serial number
+        cameras[index] = camera._replace(serial_num=device_info.serial_num)
 
     return cameras
 
