@@ -1,11 +1,10 @@
 import csv
-from math import pi, tan, hypot, degrees
+from math import degrees, hypot, pi, radians, tan
 from pathlib import Path
 from typing import NamedTuple
 
-from pytest import approx
-
 from controller import Supervisor
+from pytest import approx
 from webots_vision import Marker
 
 SAVE_PATH = Path(__file__).parents[3] / "test_data"
@@ -104,6 +103,12 @@ def main():
         assert len(recognitions) == 1, f"Found {len(recognitions)} markers"
         marker = Marker.from_webots_recognition(recognitions[0])
         print(marker, marker.orientation)
+        print(f"Errors: yaw: {abs(marker.orientation.yaw - marker_test.yaw):.2e}, "
+              f"pitch: {abs(marker.orientation.pitch - marker_test.pitch):.2e}, "
+              f"roll: {abs(marker.orientation.roll - marker_test.roll):.2e}, "
+              f"distance: {abs(marker.position.distance - hypot_dist):.2e}, "
+              f"horizontal: {abs(degrees(marker.position.horizontal_angle - horz_angle)):.3f}, "
+              f"vertical: {abs(degrees(marker.position.vertical_angle - vert_angle)):.3f}")
 
         assert marker.orientation.yaw == approx(marker_test.yaw), \
             f"Yaw: {marker.orientation.yaw} != {marker_test.yaw}"
@@ -113,9 +118,9 @@ def main():
             f"Roll: {marker.orientation.roll} != {marker_test.roll}"
         assert marker.position.distance == approx(hypot_dist, abs=3), \
             f"Distance: {marker.position.distance} != {hypot_dist}"
-        assert marker.position.horizontal_angle == approx(horz_angle, abs=degrees(1)), \
+        assert marker.position.horizontal_angle == approx(horz_angle, abs=radians(0.1)), \
             f"Horizontal angle: {marker.position.horizontal_angle} != {horz_angle}"
-        assert marker.position.vertical_angle == approx(vert_angle, abs=degrees(1)), \
+        assert marker.position.vertical_angle == approx(vert_angle, abs=radians(0.1)), \
             f"Vertical angle: {marker.position.vertical_angle} != {vert_angle}"
 
         save(robot, camera, marker_test.index)
