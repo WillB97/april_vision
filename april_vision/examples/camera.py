@@ -38,7 +38,7 @@ class AprilCamera:
     def discover(cls) -> Dict[str, 'AprilCamera']:
         """Discover boards that this backend can control."""
         return {
-            (serial := f"{camera_data.name} - {camera_data.index}"):
+            (serial := camera_data.serial_num or f"{camera_data.name} - {camera_data.index}"):
             cls(camera_data.index, camera_data=camera_data,
                 serial_num=serial, aruco_orientation=cls.use_aruco_orientation)
             for camera_data in find_cameras(calibrations)
@@ -52,6 +52,12 @@ class AprilCamera:
         aruco_orientation: bool = False,
     ) -> None:
         """Generate a backend from the camera index and calibration data."""
+        cam_name = camera_data.name
+        if camera_data.serial_num:
+            cam_name += f"{camera_data.name} {camera_data.serial_num}"
+            # Suffix the camera into the name if we have an actual serial number
+            self.name = f"{self.name} - {camera_data.name}"
+
         camera_source = USBCamera.from_calibration_file(
             camera_id,
             calibration_file=camera_data.calibration,
@@ -60,17 +66,23 @@ class AprilCamera:
         self._cam = Processor(
             camera_source,
             calibration=camera_source.calibration,
-            name=camera_data.name,
+            name=cam_name,
             vidpid=camera_data.vidpid,
             mask_unknown_size_tags=True,
             aruco_orientation=aruco_orientation,
         )
         self._serial = serial_num
+        self._model = camera_data.name
 
     @property
     def serial_number(self) -> str:
         """Get the serial number."""
         return self._serial
+
+    @property
+    def model(self) -> str:
+        """Get the camera model."""
+        return self._model
 
     @property
     def firmware_version(self) -> Optional[str]:
