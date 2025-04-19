@@ -18,6 +18,7 @@ class CameraIdentifier(NamedTuple):
     index: int  # type: ignore[assignment]
     name: str
     vidpid: str
+    serial_num: Optional[str] = None
 
 
 class CalibratedCamera(NamedTuple):
@@ -26,6 +27,7 @@ class CalibratedCamera(NamedTuple):
     index: int  # type: ignore[assignment]
     name: str
     vidpid: str
+    serial_num: Optional[str] = None
     calibration: Optional[Path] = None
 
 
@@ -100,6 +102,7 @@ def match_calibrations(
                 index=camera.index,
                 name=camera.name,
                 vidpid=camera.vidpid,
+                serial_num=camera.serial_num,
                 calibration=calibration_map[camera.vidpid],
             ))
             LOGGER.debug(
@@ -111,6 +114,7 @@ def match_calibrations(
                     index=camera.index,
                     name=camera.name,
                     vidpid=camera.vidpid,
+                    serial_num=camera.serial_num,
                 ))
 
     return calibrated_cameras + uncalibrated_cameras
