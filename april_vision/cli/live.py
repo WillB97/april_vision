@@ -14,7 +14,7 @@ from typing import List, Tuple
 
 import cv2
 
-from ..calibrations import calibrations
+from ..calibrations import calibrations, extra_calibrations
 from ..detect_cameras import find_cameras
 from ..frame_sources import USBCamera
 from ..marker import MarkerType
@@ -46,7 +46,11 @@ def main(args: argparse.Namespace) -> None:
 
     camera_properties = parse_properties(args)
 
-    cameras = find_cameras(calibrations, include_uncalibrated=True)
+    if args.extra_calibrations:
+        cameras = find_cameras(extra_calibrations, include_uncalibrated=True)
+    else:
+        cameras = find_cameras(calibrations, include_uncalibrated=True)
+
     if args.serial is not None:
         cameras_serial_dict = {
             camera.serial_num: camera
@@ -253,6 +257,12 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
         type=str,
         default=None,
         help="The resolution to use for a manually specified camera (e.g. 1280x720)"
+    )
+
+    parser.add_argument(
+        '-e', '--extra-calibrations',
+        help="Include the additional optional calibrations",
+        action='store_true',
     )
 
     parser.set_defaults(func=main)
