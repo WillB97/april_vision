@@ -14,7 +14,7 @@ subcommands = [
     "annotate_image",
     "annotate_video",
     "calibrate",
-    # "camera_benchmark",
+    "camera_benchmark",
     "live",
     # "marker_benchmark",
     "marker_generator",
