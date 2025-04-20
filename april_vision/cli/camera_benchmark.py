@@ -159,8 +159,8 @@ standardResolutions = [
 class CameraBenchmarkResult(NamedTuple):
     """Camera benchmark result."""
 
-    height: int
     width: int
+    height: int
     fps: float
 
 
@@ -209,8 +209,8 @@ def main(args: argparse.Namespace) -> None:
         fps = camera.get(cv2.CAP_PROP_FPS)
 
         results.append(CameraBenchmarkResult(
-            height=actual_resolution[1],
             width=actual_resolution[0],
+            height=actual_resolution[1],
             fps=fps,
         ))
         LOGGER.debug(f"FPS: {fps}")
