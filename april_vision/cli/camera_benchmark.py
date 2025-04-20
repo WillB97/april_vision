@@ -8,6 +8,7 @@ import logging
 from typing import List, NamedTuple
 
 import cv2
+from progress.bar import Bar  # type: ignore[import-untyped]
 from tabulate import tabulate
 
 from ..detect_cameras import find_cameras
@@ -190,7 +191,7 @@ def main(args: argparse.Namespace) -> None:
 
     results: List[CameraBenchmarkResult] = []
 
-    for resolution in standardResolutions:
+    for resolution in Bar("Testing resolutions").iter(standardResolutions):
         LOGGER.debug(f"Testing resolution: {resolution[0]}x{resolution[1]}")
 
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
