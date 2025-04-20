@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibrationDate>"Sun 20 Apr 2025 19:57:29"</calibrationDate>
+<framesCount>15</framesCount>
+<cameraResolution>
+  1280 720</cameraResolution>
+<cameraMatrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    991.69770589598454 0. 644.4951792774325 0. 990.75583534655334
+    334.3498596699007 0. 0. 1.</data></cameraMatrix>
+<dist_coeffs type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    0.12890059386568475 -0.12516127055386872 -0.00068194900429367647
+    -0.0002574911173357056 -0.087584597234298553</data></dist_coeffs>
+<avg_reprojection_error>0.32015960424418649</avg_reprojection_error>
+<vidpid>"iPhone12,1"</vidpid>
+</opencv_storage>
