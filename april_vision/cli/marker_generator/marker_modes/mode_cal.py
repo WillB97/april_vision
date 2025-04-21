@@ -2,14 +2,16 @@
 import argparse
 import logging
 
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+import reportlab.graphics.shapes as rl_shapes
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors as rl_colors
 
 from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType
 
-from ..marker_tile import generate_tag_array, mm_to_pixels
-from ..utils import DEFAULT_FONT, DEFAULT_FONT_SIZE, DPI, PageSize
+from ..marker_tile import MarkerTileVector, mm_to_pixels
+from ..utils import DEFAULT_VEC_FONT, DEFAULT_VEC_FONT_SIZE, DPI, PageSize
 
 LOGGER = logging.getLogger(__name__)
 
@@ -26,54 +28,41 @@ def main(args: argparse.Namespace) -> None:
             f"Number of markers required ({required_markers}) is more than available ",
             f"in marker family ({tag_data.ncodes})"
         ))
+        exit(1)
 
     # Generate numpy arrays of all required markers
     LOGGER.info("Generating markers for calibration board")
 
-    marker_arrays = []
+    marker_tiles: list[MarkerTileVector] = []
     for marker_id in range(required_markers):
-        tag_array = generate_tag_array(tag_data, marker_id)
-        marker_arrays.append(tag_array)
-
-    # Calculate the dimentions of the full marker grid
-    dim_width = ((tag_data.total_width - 1) * args.num_columns) + 1
-    dim_height = ((tag_data.total_width - 1) * args.num_rows) + 1
+        image_tile = MarkerTileVector(
+            tag_data,
+            marker_id,
+            args.marker_size,
+        )
+        marker_tiles.append(image_tile)
 
     # Offset between each marker in the grid
-    marker_offset = tag_data.total_width - 1
+    pixel_size = mm_to_pixels(args.marker_size / tag_data.width_at_border)
+    marker_offset = (tag_data.total_width - 1) * pixel_size
 
-    # Create and fill np array of full marker board
-    board_array = np.ones((dim_height, dim_width), dtype=np.uint8)
-
-    for index, marker_array in enumerate(marker_arrays):
-        row, col = divmod(index, args.num_columns)
-        row = args.num_rows - (row + 1)
-
-        x = row * marker_offset
-        y = col * marker_offset
-        board_array[x:x + marker_array.shape[0], y:y + marker_array.shape[1]] = marker_array
-
-    # Convert np array into correct size image
-    marker_image = Image.fromarray(board_array)
-
-    pixel_size = args.marker_size / tag_data.width_at_border
-
-    required_width = int(pixel_size * dim_width)
-    required_height = int(pixel_size * dim_height)
-
-    resized_image = marker_image.resize(
-        (mm_to_pixels(required_width), mm_to_pixels(required_height)),
-        resample=0
-    )
-
-    # Paste board onto page
+    # Create a blank board
     page_size = PageSize[args.page_size]
-    output_img = Image.new("RGB", page_size.pixels, (255, 255, 255))
+    output_img = Drawing(page_size.vec_pixels.x, page_size.vec_pixels.y)
 
-    x_loc = (output_img.width - resized_image.width) // 2
-    y_loc = (output_img.height - resized_image.height) // 2
+    # Calculate border size to center the markers on the page
+    x_border = (page_size.pixels.x - (marker_offset * (args.num_columns - 1))) / 2
+    y_border = (page_size.pixels.y - (marker_offset * (args.num_rows - 1))) / 2
 
-    output_img.paste(resized_image, (x_loc, y_loc))
+    for index, marker_tile in enumerate(marker_tiles):
+        row, col = divmod(index, args.num_columns)
+
+        x = col * marker_offset
+        y = row * marker_offset
+        x_loc = x + x_border
+        y_loc = y + y_border
+        marker_tile.set_marker_centre(x_loc, y_loc)
+        output_img.add(marker_tile.vectors)
 
     # Overlay info about the board
     text_overlay = "Family: {}  Rows: {}  Columns: {}  Marker size: {}".format(
@@ -82,15 +71,15 @@ def main(args: argparse.Namespace) -> None:
         args.num_columns,
         args.marker_size,
     )
-
-    image_draw = ImageDraw.Draw(output_img)
-    image_draw.text(
-        (x_loc, y_loc + resized_image.height),
+    text_offset = tag_data.total_width * pixel_size / 2
+    output_img.add(rl_shapes.String(
+        x_border - text_offset, y_border - text_offset - pixel_size * 0.6,
         text_overlay,
-        fill="black",
-        anchor="lt",
-        font=ImageFont.truetype(DEFAULT_FONT, args.description_size),
-    )
+        fontSize=args.description_size,
+        fontName=DEFAULT_VEC_FONT,
+        textAnchor='start',
+        fillColor=rl_colors.black,
+    ))
 
     # Save file
     filename = "cal_board_{}_{}_{}_{}_{}.pdf".format(
@@ -101,11 +90,9 @@ def main(args: argparse.Namespace) -> None:
         args.marker_size,
     )
 
-    output_img.save(
-        filename,
-        quality=100,
-        dpi=(DPI, DPI),
-    )
+    # canvas DPI is 72
+    output_img.scale(72 / DPI, 72 / DPI)
+    renderPDF.drawToFile(output_img, filename)
 
     LOGGER.info(f"Calibration board saved as '{filename}'")
 
@@ -154,7 +141,7 @@ def create_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--description_size",
         help="Set the text size (default: %(default)s)",
-        default=DEFAULT_FONT_SIZE,
+        default=DEFAULT_VEC_FONT_SIZE,
         type=int,
     )
 
