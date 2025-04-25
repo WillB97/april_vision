@@ -4,6 +4,7 @@ import importlib
 subcommands = [
     "family_details",
     "list_cameras",
+    "calibration_stats",
 ]
 
 
