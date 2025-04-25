@@ -127,16 +127,17 @@ def linux_discovery() -> List[CameraIdentifier]:
     This matches camera indexes to their USB VID & PID and omits indexes
     that are not the actual camera.
     """
-    # Get a list of all potential cameras
-    potential_cameras = []
-    for index in range(10):
-        if Path(f'/dev/video{index}').exists():
-            potential_cameras.append(index)
-
     # Filter the potential cameras to ones that work
     valid_cameras = []
-    for index in potential_cameras:
-        capture = cv2.VideoCapture(f'/dev/video{index}')
+    for dev in Path('/dev').glob('video*'):
+        try:
+            index = int(dev.stem.replace('video', ''))
+        except ValueError:
+            # Not a video device
+            continue
+
+        # Check if the device is a valid camera
+        capture = cv2.VideoCapture(str(dev))
         if capture.isOpened():
             valid_cameras.append(index)
         capture.release()
