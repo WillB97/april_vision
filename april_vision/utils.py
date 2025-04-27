@@ -41,6 +41,8 @@ class Frame(NamedTuple):
     def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
         """Load an image file into the frame."""
         colour_frame = cv2.imread(str(filepath))
+        if colour_frame is None:
+            raise FileNotFoundError(f"Could not load image: {filepath}")
 
         return cls.from_colour_frame(colour_frame)
 

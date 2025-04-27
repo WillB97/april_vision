@@ -13,10 +13,10 @@ subcommands = [
     "tools",
     "annotate_image",
     "annotate_video",
+    "bulk_process",
     "calibrate",
     "camera_benchmark",
     "live",
-    # "marker_benchmark",
     "marker_generator",
     "vision_debug",
 ]
