@@ -9,7 +9,7 @@ import csv
 import logging
 from math import degrees
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 from ..marker import Marker, MarkerType
 from ..utils import Frame, load_calibration
@@ -33,7 +33,11 @@ CSV_HEADER = [
 ]
 
 
-def convert_marker_to_csv_row(marker: Marker, filename: Path, index: int = 0) -> List[float]:
+def convert_marker_to_csv_row(
+    marker: Marker,
+    filename: Path,
+    index: int = 0,
+) -> List[Union[float, str]]:
     """Extract the relevant fields from a marker and return them as a list."""
     return [
         filename.name,
@@ -70,6 +74,8 @@ def main(args: argparse.Namespace) -> None:
 
         with open(args.benchmark, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
+            if not reader.fieldnames:
+                raise ValueError("Benchmark file is empty.")
             if 'File' not in reader.fieldnames:
                 raise ValueError("Benchmark file does not contain 'File' column.")
             benchmark_data = {Path(row['File']): row for row in reader}
@@ -140,7 +146,7 @@ def main(args: argparse.Namespace) -> None:
                 row = [marker_data['File'], marker_data['Tag ID']]
                 for col in input_columns:
                     expected = float(expected_data[col])
-                    measured = marker_data[col]
+                    measured = float(marker_data[col])
 
                     row.append(measured)
                     row.append(measured - expected)
