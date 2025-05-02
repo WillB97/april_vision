@@ -3,32 +3,26 @@ import argparse
 from math import atan, degrees
 from pathlib import Path
 
-import cv2
+from april_vision.utils import load_calibration_extra
 
 
 def main(args: argparse.Namespace) -> None:
     """Print statistics about a calibration file."""
-    calibration_file: Path = args.calibration
-    if not calibration_file.exists():
+    # Load the calibration file
+    try:
+        calibration_data = load_calibration_extra(args.calibration)
+    except FileNotFoundError:
         print(f"Calibration file {args.calibration} does not exist.")
         exit(1)
-
-    if not calibration_file.is_file():
-        print(f"Calibration file {args.calibration} is not a file.")
+    except SystemError:
+        print(f"Calibration file {args.calibration} is not a valid XML file.")
         exit(1)
 
-    # Load the calibration file
-    storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
-    resolution_node = storage.getNode("cameraResolution")
-    camera_matrix = storage.getNode("cameraMatrix").mat()
-    fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
-    cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
+    fx, fy, cx, cy = calibration_data['calibration']
+    resolution = calibration_data['resolution']
+    pidvid_list = calibration_data['vidpids']
 
     # Process values
-    resolution = (
-        int(resolution_node.at(0).real()),
-        int(resolution_node.at(1).real()),
-    )
     image_center = (resolution[0] / 2, resolution[1] / 2)
     optical_center_offset = (
         round(float(cx - image_center[0]), 2),
@@ -39,18 +33,13 @@ def main(args: argparse.Namespace) -> None:
     hfov = degrees(2 * atan(resolution[0] / (2 * fx)))
     vfov = degrees(2 * atan(resolution[1] / (2 * fy)))
 
-    vidpid_node = storage.getNode('vidpid')
-    if vidpid_node.isSeq():
-        pidvids = ', '.join([vidpid_node.at(i).string() for i in range(vidpid_node.size())])
-    elif vidpid_node.isString():
-        pidvids = vidpid_node.string()
+    if pidvid_list:
+        pidvids = ', '.join(pidvid_list)
     else:
         pidvids = "Unknown"
 
-    storage.release()
-
     # Print the results
-    print(f"Calibration file: {calibration_file}")
+    print(f"Calibration file: {args.calibration}")
     print(f"Camera ID: {pidvids}")
     print(f"Resolution: {resolution}")
     print(f"Optical center offset: {optical_center_offset}")

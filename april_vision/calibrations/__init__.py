@@ -2,6 +2,8 @@
 import os
 from pathlib import Path
 
+calibration_root = Path(__file__).parent
+
 calibrations = os.environ.get('OPENCV_CALIBRATIONS', '.').split(':')
 calibrations.append(str(Path(__file__).parent))
 

@@ -6,6 +6,8 @@ from typing import List, Optional, Tuple, Union, cast
 import cv2
 from numpy.typing import NDArray
 
+from .utils import load_calibration_extra
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -95,23 +97,15 @@ class USBCamera(FrameSource):
         else:
             return cls(index)
 
-        if not calibration_file.exists():
-            LOGGER.warning(f"Calibrations not found: {calibration_file}")
+        try:
+            calibration_data = load_calibration_extra(calibration_file)
+        except FileNotFoundError as e:
+            LOGGER.warning(e)
             return cls(index)
-
-        storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
-        resolution_node = storage.getNode("cameraResolution")
-        camera_matrix = storage.getNode("cameraMatrix").mat()
-        fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
-        cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
 
         # Overlay camera props from cal file and function args
         # function args take priority over calibration xml
-        camera_props = {}
-        cal_file_props = storage.getNode("cameraProperties").mat()
-        if cal_file_props is not None:
-            for property, value in cal_file_props:  # type: ignore[misc,unused-ignore]
-                camera_props[property] = value
+        camera_props = calibration_data['cameraProperties']
 
         if camera_parameters is not None:
             for property, value in camera_parameters:
@@ -119,11 +113,8 @@ class USBCamera(FrameSource):
 
         return cls(
             index,
-            resolution=(
-                int(resolution_node.at(0).real()),
-                int(resolution_node.at(1).real()),
-            ),
-            calibration=(fx, fy, cx, cy),
+            resolution=calibration_data['resolution'],
+            calibration=calibration_data['calibration'],
             vidpid=vidpid,
             camera_parameters=list(camera_props.items()),
         )

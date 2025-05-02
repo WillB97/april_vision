@@ -9,6 +9,9 @@ from typing import Any, Dict, List, NamedTuple, Optional
 
 import cv2
 
+from .calibrations import calibration_root
+from .utils import load_calibration_extra
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -66,22 +69,26 @@ def generate_calibration_file_map(calibration_locations: List[str]) -> Dict[str,
     for location in reversed(calibration_locations):
         for calibration_file in Path(location).glob('*.xml'):
             try:
-                storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
+                calibration_data = load_calibration_extra(calibration_file)
             except SystemError:
                 LOGGER.debug(f"Unable to read potential calibration file: {calibration_file}")
                 continue
 
-            node = storage.getNode('vidpid')
-            if node.isSeq():
-                pidvids = [node.at(i).string() for i in range(node.size())]
-            elif node.isString():
-                pidvids = [node.string()]
-            else:
+            # Check if the calibration file has a vidpid tag
+            if len(calibration_data['vidpids']) == 0:
                 # This file lacks any vidpids
                 continue
+            else:
+                pidvids = calibration_data['vidpids']
 
             for pidvid in pidvids:
-                calibration_map[pidvid] = calibration_file.absolute()
+                abs_path = calibration_file.absolute()
+                try:
+                    rel_path = abs_path.relative_to(calibration_root)
+                    alias_path = Path('__package__') / rel_path
+                except ValueError:
+                    alias_path = abs_path
+                calibration_map[pidvid] = alias_path
     LOGGER.debug(f"Calibrations found for: {list(calibration_map.keys())}")
 
     return calibration_map

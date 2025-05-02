@@ -2,15 +2,38 @@
 from collections import deque
 from math import hypot
 from pathlib import Path
-from typing import Deque, NamedTuple, Optional, Tuple, Union
+from typing import Deque, Dict, NamedTuple, Optional, Tuple, TypedDict, Union
 
 import cv2
 from numpy.typing import NDArray
 
+from .calibrations import calibration_root
 from .marker import Marker, PixelCoordinates
 
-Resolution = Tuple[int, int]
-CameraIntrinsic = Tuple[float, float, float, float]
+
+class Resolution(NamedTuple):
+    """Resolution of the camera."""
+
+    width: int
+    height: int
+
+
+class CameraIntrinsic(NamedTuple):
+    """Camera intrinsic parameters."""
+
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+
+
+class CameraCalibration(TypedDict):
+    """Camera calibration data."""
+
+    resolution: Resolution
+    calibration: CameraIntrinsic
+    vidpids: Tuple[str, ...]
+    cameraProperties: Dict[int, int]
 
 
 class Frame(NamedTuple):
@@ -73,9 +96,13 @@ def annotate_text(
     return frame
 
 
-def load_calibration(calibration_file: Union[str, Path]) -> Tuple[Resolution, CameraIntrinsic]:
-    """Load calibration data from opencv XML calibration file."""
+def load_calibration_extra(calibration_file: Union[str, Path]) -> CameraCalibration:
+    """Load full calibration data from opencv XML calibration file."""
     calibration_file = Path(calibration_file)
+
+    if calibration_file.is_relative_to('__package__'):
+        # ___package__ alias has been used, so we need to resolve the path
+        calibration_file = calibration_root / calibration_file.relative_to('__package__')
 
     if not calibration_file.exists():
         raise FileNotFoundError(f"Calibrations not found: {calibration_file}")
@@ -90,9 +117,38 @@ def load_calibration(calibration_file: Union[str, Path]) -> Tuple[Resolution, Ca
     fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
     cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
 
+    node = storage.getNode('vidpid')
+    if node.isSeq():
+        pidvids = tuple([node.at(i).string() for i in range(node.size())])
+    elif node.isString():
+        pidvids = tuple([node.string()])
+    else:
+        # This file lacks any vidpids
+        pidvids = tuple()
+
+    camera_props = {}
+    cal_file_props = storage.getNode("cameraProperties").mat()
+    if cal_file_props is not None:
+        for property, value in cal_file_props:  # type: ignore[misc,unused-ignore]
+            camera_props[property] = value
+
+    storage.release()
+
+    return CameraCalibration(
+        resolution=Resolution(width, height),
+        calibration=CameraIntrinsic(fx, fy, cx, cy),
+        vidpids=pidvids,
+        cameraProperties=camera_props,
+    )
+
+
+def load_calibration(calibration_file: Union[str, Path]) -> Tuple[Resolution, CameraIntrinsic]:
+    """Load calibration data from opencv XML calibration file."""
+    calibration_data = load_calibration_extra(calibration_file)
+
     return (
-        (width, height),
-        (fx, fy, cx, cy),
+        calibration_data['resolution'],
+        calibration_data['calibration'],
     )
 
 
