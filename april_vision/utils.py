@@ -26,6 +26,9 @@ class Frame(NamedTuple):
         colourspace: Optional[int] = cv2.COLOR_BGR2GRAY,
     ) -> 'Frame':
         """Load frame from a colour image in a numpy array."""
+        if not colour_frame.flags.writeable:
+            colour_frame = colour_frame.copy()
+
         if colourspace is not None:
             grey_frame = cv2.cvtColor(colour_frame, colourspace)
         else:
