@@ -101,6 +101,7 @@ def main(args: argparse.Namespace) -> None:
     detector = Detector(quad_decimate=1.0, debug=True)
 
     frame = cv2.imread(str(args.input_file), cv2.IMREAD_GRAYSCALE)
+    assert frame, "Failed to capture frame"
 
     if not args.output_dir.exists():
         args.output_dir.mkdir(parents=True)

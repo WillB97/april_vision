@@ -44,6 +44,7 @@ class Frame(NamedTuple):
     def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
         """Load an image file into the frame."""
         colour_frame = cv2.imread(str(filepath))
+        assert colour_frame, "Failed to capture frame"
 
         return cls.from_colour_frame(colour_frame)
 
