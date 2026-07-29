@@ -4,8 +4,8 @@ from math import acos, atan2, cos, degrees, sin
 from typing import NamedTuple, Optional, Tuple, cast
 
 import numpy as np
+from numpy import ndarray as NDArray
 from numpy.linalg import norm as hypotenuse
-from numpy.typing import NDArray
 from pyapriltags import Detection
 from pyquaternion import Quaternion
 

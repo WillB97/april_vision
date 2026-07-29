@@ -1,9 +1,8 @@
 from collections.abc import Generator
 from typing import Any, Optional, Tuple, Union
 
-import numpy as np
-from numpy.typing import NDArray
 from _typeshed import Incomplete
+from numpy import ndarray as NDArray
 
 ThreeTuple = Tuple[float, float, float]
 FourTuple = Tuple[float, float, float, float]

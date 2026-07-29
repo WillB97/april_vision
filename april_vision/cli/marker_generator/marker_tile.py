@@ -7,7 +7,7 @@ from copy import deepcopy
 
 import numpy as np
 import reportlab.graphics.shapes as rl_shapes
-from numpy.typing import NDArray
+from numpy import ndarray as NDArray
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from reportlab.lib import colors as rl_colors
 

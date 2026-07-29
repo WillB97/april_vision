@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union, cast
 
 import cv2
-from numpy.typing import NDArray
+from numpy import ndarray as NDArray
 
 LOGGER = logging.getLogger(__name__)
 
@@ -102,8 +102,8 @@ class USBCamera(FrameSource):
         storage = cv2.FileStorage(str(calibration_file), cv2.FILE_STORAGE_READ)
         resolution_node = storage.getNode("cameraResolution")
         camera_matrix = storage.getNode("cameraMatrix").mat()
-        fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
-        cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
+        fx, fy = float(camera_matrix[0, 0]), float(camera_matrix[1, 1])
+        cx, cy = float(camera_matrix[0, 2]), float(camera_matrix[1, 2])
 
         # Overlay camera props from cal file and function args
         # function args take priority over calibration xml

@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
-from numpy.typing import NDArray
+from numpy import ndarray as NDArray
 
 from april_vision import (
     CalibratedCamera,

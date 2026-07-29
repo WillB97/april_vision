@@ -1,11 +1,10 @@
 """Helper classes for sending image data."""
 import base64
 from threading import Thread
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 import cv2
 import numpy as np
-from numpy.typing import NDArray
 
 from ..marker import Marker
 from ..utils import Frame
@@ -66,7 +65,7 @@ class Base64Sender:
         else:
             self.encode_and_send(output_frame.colour_frame)
 
-    def encode_and_send(self, frame: NDArray[np.uint8]) -> None:
+    def encode_and_send(self, frame: np.ndarray[tuple[Any, ...], np.dtype[np.uint8]]) -> None:
         """
         Convert a frame to a base64 bytestring and send it using the publish callback.
 
@@ -90,7 +89,10 @@ class Base64Sender:
         except ValueError:
             pass
 
-    def base64_encode_frame(self, frame: NDArray[np.uint8]) -> Optional[bytes]:
+    def base64_encode_frame(
+        self,
+        frame: np.ndarray[tuple[Any, ...], np.dtype[np.uint8]],
+    ) -> Optional[bytes]:
         """Convert image frame to base64 bytestring."""
         ret, image = cv2.imencode(
             '.jpg',

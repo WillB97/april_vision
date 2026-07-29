@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Deque, NamedTuple, Optional, Tuple, Union
 
 import cv2
-from numpy.typing import NDArray
+from numpy import ndarray as NDArray
 
 from .marker import Marker, PixelCoordinates
 
@@ -44,7 +44,7 @@ class Frame(NamedTuple):
     def from_file(cls, filepath: Union[str, Path]) -> 'Frame':
         """Load an image file into the frame."""
         colour_frame = cv2.imread(str(filepath))
-        assert colour_frame, "Failed to capture frame"
+        assert colour_frame is not None, "Failed to capture frame"
 
         return cls.from_colour_frame(colour_frame)
 
@@ -89,8 +89,8 @@ def load_calibration(calibration_file: Union[str, Path]) -> Tuple[Resolution, Ca
     height = int(resolution_node.at(1).real())
 
     camera_matrix = storage.getNode("cameraMatrix").mat()
-    fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]
-    cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]
+    fx, fy = float(camera_matrix[0, 0]), float(camera_matrix[1, 1])
+    cx, cy = float(camera_matrix[0, 2]), float(camera_matrix[1, 2])
 
     return (
         (width, height),

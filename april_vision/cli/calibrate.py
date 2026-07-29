@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 
 import cv2
 import numpy as np
-from numpy.typing import NDArray
+from numpy import ndarray as NDArray
 
 from april_vision.cli.utils import get_tag_family
 from april_vision.marker import MarkerType

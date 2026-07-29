@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
-from numpy.typing import NDArray
+from numpy import ndarray as NDArray
 from pyapriltags import Detector
 
 from .frame_sources import FrameSource
@@ -116,7 +116,8 @@ class Processor:
         The annotation is in-place.
         """
         for marker in markers:
-            integer_corners = np.array(marker.pixel_corners, dtype=np.int32)
+            t_corners = np.ndarray[tuple[int], np.dtype[np.int32]]
+            integer_corners: t_corners = np.array(marker.pixel_corners, dtype=np.int32)  # type: ignore[assignment, unused-ignore]
             marker_id = f"id={marker.id}"
 
             for frame_type in frame:
