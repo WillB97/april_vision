@@ -127,9 +127,12 @@ def linux_discovery() -> List[CameraIdentifier]:
     This matches camera indexes to their USB VID & PID and omits indexes
     that are not the actual camera.
     """
+    # Get a list of all potential cameras
+    potential_cameras = sorted(Path('/dev').glob('video*'))
+
     # Filter the potential cameras to ones that work
     valid_cameras = []
-    for dev in Path('/dev').glob('video*'):
+    for dev in potential_cameras:
         try:
             index = int(dev.stem.replace('video', ''))
         except ValueError:
